@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace SAPLSServer.DTOs.Concrete.User
 {
-    public abstract class UserSummaryDto : GetDto
+    public abstract class UserSummaryDto : GetResult
     {
         public string Email { get; set; } = null!;
         public string FullName { get; set; } = null!;

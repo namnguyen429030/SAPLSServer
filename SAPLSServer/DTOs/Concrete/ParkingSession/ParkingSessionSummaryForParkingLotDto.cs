@@ -2,7 +2,7 @@
 
 namespace SAPLSServer.DTOs.Concrete.ParkingSession
 {
-    public class ParkingSessionSummaryForParkingLotDto : GetDto
+    public class ParkingSessionSummaryForParkingLotDto : GetResult
     {
         public string VehicleNumber { get; set; } = null!;
         public DateTime EntryDateTime { get; set; }

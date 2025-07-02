@@ -1,10 +1,8 @@
 ﻿using SAPLSServer.DTOs.Base;
-using SAPLSServer.DTOs.Concrete.ParkingLot;
-using SAPLSServer.DTOs.Concrete.Vehicle;
 
 namespace SAPLSServer.DTOs.Concrete.ParkingSession
 {
-    public class ParkingSessionDetailsForParkingLotDto : GetDto
+    public class ParkingSessionDetailsForParkingLotDto : GetResult
     {
         public VehicleSummaryDto Vehicle { get; set; } = null!;
         public DateTime EntryDateTime { get; set; }

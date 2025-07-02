@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace SAPLSServer.DTOs.Concrete.PaymentSource
 {
-    public class GetPaymentSourceDto : GetDto
+    public class GetPaymentSourceDto : GetResult
     {
         public string BankName { get; set; } = null!;
         public string AccountName { get; set; } = null!;

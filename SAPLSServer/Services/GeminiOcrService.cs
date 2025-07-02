@@ -87,7 +87,7 @@ namespace SAPLSServer.Services.Implementations
             }
         }
 
-        public async Task<VehicleRegistrationOcrResponseDto> ExtractVehicleRegistrationDataAsync(VehicleRegistrationOcrRequestDto dto)
+        public async Task<VehicleRegistrationOcrResponse> ExtractVehicleRegistrationDataAsync(VehicleRegistrationOcrRequestDto dto)
         {
             var stopwatch = Stopwatch.StartNew();
             
@@ -103,7 +103,7 @@ namespace SAPLSServer.Services.Implementations
                 
                 stopwatch.Stop();
                 
-                var result = new VehicleRegistrationOcrResponseDto
+                var result = new VehicleRegistrationOcrResponse
                 {
                     Id = Guid.NewGuid().ToString(),
                     LicensePlate = extractedData.GetValueOrDefault("licensePlate", ""),

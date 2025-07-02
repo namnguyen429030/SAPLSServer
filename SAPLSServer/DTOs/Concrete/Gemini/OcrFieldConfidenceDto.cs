@@ -1,4 +1,3 @@
-// OcrFieldConfidenceDto.cs
 namespace SAPLSServer.DTOs.Concrete.GeminiOcr
 {
     public class OcrFieldConfidenceDto

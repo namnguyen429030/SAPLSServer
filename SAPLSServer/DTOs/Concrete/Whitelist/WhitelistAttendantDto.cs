@@ -2,7 +2,7 @@
 
 namespace SAPLSServer.DTOs.Concrete.Whitelist
 {
-    public class WhitelistAttendantDto : GetDto
+    public class WhitelistAttendantDto : GetResult
     {
         public string Email { get; set; } = null!;
         public string FullName { get; set; } = null!;

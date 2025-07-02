@@ -66,7 +66,7 @@ namespace SAPLSServer.Controllers
         /// <param name="dto">Vehicle Registration OCR request</param>
         /// <returns>Extracted vehicle registration information</returns>
         [HttpPost("vehicle-registration/extract")]
-        public async Task<ActionResult<VehicleRegistrationOcrResponseDto>> ExtractVehicleRegistrationData([FromBody] VehicleRegistrationOcrRequestDto dto)
+        public async Task<ActionResult<VehicleRegistrationOcrResponse>> ExtractVehicleRegistrationData([FromBody] VehicleRegistrationOcrRequestDto dto)
         {
             try
             {

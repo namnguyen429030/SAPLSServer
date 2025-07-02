@@ -2,7 +2,7 @@
 
 namespace SAPLSServer.DTOs.Concrete.Request
 {
-    public class RequestDetailsDto : GetDto
+    public class RequestDetailsDto : GetResult
     {
         public string Email { get; set; } = null!;
         public string FullName { get; set; } = null!;

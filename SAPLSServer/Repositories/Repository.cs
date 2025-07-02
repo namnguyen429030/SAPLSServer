@@ -15,7 +15,16 @@ namespace SAPLSServer.Repositories
             _context = context;
             _dbSet = context.Set<T>();
         }
-        public virtual async Task<IEnumerable<T>> GetPagedAsync(int pageNumber = 1, int pageSize = 20, Expression<Func<T, bool>>[]? filters = null, Expression<Func<T, object>>? sortBy = null, bool isAscending = true)
+        public virtual async Task<IEnumerable<T>> GetAllAsync(Expression<Func<T, bool>>[]? filters = null, Expression<Func<T, object>>? sortBy = null, bool isAscending = true)
+        {
+            var query = ApplyFilters(_dbSet.AsQueryable(), filters ?? Array.Empty<Expression<Func<T, bool>>>());
+            if (sortBy != null)
+            {
+                query = isAscending ? query.OrderBy(sortBy) : query.OrderByDescending(sortBy);
+            }
+            return await query.ToListAsync();
+        }
+        public virtual async Task<IEnumerable<T>> GetPageAsync(int pageNumber = 1, int pageSize = 20, Expression<Func<T, bool>>[]? filters = null, Expression<Func<T, object>>? sortBy = null, bool isAscending = true)
         {
             var query = ApplyFilters(_dbSet.AsQueryable(), filters ?? Array.Empty<Expression<Func<T, bool>>>());
             if (sortBy != null)

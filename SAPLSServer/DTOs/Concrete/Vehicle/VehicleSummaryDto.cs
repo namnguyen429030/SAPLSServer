@@ -2,7 +2,7 @@
 
 namespace SAPLSServer.DTOs.Concrete.Vehicle
 {
-    public class VehicleSummaryDto : GetDto
+    public class VehicleSummaryDto : GetResult
     {
         public string LicensePlate { get; set; } = null!;
         public string Brand { get; set; } = null!;

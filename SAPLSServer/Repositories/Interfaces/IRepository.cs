@@ -6,6 +6,16 @@ namespace SAPLSServer.Repositories.Interfaces
     public interface IRepository<T, TKey> where T : class where TKey : class
     {
         /// <summary>
+        /// Retrieves all entities from the repository, optionally filtered and sorted.
+        /// </summary>
+        /// <param name="filters"></param>
+        /// <param name="sortBy"></param>
+        /// <param name="isAscending"></param>
+        /// <returns></returns>
+        Task<IEnumerable<T>> GetAllAsync(Expression<Func<T, bool>>[]? filters = null,
+                                                Expression<Func<T, object>>? sortBy = null,
+                                                bool isAscending = true);
+        /// <summary>
         /// Retrieves a paginated collection of entities based on the specified filters and sorting options.
         /// </summary>
         /// <param name="pageNumber"></param>
@@ -14,7 +24,7 @@ namespace SAPLSServer.Repositories.Interfaces
         /// <param name="sortBy">Use to apply sorting to the DbSet</param>
         /// <param name="isAscending">Use to set the sort order.</param>
         /// <returns></returns>
-        Task<IEnumerable<T>> GetPagedAsync(int pageNumber = 1, int pageSize = 20,
+        Task<IEnumerable<T>> GetPageAsync(int pageNumber = 1, int pageSize = 20,
                                         Expression<Func<T, bool>>[]? filters = null,
                                         Expression<Func<T, object>>? sortBy = null,
                                         bool isAscending = true);

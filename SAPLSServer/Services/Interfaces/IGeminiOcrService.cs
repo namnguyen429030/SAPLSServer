@@ -16,7 +16,7 @@ namespace SAPLSServer.Services.Interfaces
         /// </summary>
         /// <param name="dto">Vehicle Registration OCR request</param>
         /// <returns>Extracted vehicle registration information</returns>
-        Task<VehicleRegistrationOcrResponseDto> ExtractVehicleRegistrationDataAsync(VehicleRegistrationOcrRequestDto dto);
+        Task<VehicleRegistrationOcrResponse> ExtractVehicleRegistrationDataAsync(VehicleRegistrationOcrRequestDto dto);
 
         /// <summary>
         /// Validate and correct OCR extracted data using AI

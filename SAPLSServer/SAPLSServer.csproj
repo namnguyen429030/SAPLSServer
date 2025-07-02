@@ -27,9 +27,7 @@
     <Folder Include="DTOs\Concrete\AttachedFile\IncidenceEvidence\" />
     <Folder Include="DTOs\Concrete\AttachedFile\RequestAttachedFIle\" />
     <Folder Include="DTOs\Concrete\IncidenceReport\" />
-    <Folder Include="DTOs\Concrete\Gemini\" />
     <Folder Include="DTOs\Concrete\ParkingFeeSchedule\" />
-    <Folder Include="Services\Interfaces\" />
   </ItemGroup>
 
 </Project>

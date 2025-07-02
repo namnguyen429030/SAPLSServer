@@ -1,9 +1,8 @@
-// OcrServiceHealthDto.cs
 using SAPLSServer.DTOs.Base;
 
 namespace SAPLSServer.DTOs.Concrete.GeminiOcr
 {
-    public class OcrServiceHealthDto : GetDto
+    public class OcrServiceHealthDto : GetResult
     {
         public bool IsHealthy { get; set; }
         public string ServiceStatus { get; set; } = null!;

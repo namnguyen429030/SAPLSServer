@@ -1,4 +1,4 @@
-﻿namespace SAPLSServer.DTOs.Concrete.User.ParkingLotOwner
+﻿namespace SAPLSServer.DTOs.Concrete.User
 {
     public class ParkingLotOwnerProfileSummaryDto : UserSummaryDto
     {

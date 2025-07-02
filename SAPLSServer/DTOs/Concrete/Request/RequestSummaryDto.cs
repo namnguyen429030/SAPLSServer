@@ -2,7 +2,7 @@
 
 namespace SAPLSServer.DTOs.Concrete.Request
 {
-    public class RequestSummaryDto : GetDto
+    public class RequestSummaryDto : GetResult
     {
         public string Header { get; set; } = null!;
 

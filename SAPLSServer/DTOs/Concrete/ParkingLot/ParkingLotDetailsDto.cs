@@ -1,6 +1,4 @@
-﻿using SAPLSServer.DTOs.Base;
-
-namespace SAPLSServer.DTOs.Concrete.ParkingLot
+﻿namespace SAPLSServer.DTOs.Concrete.ParkingLot
 {
     public class ParkingLotDetailsDto : ParkingLotSummaryDto
     {
