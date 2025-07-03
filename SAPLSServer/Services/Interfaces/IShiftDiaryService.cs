@@ -10,13 +10,7 @@ namespace SAPLSServer.Services.Interfaces
         /// </summary>
         /// <param name="dto"></param>
         /// <returns></returns>
-        Task CreateShiftDiary(CreateShiftDiaryDto dto);
-        /// <summary>
-        /// Updates an existing shift diary with the provided details.
-        /// </summary>
-        /// <param name="dto"></param>
-        /// <returns></returns>
-        Task UpdateShiftDiary(UpdateShiftDiaryDto dto);
+        Task CreateShiftDiary(CreateShiftDiaryRequest dto);
         /// <summary>
         /// Retrieves the details of a shift diary by its unique identifier (ID).
         /// </summary>

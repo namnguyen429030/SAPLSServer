@@ -30,6 +30,6 @@ namespace SAPLSServer.Services.Interfaces
         /// <param name="pageRequest"></param>
         /// <param name="request"></param>
         /// <returns></returns>
-        Task<PageResult<AdminProfileDetailsDto>> GetAdminPage(PageRequest pageRequest, GetListRequest request);
+        Task<PageResult<AdminProfileDetailsDto>> GetAdminProfilesPage(PageRequest pageRequest, GetListRequest request);
     }
 }

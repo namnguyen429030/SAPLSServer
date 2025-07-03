@@ -37,22 +37,22 @@ namespace SAPLSServer.Extensions
         /// <returns>Service collection for chaining</returns>
         public static IServiceCollection AddApplicationServices(this IServiceCollection services)
         {
-            // Core Business Services
-            services.AddScoped<IParkingLotService, ParkingLotService>();
-            services.AddScoped<IParkingSessionService, ParkingSessionService>();
-            services.AddScoped<IPaymentSourceService, PaymentSourceService>();
-            services.AddScoped<IRequestService, RequestService>();
-            services.AddScoped<ISharedVehicleService, SharedVehicleService>();
-            services.AddScoped<IShiftDiaryService, ShiftDiaryService>();
-            services.AddScoped<IVehicleService, VehicleService>();
-            services.AddScoped<IWhitelistService, WhitelistService>();
+            //// Core Business Services
+            //services.AddScoped<IParkingLotService, ParkingLotService>();
+            //services.AddScoped<IParkingSessionService, ParkingSessionService>();
+            //services.AddScoped<IPaymentSourceService, PaymentSourceService>();
+            //services.AddScoped<IRequestService, RequestService>();
+            //services.AddScoped<ISharedVehicleService, SharedVehicleService>();
+            //services.AddScoped<IShiftDiaryService, ShiftDiaryService>();
+            //services.AddScoped<IVehicleService, VehicleService>();
+            //services.AddScoped<IWhitelistService, WhitelistService>();
 
-            // User Management Services
-            services.AddScoped<IUserService, UserService>();
-            services.AddScoped<IAdminProfileService, AdminProfileService>();
-            services.AddScoped<IClientProfileService, ClientProfileService>();
-            services.AddScoped<IParkingLotOwnerProfileService, ParkingLotOwnerProfileService>();
-            services.AddScoped<IStaffProfileService, StaffProfileService>();
+            //// User Management Services
+            //services.AddScoped<IUserService, UserService>();
+            //services.AddScoped<IAdminProfileService, AdminProfileService>();
+            //services.AddScoped<IClientProfileService, ClientProfileService>();
+            //services.AddScoped<IParkingLotOwnerProfileService, ParkingLotOwnerProfileService>();
+            //services.AddScoped<IStaffProfileService, StaffProfileService>();
 
             return services;
         }

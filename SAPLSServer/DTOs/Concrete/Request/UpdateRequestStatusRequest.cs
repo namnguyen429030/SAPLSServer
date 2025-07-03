@@ -3,11 +3,8 @@ using System.ComponentModel.DataAnnotations;
 
 namespace SAPLSServer.DTOs.Concrete.Request
 {
-    public class UpdateRequestRequest : UpdateRequest
+    public class UpdateRequestStatusRequest : UpdateRequest
     {
-        public string? InternalNote { get; set; }
-
-        public string? ResponseMessage { get; set; }
         [Required(ErrorMessage = "Status is required.")]
         public string Status { get; set; } = null!;
     }

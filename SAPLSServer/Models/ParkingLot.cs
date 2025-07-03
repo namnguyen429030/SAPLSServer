@@ -25,6 +25,8 @@ public partial class ParkingLot
 
     public string ParkingLotOwnerId { get; set; } = null!;
 
+    public virtual ICollection<IncidenceReport> IncidenceReports { get; set; } = new List<IncidenceReport>();
+
     public virtual ICollection<ParkingFeeSchedule> ParkingFeeSchedules { get; set; } = new List<ParkingFeeSchedule>();
 
     public virtual ParkingLotOwnerProfile ParkingLotOwner { get; set; } = null!;

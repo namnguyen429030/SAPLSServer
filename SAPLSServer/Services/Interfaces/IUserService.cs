@@ -1,4 +1,5 @@
-﻿using SAPLSServer.DTOs.Concrete.Pagination;
+﻿using SAPLSServer.DTOs.Base;
+using SAPLSServer.DTOs.Concrete.Pagination;
 using SAPLSServer.DTOs.Concrete.User;
 
 namespace SAPLSServer.Services.Interfaces
@@ -7,6 +8,6 @@ namespace SAPLSServer.Services.Interfaces
     {
         Task UpdateUserPassword(UpdateUserPasswordRequest dto);
         Task UpdateUserProfileImage(UpdateUserProfileImageRequest dto);
-        Task DeleteUser(DeleteUserRequest dto);
+        Task DeleteUser(DeleteRequest request);
     }
 }

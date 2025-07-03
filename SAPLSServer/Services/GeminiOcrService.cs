@@ -43,7 +43,7 @@ namespace SAPLSServer.Services.Implementations
             _httpClient.Timeout = TimeSpan.FromMinutes(2); // Set timeout for image processing
         }
 
-        public async Task<CitizenIdOcrResponseDto> ExtractCitizenIdDataAsync(CitizenIdOcrRequestDto dto)
+        public async Task<CitizenIdOcrResponse> ExtractCitizenIdDataAsync(CitizenIdOcrRequest dto)
         {
             var stopwatch = Stopwatch.StartNew();
             
@@ -59,7 +59,7 @@ namespace SAPLSServer.Services.Implementations
                 
                 stopwatch.Stop();
                 
-                var result = new CitizenIdOcrResponseDto
+                var result = new CitizenIdOcrResponse
                 {
                     Id = Guid.NewGuid().ToString(),
                     CitizenId = extractedData.GetValueOrDefault("citizenId", ""),
@@ -87,7 +87,7 @@ namespace SAPLSServer.Services.Implementations
             }
         }
 
-        public async Task<VehicleRegistrationOcrResponse> ExtractVehicleRegistrationDataAsync(VehicleRegistrationOcrRequestDto dto)
+        public async Task<VehicleRegistrationOcrResponse> ExtractVehicleRegistrationDataAsync(VehicleRegistrationOcrRequest dto)
         {
             var stopwatch = Stopwatch.StartNew();
             
@@ -133,7 +133,7 @@ namespace SAPLSServer.Services.Implementations
             }
         }
 
-        public async Task<OcrValidationResponseDto> ValidateOcrDataAsync(OcrValidationRequestDto dto)
+        public async Task<OcrValidationResponse> ValidateOcrDataAsync(OcrValidationRequest dto)
         {
             try
             {
@@ -145,7 +145,7 @@ namespace SAPLSServer.Services.Implementations
                 var response = await SendGeminiRequestAsync(geminiRequest);
                 var validationResult = ParseValidationResponse(response);
 
-                var result = new OcrValidationResponseDto
+                var result = new OcrValidationResponse
                 {
                     Id = Guid.NewGuid().ToString(),
                     IsValid = validationResult.GetValueOrDefault("isValid", "false") == "true",
@@ -166,10 +166,10 @@ namespace SAPLSServer.Services.Implementations
             }
         }
 
-        public async Task<BatchOcrResponseDto> ExtractBatchDocumentsAsync(BatchOcrRequestDto dto)
+        public async Task<BatchOcrResponse> ExtractBatchDocumentsAsync(BatchOcrRequest dto)
         {
             var stopwatch = Stopwatch.StartNew();
-            var results = new List<BatchOcrResultDto>();
+            var results = new List<BatchOcrResult>();
             int successful = 0;
             int failed = 0;
 
@@ -181,7 +181,7 @@ namespace SAPLSServer.Services.Implementations
                 {
                     try
                     {
-                        var batchResult = new BatchOcrResultDto
+                        var batchResult = new BatchOcrResult
                         {
                             ReferenceId = document.ReferenceId,
                             DocumentType = document.DocumentType
@@ -189,7 +189,7 @@ namespace SAPLSServer.Services.Implementations
 
                         if (document.DocumentType.Equals("CitizenId", StringComparison.OrdinalIgnoreCase))
                         {
-                            var citizenRequest = new CitizenIdOcrRequestDto
+                            var citizenRequest = new CitizenIdOcrRequest
                             {
                                 ImageBase64 = document.ImageBase64,
                                 ImageFormat = document.ImageFormat,
@@ -205,7 +205,7 @@ namespace SAPLSServer.Services.Implementations
                         }
                         else if (document.DocumentType.Equals("VehicleRegistration", StringComparison.OrdinalIgnoreCase))
                         {
-                            var vehicleRequest = new VehicleRegistrationOcrRequestDto
+                            var vehicleRequest = new VehicleRegistrationOcrRequest
                             {
                                 ImageBase64 = document.ImageBase64,
                                 ImageFormat = document.ImageFormat,
@@ -231,7 +231,7 @@ namespace SAPLSServer.Services.Implementations
                     catch (Exception ex)
                     {
                         _logger.LogError(ex, "Error processing document {ReferenceId}", document.ReferenceId);
-                        results.Add(new BatchOcrResultDto
+                        results.Add(new BatchOcrResult
                         {
                             ReferenceId = document.ReferenceId,
                             DocumentType = document.DocumentType,
@@ -245,7 +245,7 @@ namespace SAPLSServer.Services.Implementations
 
                 stopwatch.Stop();
 
-                var result = new BatchOcrResponseDto
+                var result = new BatchOcrResponse
                 {
                     Id = Guid.NewGuid().ToString(),
                     Results = results,

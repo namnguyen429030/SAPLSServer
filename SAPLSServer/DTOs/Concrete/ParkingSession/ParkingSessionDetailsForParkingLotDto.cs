@@ -1,4 +1,5 @@
 ﻿using SAPLSServer.DTOs.Base;
+using SAPLSServer.DTOs.Concrete.Vehicle;
 
 namespace SAPLSServer.DTOs.Concrete.ParkingSession
 {

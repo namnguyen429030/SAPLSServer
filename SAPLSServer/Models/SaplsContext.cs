@@ -168,6 +168,7 @@ public partial class SaplsContext : DbContext
             entity.Property(e => e.Id).HasMaxLength(36);
             entity.Property(e => e.Description).HasMaxLength(2000);
             entity.Property(e => e.Header).HasMaxLength(255);
+            entity.Property(e => e.ParkingLotId).HasMaxLength(36);
             entity.Property(e => e.Priority)
                 .HasMaxLength(20)
                 .HasDefaultValue("Medium");
@@ -176,6 +177,11 @@ public partial class SaplsContext : DbContext
             entity.Property(e => e.Status)
                 .HasMaxLength(20)
                 .HasDefaultValue("Open");
+
+            entity.HasOne(d => d.ParkingLot).WithMany(p => p.IncidenceReports)
+                .HasForeignKey(d => d.ParkingLotId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_IncidenceReport_ParkingLot");
 
             entity.HasOne(d => d.Reporter).WithMany(p => p.IncidenceReports)
                 .HasForeignKey(d => d.ReporterId)

@@ -25,7 +25,7 @@ namespace SAPLSServer.Controllers
         /// <param name="dto">Citizen ID Card OCR request</param>
         /// <returns>Extracted citizen information</returns>
         [HttpPost("citizen-id/extract")]
-        public async Task<ActionResult<CitizenIdOcrResponseDto>> ExtractCitizenIdData([FromBody] CitizenIdOcrRequestDto dto)
+        public async Task<ActionResult<CitizenIdOcrResponse>> ExtractCitizenIdData([FromBody] CitizenIdOcrRequest dto)
         {
             try
             {
@@ -66,7 +66,7 @@ namespace SAPLSServer.Controllers
         /// <param name="dto">Vehicle Registration OCR request</param>
         /// <returns>Extracted vehicle registration information</returns>
         [HttpPost("vehicle-registration/extract")]
-        public async Task<ActionResult<VehicleRegistrationOcrResponse>> ExtractVehicleRegistrationData([FromBody] VehicleRegistrationOcrRequestDto dto)
+        public async Task<ActionResult<VehicleRegistrationOcrResponse>> ExtractVehicleRegistrationData([FromBody] VehicleRegistrationOcrRequest dto)
         {
             try
             {
@@ -107,7 +107,7 @@ namespace SAPLSServer.Controllers
         /// <param name="dto">OCR validation request</param>
         /// <returns>Validated and corrected data</returns>
         [HttpPost("validate")]
-        public async Task<ActionResult<OcrValidationResponseDto>> ValidateOcrData([FromBody] OcrValidationRequestDto dto)
+        public async Task<ActionResult<OcrValidationResponse>> ValidateOcrData([FromBody] OcrValidationRequest dto)
         {
             try
             {
@@ -148,7 +148,7 @@ namespace SAPLSServer.Controllers
         /// <param name="dto">Batch OCR request</param>
         /// <returns>Batch extraction results</returns>
         [HttpPost("batch/extract")]
-        public async Task<ActionResult<BatchOcrResponseDto>> ExtractBatchDocuments([FromBody] BatchOcrRequestDto dto)
+        public async Task<ActionResult<BatchOcrResponse>> ExtractBatchDocuments([FromBody] BatchOcrRequest dto)
         {
             try
             {
@@ -314,7 +314,7 @@ namespace SAPLSServer.Controllers
                 // Process based on document type
                 if (documentType.Equals("CitizenId", StringComparison.OrdinalIgnoreCase))
                 {
-                    var citizenRequest = new CitizenIdOcrRequestDto
+                    var citizenRequest = new CitizenIdOcrRequest
                     {
                         ImageBase64 = imageBase64,
                         ImageFormat = imageFormat,
@@ -327,7 +327,7 @@ namespace SAPLSServer.Controllers
                 }
                 else if (documentType.Equals("VehicleRegistration", StringComparison.OrdinalIgnoreCase))
                 {
-                    var vehicleRequest = new VehicleRegistrationOcrRequestDto
+                    var vehicleRequest = new VehicleRegistrationOcrRequest
                     {
                         ImageBase64 = imageBase64,
                         ImageFormat = imageFormat,

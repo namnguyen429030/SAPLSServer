@@ -9,28 +9,28 @@ namespace SAPLSServer.Services.Interfaces
         /// </summary>
         /// <param name="dto">Citizen ID Card OCR request</param>
         /// <returns>Extracted citizen information</returns>
-        Task<CitizenIdOcrResponseDto> ExtractCitizenIdDataAsync(CitizenIdOcrRequestDto dto);
+        Task<CitizenIdOcrResponse> ExtractCitizenIdDataAsync(CitizenIdOcrRequest dto);
 
         /// <summary>
         /// Extract data from Vehicle Registration Certificate image using Gemini Vision OCR
         /// </summary>
         /// <param name="dto">Vehicle Registration OCR request</param>
         /// <returns>Extracted vehicle registration information</returns>
-        Task<VehicleRegistrationOcrResponse> ExtractVehicleRegistrationDataAsync(VehicleRegistrationOcrRequestDto dto);
+        Task<VehicleRegistrationOcrResponse> ExtractVehicleRegistrationDataAsync(VehicleRegistrationOcrRequest dto);
 
         /// <summary>
         /// Validate and correct OCR extracted data using AI
         /// </summary>
         /// <param name="dto">OCR validation request</param>
         /// <returns>Validated and corrected data</returns>
-        Task<OcrValidationResponseDto> ValidateOcrDataAsync(OcrValidationRequestDto dto);
+        Task<OcrValidationResponse> ValidateOcrDataAsync(OcrValidationRequest dto);
 
         /// <summary>
         /// Extract data from multiple document images in batch
         /// </summary>
         /// <param name="dto">Batch OCR request</param>
         /// <returns>Batch extraction results</returns>
-        Task<BatchOcrResponseDto> ExtractBatchDocumentsAsync(BatchOcrRequestDto dto);
+        Task<BatchOcrResponse> ExtractBatchDocumentsAsync(BatchOcrRequest dto);
 
         /// <summary>
         /// Check OCR service health and available models

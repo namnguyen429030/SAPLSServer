@@ -1,3 +1,4 @@
+using SAPLSServer.DTOs.Base;
 using SAPLSServer.DTOs.Concrete.Pagination;
 using SAPLSServer.DTOs.Concrete.SharedVehicle;
 
@@ -8,27 +9,22 @@ namespace SAPLSServer.Services.Interfaces
         /// <summary>
         /// Creates a new shared vehicle with the provided details.
         /// </summary>
-        /// <param name="dto"></param>
+        /// <param name="request"></param>
         /// <returns></returns>
-        Task CreateSharedVehicle(CreateSharedVehicleDto dto);
-        /// <summary>
-        /// Updates an existing shared vehicle with the provided details.
-        /// </summary>
-        /// <param name="dto"></param>
-        /// <returns></returns>
-        Task UpdateSharedVehicle(UpdateSharedVehicleDto dto);
+        Task CreateSharedVehicle(CreateSharedVehicleRequest request);
         /// <summary>
         /// Retrieves the details of a shared vehicle by its unique identifier (ID).
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        Task<SharedVehicleDetailsDto?> GetSharedVehicleDetails(string id);
+        Task<SharedVehicleDetailsDto?> GetSharedVehicleDetails(GetDetailsRequest request);
         /// <summary>
-        /// Retrieves a paginated list of shared vehicles with optional search criteria.
+        /// Retrieves a paginated list of shared vehicles based on the provided pageRequest and filter criteria.
         /// </summary>
+        /// <param name="pageRequest"></param>
         /// <param name="request"></param>
         /// <returns></returns>
-        Task<PageResult<SharedVehicleSummaryDto>> GetSharedVehiclesPage(PageRequest request);
+        Task<PageResult<SharedVehicleSummaryDto>> GetSharedVehiclesPage(PageRequest pageRequest, GetListRequest request);
         /// <summary>
         /// Retrieves a paginated list of shared vehicles owned by a specific owner, identified by their unique identifier (ownerId).
         /// </summary>

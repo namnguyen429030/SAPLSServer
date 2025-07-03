@@ -1,3 +1,4 @@
+using SAPLSServer.DTOs.Base;
 using SAPLSServer.DTOs.Concrete.Pagination;
 using SAPLSServer.DTOs.Concrete.Vehicle;
 
@@ -14,7 +15,7 @@ namespace SAPLSServer.Services.Interfaces
         Task<PageResult<VehicleSummaryDto>> GetVehiclesByOwnerPage(string ownerId, PageRequest request);
         Task<PageResult<VehicleSummaryDto>> GetVehiclesByLicensePlatePage(string licensePlate, PageRequest request);
         Task<PageResult<VehicleSummaryDto>> GetVehiclesByStatusPage(string status, PageRequest request);
-        Task DeleteVehicle(DeleteVehicleDto dto);
+        Task DeleteVehicle(DeleteRequest dto);
     }
 }
 
