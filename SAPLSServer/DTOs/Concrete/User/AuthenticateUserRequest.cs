@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace SAPLSServer.DTOs.Concrete.User
+namespace SAPLSServer.DTOs.Concrete
 {
     public class AuthenticateUserRequest
     {

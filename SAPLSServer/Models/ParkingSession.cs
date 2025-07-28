@@ -31,6 +31,10 @@ public partial class ParkingSession
 
     public decimal Cost { get; set; }
 
+    public string Status { get; set; } = null!;
+
+    public string PaymentStatus { get; set; } = null!;
+
     public virtual ParkingLot ParkingLot { get; set; } = null!;
 
     public virtual Vehicle Vehicle { get; set; } = null!;

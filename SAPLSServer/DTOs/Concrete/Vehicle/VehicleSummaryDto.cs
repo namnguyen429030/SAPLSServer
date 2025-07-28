@@ -1,14 +1,25 @@
 ﻿using SAPLSServer.DTOs.Base;
+using SAPLSServer.Models;
 
-namespace SAPLSServer.DTOs.Concrete.Vehicle
+namespace SAPLSServer.DTOs.Concrete
 {
     public class VehicleSummaryDto : GetResult
     {
-        public string LicensePlate { get; set; } = null!;
-        public string Brand { get; set; } = null!;
-        public string Model { get; set; } = null!;
-        public string Color { get; set; } = null!;
-        public string Status { get; set; } = null!;
-        public string SharingStatus { get; set; } = null!;
+        public string LicensePlate { get; set; }
+        public string Brand { get; set; }
+        public string Model { get; set; }
+        public string Color { get; set; }
+        public string Status { get; set; }
+        public string SharingStatus { get; set; }
+        public VehicleSummaryDto(Vehicle vehicle)
+        {
+            Id = vehicle.Id;
+            LicensePlate = vehicle.LicensePlate;
+            Brand = vehicle.Brand;
+            Model = vehicle.Model;
+            Color = vehicle.Color;
+            Status = vehicle.Status;
+            SharingStatus = vehicle.SharingStatus;
+        }
     }
 }

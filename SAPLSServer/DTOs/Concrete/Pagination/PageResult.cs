@@ -1,4 +1,4 @@
-﻿namespace SAPLSServer.DTOs.Concrete.Pagination
+﻿namespace SAPLSServer.DTOs.Concrete
 {
     public class PageResult<T> where T : class
     {

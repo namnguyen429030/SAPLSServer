@@ -1,7 +1,6 @@
 ﻿using SAPLSServer.DTOs.Base;
-using SAPLSServer.DTOs.Concrete.Vehicle;
 
-namespace SAPLSServer.DTOs.Concrete.ParkingSession
+namespace SAPLSServer.DTOs.Concrete
 {
     public class ParkingSessionDetailsForParkingLotDto : GetResult
     {

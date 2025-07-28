@@ -25,6 +25,8 @@ public partial class User
 
     public string? OneTimePassword { get; set; }
 
+    public string Role { get; set; } = null!;
+
     public virtual AdminProfile? AdminProfile { get; set; }
 
     public virtual ClientProfile? ClientProfile { get; set; }

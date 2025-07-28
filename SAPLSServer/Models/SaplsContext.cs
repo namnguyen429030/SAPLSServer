@@ -73,9 +73,7 @@ public partial class SaplsContext : DbContext
 
             entity.Property(e => e.UserId).HasMaxLength(36);
             entity.Property(e => e.AdminId).HasMaxLength(20);
-            entity.Property(e => e.Role)
-                .HasMaxLength(20)
-                .HasDefaultValue("Admin");
+            entity.Property(e => e.Role).HasMaxLength(20);
 
             entity.HasOne(d => d.User).WithOne(p => p.AdminProfile)
                 .HasForeignKey<AdminProfile>(d => d.UserId)
@@ -311,6 +309,12 @@ public partial class SaplsContext : DbContext
             entity.Property(e => e.PaymentMethod)
                 .HasMaxLength(20)
                 .HasDefaultValue("Cash");
+            entity.Property(e => e.PaymentStatus)
+                .HasMaxLength(50)
+                .IsUnicode(false);
+            entity.Property(e => e.Status)
+                .HasMaxLength(50)
+                .IsUnicode(false);
             entity.Property(e => e.TransactionId)
                 .HasMaxLength(36)
                 .HasDefaultValueSql("(NULL)");
@@ -531,6 +535,7 @@ public partial class SaplsContext : DbContext
             entity.Property(e => e.ProfileImageUrl)
                 .HasMaxLength(500)
                 .HasDefaultValueSql("(NULL)");
+            entity.Property(e => e.Role).HasMaxLength(50);
             entity.Property(e => e.Status)
                 .HasMaxLength(20)
                 .HasDefaultValue("Inactive");

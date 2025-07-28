@@ -13,6 +13,7 @@ namespace SAPLSServer.Extensions
             if (app.Environment.IsDevelopment())
             {
                 app.ConfigureDevelopment();
+                app.UseSwaggerUI();
             }
             else
             {
@@ -22,6 +23,7 @@ namespace SAPLSServer.Extensions
             // Configure common middleware
             app.UseHttpsRedirection();
             app.UseCors("DefaultPolicy");
+            app.UseAuthentication();
             app.UseAuthorization();
             app.MapControllers();
 

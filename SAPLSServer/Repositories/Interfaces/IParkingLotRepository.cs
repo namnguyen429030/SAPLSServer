@@ -2,7 +2,7 @@ using SAPLSServer.Models;
 
 namespace SAPLSServer.Repositories.Interfaces
 {
-    public interface IParkingLotRepository
+    public interface IParkingLotRepository : IRepository<ParkingLot, string>
     {
     }
 }

@@ -1,6 +1,14 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 using SAPLSServer.Services.Interfaces;
 using SAPLSServer.Services.Implementations;
 using Azure.Identity;
+using SAPLSServer.Repositories.Interfaces;
+using SAPLSServer.Repositories.Implementations;
+using SAPLSServer.Models;
 
 namespace SAPLSServer.Extensions
 {
@@ -37,22 +45,21 @@ namespace SAPLSServer.Extensions
         /// <returns>Service collection for chaining</returns>
         public static IServiceCollection AddApplicationServices(this IServiceCollection services)
         {
-            //// Core Business Services
-            //services.AddScoped<IParkingLotService, ParkingLotService>();
-            //services.AddScoped<IParkingSessionService, ParkingSessionService>();
-            //services.AddScoped<IPaymentSourceService, PaymentSourceService>();
-            //services.AddScoped<IRequestService, RequestService>();
-            //services.AddScoped<ISharedVehicleService, SharedVehicleService>();
-            //services.AddScoped<IShiftDiaryService, ShiftDiaryService>();
-            //services.AddScoped<IVehicleService, VehicleService>();
-            //services.AddScoped<IWhitelistService, WhitelistService>();
+            services.AddDbContext<SaplsContext>();
+            //Repositories
+            services.AddScoped<IUserRepository, UserRepository>();
+            services.AddScoped<IAdminProfileRepository, AdminProfileRepository>();
+            services.AddScoped<IClientProfileRepository, ClientProfileRepository>();
+            services.AddScoped<IParkingLotOwnerProfileRepository, ParkingLotOwnerProfileRepository>();
+            services.AddScoped<IStaffProfileRepository, StaffProfileRepository>();
 
-            //// User Management Services
-            //services.AddScoped<IUserService, UserService>();
-            //services.AddScoped<IAdminProfileService, AdminProfileService>();
-            //services.AddScoped<IClientProfileService, ClientProfileService>();
-            //services.AddScoped<IParkingLotOwnerProfileService, ParkingLotOwnerProfileService>();
-            //services.AddScoped<IStaffProfileService, StaffProfileService>();
+            //Services
+            services.AddScoped<IAuthService, AuthService>();
+            services.AddScoped<IUserService, UserService>();
+            services.AddScoped<IAdminService, AdminService>();
+            services.AddScoped<IClientService, ClientService>();
+            services.AddScoped<IParkingLotOwnerService, ParkingLotOwnerService>();
+            services.AddScoped<IStaffService, StaffService>();
 
             return services;
         }
@@ -90,6 +97,31 @@ namespace SAPLSServer.Extensions
                     Description = "Smart Automated Parking Lot System API"
                 });
 
+                // ADD JWT SUPPORT TO SWAGGER
+                options.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+                {
+                    Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
+                    Name = "Authorization",
+                    In = Microsoft.OpenApi.Models.ParameterLocation.Header,
+                    Type = Microsoft.OpenApi.Models.SecuritySchemeType.ApiKey,
+                    Scheme = "Bearer"
+                });
+
+                options.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
+                {
+                    {
+                        new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+                        {
+                            Reference = new Microsoft.OpenApi.Models.OpenApiReference
+                            {
+                                Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
+                                Id = "Bearer"
+                            }
+                        },
+                        new string[] {}
+                    }
+                });
+
                 // Include XML documentation if available
                 var xmlFile = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
                 var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
@@ -125,6 +157,38 @@ namespace SAPLSServer.Extensions
                           .AllowAnyHeader()
                           .AllowCredentials();
                 });
+            });
+
+            return services;
+        }
+
+        /// <summary>
+        /// Add JWT authentication to the service collection
+        /// </summary>
+        /// <param name="services">Service collection</param>
+        /// <param name="configuration">Application configuration</param>
+        /// <returns>Service collection for chaining</returns>
+        public static IServiceCollection AddJwtAuthentication(this IServiceCollection services, IConfiguration configuration)
+        {
+            var jwtSettings = configuration.GetSection("JwtSettings");
+            services.AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
+            .AddJwtBearer(options =>
+            {
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+                    ValidIssuer = jwtSettings["Issuer"],
+                    ValidAudience = jwtSettings["Audience"],
+                    IssuerSigningKey = new SymmetricSecurityKey(
+                        Encoding.UTF8.GetBytes(jwtSettings["SecretKey"] ?? "DefaultSecretKey"))
+                };
             });
 
             return services;

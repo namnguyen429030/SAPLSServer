@@ -1,7 +1,6 @@
-﻿using SAPLSServer.DTOs.Base;
-using SAPLSServer.DTOs.Concrete.Vehicle;
+﻿using SAPLSServer.Models;
 
-namespace SAPLSServer.DTOs.Concrete.SharedVehicle
+namespace SAPLSServer.DTOs.Concrete
 {
     public class SharedVehicleDetailsDto : VehicleDetailsDto
     {
@@ -10,7 +9,14 @@ namespace SAPLSServer.DTOs.Concrete.SharedVehicle
         public DateTime InviteAt { get; set; }
 
         public DateTime? ExpirationDate { get; set; }
-        public string OwnerName { get; set; } = null!;
+        public string OwnerName { get; set; }
         public string? Note { get; set; }
+        public SharedVehicleDetailsDto(SharedVehicle sharedVehicle) : base(sharedVehicle.Vehicle)
+        {
+            AccessDuration = sharedVehicle.AccessDuration;
+            InviteAt = sharedVehicle.InviteAt;
+            ExpirationDate = sharedVehicle.ExpireAt;
+            OwnerName = sharedVehicle.Vehicle.Owner.User.FullName;
+        }
     }
 }

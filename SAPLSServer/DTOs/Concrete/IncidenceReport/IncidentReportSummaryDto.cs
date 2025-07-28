@@ -1,6 +1,6 @@
 ﻿using SAPLSServer.DTOs.Base;
 
-namespace SAPLSServer.DTOs.Concrete.IncidenceReport
+namespace SAPLSServer.DTOs.Concrete
 {
     public class IncidentReportSummaryDto : GetResult
     {

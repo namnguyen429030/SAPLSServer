@@ -1,6 +1,6 @@
-﻿using SAPLSServer.DTOs.Concrete.ParkingLot;
+﻿using SAPLSServer.DTOs.Concrete;
 
-namespace SAPLSServer.DTOs.Concrete.ParkingSession
+namespace SAPLSServer.DTOs.Concrete
 {
     public class ParkingSessionDetailsForClientDto : ParkingSessionDetailsForParkingLotDto
     {

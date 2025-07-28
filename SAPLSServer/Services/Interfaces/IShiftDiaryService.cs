@@ -1,5 +1,4 @@
-using SAPLSServer.DTOs.Concrete.Pagination;
-using SAPLSServer.DTOs.Concrete.ShiftDiary;
+using SAPLSServer.DTOs.Concrete;
 
 namespace SAPLSServer.Services.Interfaces
 {

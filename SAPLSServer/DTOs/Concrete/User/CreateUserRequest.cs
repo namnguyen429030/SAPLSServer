@@ -1,9 +1,9 @@
 ﻿using SAPLSServer.DTOs.Base;
 using System.ComponentModel.DataAnnotations;
 
-namespace SAPLSServer.DTOs.Concrete.User
+namespace SAPLSServer.DTOs.Concrete
 {
-    public abstract class CreateUserRequest : CreateRequest
+    public class CreateUserRequest : CreateRequest
     {
         [Required(ErrorMessage = "Email is required.")]
         [EmailAddress(ErrorMessage = "Invalid email format.")]

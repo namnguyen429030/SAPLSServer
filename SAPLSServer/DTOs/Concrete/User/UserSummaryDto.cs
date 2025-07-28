@@ -1,7 +1,6 @@
 ﻿using SAPLSServer.DTOs.Base;
-using System.ComponentModel.DataAnnotations;
 
-namespace SAPLSServer.DTOs.Concrete.User
+namespace SAPLSServer.DTOs.Concrete
 {
     public abstract class UserSummaryDto : GetResult
     {

@@ -2,7 +2,7 @@ using SAPLSServer.Models;
 
 namespace SAPLSServer.Repositories.Interfaces
 {
-    public interface IStaffProfileRepository
+    public interface IStaffProfileRepository : IRepository<StaffProfile, string>
     {
     }
 }

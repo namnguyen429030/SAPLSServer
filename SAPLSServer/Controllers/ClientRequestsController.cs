@@ -7,5 +7,6 @@ namespace SAPLSServer.Controllers
     [ApiController]
     public class ClientRequestsController : ControllerBase
     {
+        
     }
 }

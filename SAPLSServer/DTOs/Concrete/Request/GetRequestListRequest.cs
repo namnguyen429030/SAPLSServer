@@ -1,6 +1,6 @@
 ﻿using SAPLSServer.DTOs.Base;
 
-namespace SAPLSServer.DTOs.Concrete.Request
+namespace SAPLSServer.DTOs.Concrete
 {
     public class GetRequestListRequest : GetListRequest
     {

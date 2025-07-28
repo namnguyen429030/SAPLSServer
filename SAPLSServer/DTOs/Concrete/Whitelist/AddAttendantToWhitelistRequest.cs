@@ -1,4 +1,4 @@
-﻿namespace SAPLSServer.DTOs.Concrete.Whitelist
+﻿namespace SAPLSServer.DTOs.Concrete
 {
     public class AddAttendantToWhitelistRequest
     {

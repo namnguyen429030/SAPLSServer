@@ -1,7 +1,7 @@
 ﻿using SAPLSServer.DTOs.Base;
 using System.ComponentModel.DataAnnotations;
 
-namespace SAPLSServer.DTOs.Concrete.IncidenceReport
+namespace SAPLSServer.DTOs.Concrete
 {
     public class CreateIncidentReportRequest : CreateRequest
     {

@@ -1,42 +1,25 @@
-using SAPLSServer.DTOs.Concrete.GeminiOcr;
+using SAPLSServer.DTOs.Concrete;
 
 namespace SAPLSServer.Services.Interfaces
 {
+    /// <summary>
+    /// Provides OCR extraction services for Vietnamese Citizen ID cards and Vehicle Registration Certificates using Gemini.
+    /// </summary>
     public interface IGeminiOcrService
     {
         /// <summary>
-        /// Extract data from Citizen ID Card image using Gemini Vision OCR
+        /// Extracts structured data from the front and back images of a Vietnamese Citizen ID card.
         /// </summary>
-        /// <param name="dto">Citizen ID Card OCR request</param>
-        /// <returns>Extracted citizen information</returns>
-        Task<CitizenIdOcrResponse> ExtractCitizenIdDataAsync(CitizenIdOcrRequest dto);
+        /// <param name="request">The request containing base64-encoded front and back images, image format, language, and accuracy options.</param>
+        /// <returns>A <see cref="CitizenIdOcrResponse"/> containing the extracted fields from the ID card.</returns>
+        Task<CitizenIdOcrResponse> ExtractCitizenIdDataAsync(CitizenIdOcrRequest request);
 
         /// <summary>
-        /// Extract data from Vehicle Registration Certificate image using Gemini Vision OCR
+        /// Extracts structured data from the front and back images of a Vietnamese Vehicle Registration Certificate.
         /// </summary>
-        /// <param name="dto">Vehicle Registration OCR request</param>
-        /// <returns>Extracted vehicle registration information</returns>
-        Task<VehicleRegistrationOcrResponse> ExtractVehicleRegistrationDataAsync(VehicleRegistrationOcrRequest dto);
-
-        /// <summary>
-        /// Validate and correct OCR extracted data using AI
-        /// </summary>
-        /// <param name="dto">OCR validation request</param>
-        /// <returns>Validated and corrected data</returns>
-        Task<OcrValidationResponse> ValidateOcrDataAsync(OcrValidationRequest dto);
-
-        /// <summary>
-        /// Extract data from multiple document images in batch
-        /// </summary>
-        /// <param name="dto">Batch OCR request</param>
-        /// <returns>Batch extraction results</returns>
-        Task<BatchOcrResponse> ExtractBatchDocumentsAsync(BatchOcrRequest dto);
-
-        /// <summary>
-        /// Check OCR service health and available models
-        /// </summary>
-        /// <returns>OCR service status</returns>
-        Task<OcrServiceHealthDto> CheckOcrServiceHealthAsync();
+        /// <param name="request">The request containing base64-encoded front and back images, image format, language, and accuracy options.</param>
+        /// <returns>A <see cref="VehicleRegistrationOcrResponse"/> containing the extracted fields from the registration certificate.</returns>
+        Task<VehicleRegistrationOcrResponse> ExtractVehicleRegistrationDataAsync(VehicleRegistrationOcrRequest request);
     }
 }
 

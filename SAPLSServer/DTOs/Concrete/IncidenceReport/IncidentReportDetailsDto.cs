@@ -1,7 +1,7 @@
 ﻿using SAPLSServer.DTOs.Base;
-using SAPLSServer.DTOs.Concrete.User;
+using SAPLSServer.DTOs.Concrete;
 
-namespace SAPLSServer.DTOs.Concrete.IncidenceReport
+namespace SAPLSServer.DTOs.Concrete
 {
     public class IncidentReportDetailsDto : GetResult
     {

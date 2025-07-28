@@ -1,6 +1,6 @@
 ﻿using SAPLSServer.DTOs.Base;
 
-namespace SAPLSServer.DTOs.Concrete.User
+namespace SAPLSServer.DTOs.Concrete
 {
     public abstract class UserDetailsDto : UserSummaryDto
     {

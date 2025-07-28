@@ -1,9 +1,9 @@
 ﻿using SAPLSServer.DTOs.Base;
 
-namespace SAPLSServer.DTOs.Concrete.User
+namespace SAPLSServer.DTOs.Concrete
 {
     public class UpdateUserProfileImageRequest : UpdateRequest
     {
-        public string? ProfileImageUrl { get; set; }
+        public string ProfileImageUrl { get; set; } = null!;
     }
 }

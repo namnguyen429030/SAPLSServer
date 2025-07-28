@@ -1,7 +1,7 @@
 ﻿using SAPLSServer.DTOs.Base;
 using System.ComponentModel.DataAnnotations;
 
-namespace SAPLSServer.DTOs.Concrete.SharedVehicle
+namespace SAPLSServer.DTOs.Concrete
 {
     public class CreateSharedVehicleRequest : CreateRequest
     {

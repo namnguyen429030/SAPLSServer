@@ -1,6 +1,5 @@
 using SAPLSServer.DTOs.Base;
-using SAPLSServer.DTOs.Concrete.Pagination;
-using SAPLSServer.DTOs.Concrete.ParkingSession;
+using SAPLSServer.DTOs.Concrete;
 
 namespace SAPLSServer.Services.Interfaces
 {
