@@ -1,18 +1,18 @@
-﻿using SAPLSServer.Models;
+﻿using SAPLSServer.DTOs.Concrete.UserDto;
+using SAPLSServer.Models;
 
-namespace SAPLSServer.DTOs.Concrete
+namespace SAPLSServer.DTOs.Concrete.ParkingLotDto
 {
     public class ParkingLotDetailsDto : ParkingLotSummaryDto
     {
         public string? Description { get; set; }
         public int TotalParkingSlot { get; set; }
-
-        public ParkingLotDetailsDto() { }
-
-        public ParkingLotDetailsDto(ParkingLot model) : base(model)
+        public ParkingLotOwnerProfileDetailsDto ParkingLotOwner { get; set; }
+        public ParkingLotDetailsDto(ParkingLot parkingLot) : base(parkingLot)
         {
-            Description = model.Description;
-            TotalParkingSlot = model.TotalParkingSlot;
+            Description = parkingLot.Description;
+            TotalParkingSlot = parkingLot.TotalParkingSlot;
+            ParkingLotOwner = new ParkingLotOwnerProfileDetailsDto(parkingLot.ParkingLotOwner);
         }
     }
 }

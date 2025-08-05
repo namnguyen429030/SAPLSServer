@@ -1,5 +1,6 @@
 using SAPLSServer.DTOs.Base;
-using SAPLSServer.DTOs.Concrete;
+using SAPLSServer.DTOs.Concrete.UserDto;
+using SAPLSServer.DTOs.PaginationDto;
 
 namespace SAPLSServer.Services.Interfaces
 {
@@ -35,6 +36,13 @@ namespace SAPLSServer.Services.Interfaces
         /// <param name="pageRequest">The pagination request.</param>
         /// <param name="request">The search/filter criteria.</param>
         /// <returns>A paginated result of admin profile details.</returns>
-        Task<PageResult<AdminProfileDetailsDto>> GetAdminProfilesPage(PageRequest pageRequest, GetListRequest request);
+        Task<PageResult<AdminProfileSummaryDto>> GetAdminProfilesPage(PageRequest pageRequest, GetAdminListRequest request);
+
+        /// <summary>
+        /// Retrieves a list of admin profiles with optional search criteria.
+        /// </summary>
+        /// <param name="request">The search/filter criteria.</param>
+        /// <returns></returns>
+        Task<List<AdminProfileSummaryDto>> GetAdminProfiles(GetAdminListRequest request);
     }
 }

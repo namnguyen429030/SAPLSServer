@@ -2,9 +2,7 @@ using SAPLSServer.Models;
 
 namespace SAPLSServer.Repositories.Interfaces
 {
-    public interface IVehicleRepository
+    public interface IVehicleRepository : IRepository<Vehicle, string>
     {
-        Task<Vehicle?> GetByLicensePlateAsync(string licensePlate);
-        Task<IEnumerable<Vehicle>> GetByOwnerIdAsync(string ownerId);
     }
 }

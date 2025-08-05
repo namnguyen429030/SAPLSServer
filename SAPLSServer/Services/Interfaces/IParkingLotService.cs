@@ -1,5 +1,6 @@
 using SAPLSServer.DTOs.Base;
-using SAPLSServer.DTOs.Concrete;
+using SAPLSServer.DTOs.Concrete.ParkingLotDto;
+using SAPLSServer.DTOs.PaginationDto;
 
 namespace SAPLSServer.Services.Interfaces
 {
@@ -30,20 +31,19 @@ namespace SAPLSServer.Services.Interfaces
         /// <returns></returns>
         Task<ParkingLotDetailsDto?> GetParkingLotDetails(GetDetailsRequest request);
         /// <summary>
-        /// Retrieves a paginated list of parking lots based on the provided page request and filter criteria.
+        /// Retrieves a paginated list of owned parking lots based on the provided page request and filter criteria.
         /// </summary>
         /// <param name="pageRequest"></param>
         /// <param name="request"></param>
         /// <returns></returns>
-        Task<PageResult<ParkingLotSummaryDto>> GetParkingLotsPage(PageRequest pageRequest, GetListRequest request);
+        Task<PageResult<ParkingLotSummaryDto>> GetParkingLotsPage(PageRequest pageRequest, 
+            GetParkingLotListRequest request);
         /// <summary>
-        /// Retrieves a paginated list of parking lots owned by a specific owner, identified by their unique identifier (ID).
+        /// Retrieves a own list of owned parking lots based on the filter criteria.
         /// </summary>
-        /// <param name="ownerId"></param>
-        /// <param name="pageRequest"></param>
         /// <param name="request"></param>
         /// <returns></returns>
-        Task<PageResult<ParkingLotSummaryDto>> GetParkingLotsByOwnerPage(string ownerId, PageRequest pageRequest, GetListRequest request);
+        Task<List<ParkingLotSummaryDto>> GetParkingLots(GetParkingLotListRequest request);
         /// <summary>
         /// Deletes a parking lot by its unique identifier (ID).
         /// </summary>

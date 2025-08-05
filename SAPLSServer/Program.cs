@@ -12,7 +12,6 @@ namespace SAPLSServer
             //builder.AddAzureKeyVault();
             //TODO: Uncomment the above line if you want to use Azure Key Vault for configuration.
             // Configure services
-            builder.Services.AddControllers();
             builder.Services.AddApplicationServices();
             builder.Services.AddExternalServices();
             builder.Services.AddApiDocumentation();

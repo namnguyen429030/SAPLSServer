@@ -23,15 +23,15 @@ public partial class Request
 
     public string? LastUpdatePersonId { get; set; }
 
-    public string? Type { get; set; }
+    public string? DataType { get; set; }
 
     public string? Data { get; set; }
 
-    public string SenderId { get; set; } = null!;
+    public string? SenderId { get; set; }
 
     public virtual AdminProfile? LastUpdatePerson { get; set; }
 
     public virtual ICollection<RequestAttachedFile> RequestAttachedFiles { get; set; } = new List<RequestAttachedFile>();
 
-    public virtual User Sender { get; set; } = null!;
+    public virtual User? Sender { get; set; }
 }

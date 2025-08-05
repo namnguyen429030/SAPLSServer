@@ -1,11 +1,12 @@
-﻿using SAPLSServer.DTOs.Base;
+﻿using SAPLSServer.Constants;
+using SAPLSServer.DTOs.Base;
 using System.ComponentModel.DataAnnotations;
 
-namespace SAPLSServer.DTOs.Concrete
+namespace SAPLSServer.DTOs.Concrete.UserDto
 {
     public class UpdateStaffProfileRequest : UpdateRequest
     {
-        [Required(ErrorMessage = "Staff ID is required.")]
+        [Required(ErrorMessage = MessageKeys.STAFF_PROFILE_ID_REQUIRED)]
         public string StaffId { get; set; } = null!;
     }
 }

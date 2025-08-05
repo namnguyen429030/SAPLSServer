@@ -1,5 +1,6 @@
 using SAPLSServer.Models;
 using SAPLSServer.Repositories.Interfaces;
+using System.Linq.Expressions;
 
 namespace SAPLSServer.Repositories.Implementations
 {
@@ -8,15 +9,9 @@ namespace SAPLSServer.Repositories.Implementations
         public VehicleRepository(SaplsContext context) : base(context)
         {
         }
-
-        public Task<Vehicle?> GetByLicensePlateAsync(string licensePlate)
+        protected override Expression<Func<Vehicle, bool>> CreateIdPredicate(string id)
         {
-            throw new NotImplementedException();
-        }
-
-        public Task<IEnumerable<Vehicle>> GetByOwnerIdAsync(string ownerId)
-        {
-            throw new NotImplementedException();
+            return v => v.Id == id;
         }
     }
 }

@@ -1,4 +1,6 @@
 using SAPLSServer.DTOs.Concrete;
+using SAPLSServer.DTOs.Concrete.ShiftDiaryDto;
+using SAPLSServer.DTOs.PaginationDto;
 
 namespace SAPLSServer.Services.Interfaces
 {
@@ -7,9 +9,10 @@ namespace SAPLSServer.Services.Interfaces
         /// <summary>
         /// Creates a new shift diary with the provided details.
         /// </summary>
-        /// <param name="dto"></param>
+        /// <param name="request"></param>
+        /// <param name="senderId"></param>
         /// <returns></returns>
-        Task CreateShiftDiary(CreateShiftDiaryRequest dto);
+        Task CreateShiftDiary(CreateShiftDiaryRequest request, string senderId);
         /// <summary>
         /// Retrieves the details of a shift diary by its unique identifier (ID).
         /// </summary>

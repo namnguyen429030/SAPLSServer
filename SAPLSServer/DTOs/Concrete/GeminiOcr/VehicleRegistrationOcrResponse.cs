@@ -1,8 +1,8 @@
 using SAPLSServer.DTOs.Base;
 
-namespace SAPLSServer.DTOs.Concrete
+namespace SAPLSServer.DTOs.Concrete.OcrDto
 {
-    public class VehicleRegistrationOcrResponse : GetResult
+    public class VehicleRegistrationOcrResponse
     {
         public string? LicensePlate { get; set; }
         public string? Brand { get; set; }

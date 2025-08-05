@@ -1,4 +1,4 @@
-﻿namespace SAPLSServer.DTOs.Concrete
+﻿namespace SAPLSServer.DTOs.Concrete.UserDto
 {
     public class AuthenticateUserResponse
     {

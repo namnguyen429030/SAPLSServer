@@ -1,11 +1,12 @@
 using SAPLSServer.DTOs.Base;
-using SAPLSServer.DTOs.Concrete;
 using SAPLSServer.Services.Interfaces;
 using SAPLSServer.Models;
 using SAPLSServer.Exceptions;
 using SAPLSServer.Repositories.Interfaces;
 using SAPLSServer.Constants;
 using System.Linq.Expressions;
+using SAPLSServer.DTOs.PaginationDto;
+using SAPLSServer.DTOs.Concrete.ParkingLotDto;
 
 namespace SAPLSServer.Services.Implementations
 {
@@ -26,7 +27,8 @@ namespace SAPLSServer.Services.Implementations
                 Name = dto.Name,
                 Description = dto.Description,
                 Address = dto.Address,
-                TotalParkingSlot = dto.TotalParkingSlot
+                TotalParkingSlot = dto.TotalParkingSlot,
+                ParkingLotOwnerId = dto.ParkingLotOwnerId,
             };
             await _parkingLotRepository.AddAsync(entity);
             await _parkingLotRepository.SaveChangesAsync();
@@ -60,92 +62,57 @@ namespace SAPLSServer.Services.Implementations
 
         public async Task<ParkingLotDetailsDto?> GetParkingLotDetails(GetDetailsRequest request)
         {
-            var entity = await _parkingLotRepository.Find(request.Id);
-
-            if (entity == null)
+            var parkingLot = await _parkingLotRepository.FindIncludingParkingLotOwnerReadOnly(request.Id);
+            if (parkingLot == null)
                 return null;
-
-            return new ParkingLotDetailsDto
-            {
-                Id = entity.Id,
-                Name = entity.Name,
-                Address = entity.Address,
-                Description = entity.Description,
-                TotalParkingSlot = entity.TotalParkingSlot
-            };
+            return new ParkingLotDetailsDto(parkingLot);
         }
 
-        public async Task<PageResult<ParkingLotSummaryDto>> GetParkingLotsPage(PageRequest pageRequest, GetListRequest request)
+        public async Task<PageResult<ParkingLotSummaryDto>> GetParkingLotsPage(PageRequest pageRequest, GetParkingLotListRequest request)
         {
-            Expression<Func<ParkingLot, bool>>? filter = null;
-            if (!string.IsNullOrEmpty(request.SearchCriteria))
+            var criterias = new Expression<Func<ParkingLot, bool>>[] 
             {
-                filter = x => x.Name.Contains(request.SearchCriteria) || x.Address.Contains(request.SearchCriteria);
-            }
-
-            var filters = filter != null ? new[] { filter } : null;
-            var items = await _parkingLotRepository.GetPageAsync(
+                p1 => p1.ParkingLotOwnerId == request.ParkingLotOwnerId,
+                pl => request.Status != null && pl.Status == request.Status,
+                pl => !string.IsNullOrEmpty(request.SearchCriteria) && (
+                        pl.Name.Contains(request.SearchCriteria) || 
+                        pl.Address.Contains(request.SearchCriteria) ||
+                        pl.Id.Contains(request.SearchCriteria)
+                    )
+            };
+            var totalCount = await _parkingLotRepository.CountAsync(criterias);
+            var parkingLots = await _parkingLotRepository.GetPageAsync(
                 pageRequest.PageNumber,
                 pageRequest.PageSize,
-                filters,
-                x => x.Name,
-                true
+                criterias,
+                null,
+                request.Order == OrderType.Asc.ToString()
             );
-            var totalCount = await _parkingLotRepository.CountAsync(filter);
 
+            var items = parkingLots.Select(pl => new ParkingLotSummaryDto(pl)).ToList();
             return new PageResult<ParkingLotSummaryDto>
             {
-                Items = items.Select(x => new ParkingLotSummaryDto
-                {
-                    Id = x.Id,
-                    Name = x.Name,
-                    Address = x.Address
-                }).ToList(),
+                Items = items,
                 TotalCount = totalCount,
                 PageNumber = pageRequest.PageNumber,
                 PageSize = pageRequest.PageSize,
             };
         }
-
-        public async Task<PageResult<ParkingLotSummaryDto>> GetParkingLotsByOwnerPage(string ownerId, PageRequest pageRequest, GetListRequest request)
+        public async Task<List<ParkingLotSummaryDto>> GetParkingLots(GetParkingLotListRequest request)
         {
-            Expression<Func<ParkingLot, bool>> ownerFilter = x => x.ParkingLotOwnerId == ownerId;
-            Expression<Func<ParkingLot, bool>>? searchFilter = null;
-            if (!string.IsNullOrEmpty(request.SearchCriteria))
-            {
-                searchFilter = x => x.Name.Contains(request.SearchCriteria) || x.Address.Contains(request.SearchCriteria);
-            }
+            var criterias = new Expression<Func<ParkingLot, bool>>[]
+                        {
+                p1 => p1.ParkingLotOwnerId == request.ParkingLotOwnerId,
+                pl => request.Status != null && pl.Status == request.Status,
+                pl => !string.IsNullOrEmpty(request.SearchCriteria) && (
+                        pl.Name.Contains(request.SearchCriteria) ||
+                        pl.Address.Contains(request.SearchCriteria) ||
+                        pl.Id.Contains(request.SearchCriteria)
+                    )
+                        };
+            var parkingLots = await _parkingLotRepository.GetAllAsync(criterias, null,request.Order == OrderType.Asc.ToString());
 
-            var filters = searchFilter != null
-                ? new[] { ownerFilter, searchFilter }
-                : new[] { ownerFilter };
-
-            var items = await _parkingLotRepository.GetPageAsync(
-                pageRequest.PageNumber,
-                pageRequest.PageSize,
-                filters,
-                x => x.Name,
-                true
-            );
-            var totalCount = await _parkingLotRepository.CountAsync(
-                x => x.ParkingLotOwnerId == ownerId &&
-                     (string.IsNullOrEmpty(request.SearchCriteria) ||
-                      x.Name.Contains(request.SearchCriteria) ||
-                      x.Address.Contains(request.SearchCriteria))
-            );
-
-            return new PageResult<ParkingLotSummaryDto>
-            {
-                Items = items.Select(x => new ParkingLotSummaryDto
-                {
-                    Id = x.Id,
-                    Name = x.Name,
-                    Address = x.Address
-                }).ToList(),
-                TotalCount = totalCount,
-                PageNumber = pageRequest.PageNumber,
-                PageSize = pageRequest.PageSize,
-            };
+            return parkingLots.Select(pl => new ParkingLotSummaryDto(pl)).ToList();
         }
 
         public async Task DeleteParkingLot(DeleteRequest request)

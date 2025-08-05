@@ -1,5 +1,7 @@
 using SAPLSServer.DTOs.Base;
 using SAPLSServer.DTOs.Concrete;
+using SAPLSServer.DTOs.Concrete.PaymentSourceDto;
+using SAPLSServer.DTOs.PaginationDto;
 
 namespace SAPLSServer.Services.Interfaces
 {
@@ -36,7 +38,7 @@ namespace SAPLSServer.Services.Interfaces
         /// <summary>
         /// Retrieves a paginated list of payment sources with optional search and filter criteria.
         /// </summary>
-        /// <param name="pageRequest">Pagination parameters</param>
+        /// <param name="pageRequest">PaginationDto parameters</param>
         /// <param name="request">List request with optional filtering and search criteria</param>
         /// <returns>Paginated result containing payment sources</returns>
         Task<PageResult<GetPaymentSourceDto>> GetPaymentSourcesPage(PageRequest pageRequest, GetListRequest request);
@@ -52,7 +54,7 @@ namespace SAPLSServer.Services.Interfaces
         /// Retrieves a paginated list of payment sources owned by a specific parking lot owner.
         /// </summary>
         /// <param name="ownerId">Unique identifier of the parking lot owner</param>
-        /// <param name="pageRequest">Pagination parameters</param>
+        /// <param name="pageRequest">PaginationDto parameters</param>
         /// <param name="request">List request with optional filtering and search criteria</param>
         /// <returns>Paginated result containing payment sources for the specified owner</returns>
         Task<PageResult<GetPaymentSourceDto>> GetPaymentSourcesByOwnerPage(string ownerId, PageRequest pageRequest, GetListRequest request);
@@ -61,7 +63,7 @@ namespace SAPLSServer.Services.Interfaces
         /// Retrieves a paginated list of payment sources filtered by their status.
         /// </summary>
         /// <param name="status">Status to filter payment sources by</param>
-        /// <param name="pageRequest">Pagination parameters</param>
+        /// <param name="pageRequest">PaginationDto parameters</param>
         /// <param name="request">List request with optional additional filtering criteria</param>
         /// <returns>Paginated result containing payment sources with the specified status</returns>
         Task<PageResult<GetPaymentSourceDto>> GetPaymentSourcesByStatusPage(string status, PageRequest pageRequest, GetListRequest request);

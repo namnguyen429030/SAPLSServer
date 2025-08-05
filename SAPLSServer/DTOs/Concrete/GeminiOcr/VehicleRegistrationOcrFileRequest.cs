@@ -1,13 +1,16 @@
 using Microsoft.AspNetCore.Http;
+using SAPLSServer.Constants;
+using System.ComponentModel.DataAnnotations;
 
-namespace SAPLSServer.DTOs.Concrete
+namespace SAPLSServer.DTOs.Concrete.OcrDto
 {
     public class VehicleRegistrationOcrFileRequest
     {
-        public IFormFile FrontImage { get; set; } = null!;
-        public IFormFile BackImage { get; set; } = null!;
-        public string ImageFormat { get; set; } = "jpeg";
-        public string Language { get; set; } = "vi";
-        public bool EnhanceAccuracy { get; set; } = false;
+        [Required(ErrorMessage = MessageKeys.FILE_REQUIRED)]
+        [DataType(DataType.Upload, ErrorMessage = MessageKeys.INVALID_FILE_UPLOADED)]
+        public IFormFile? FrontImage { get; set; }
+        [Required(ErrorMessage = MessageKeys.FILE_REQUIRED)]
+        [DataType(DataType.Upload, ErrorMessage = MessageKeys.INVALID_FILE_UPLOADED)]
+        public IFormFile? BackImage { get; set; }
     }
 }

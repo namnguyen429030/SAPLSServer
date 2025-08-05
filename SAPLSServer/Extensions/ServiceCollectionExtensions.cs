@@ -9,6 +9,7 @@ using Azure.Identity;
 using SAPLSServer.Repositories.Interfaces;
 using SAPLSServer.Repositories.Implementations;
 using SAPLSServer.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace SAPLSServer.Extensions
 {
@@ -45,7 +46,10 @@ namespace SAPLSServer.Extensions
         /// <returns>Service collection for chaining</returns>
         public static IServiceCollection AddApplicationServices(this IServiceCollection services)
         {
-            services.AddDbContext<SaplsContext>();
+            services.AddDbContext<SaplsContext>(opt =>
+            {
+                opt.UseSqlServer(Environment.GetEnvironmentVariable("DefaultConnection"));
+            });
             //Repositories
             services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<IAdminProfileRepository, AdminProfileRepository>();
@@ -88,6 +92,14 @@ namespace SAPLSServer.Extensions
         public static IServiceCollection AddApiDocumentation(this IServiceCollection services)
         {
             services.AddEndpointsApiExplorer();
+            services.AddControllers().AddJsonOptions(opts =>
+            {
+                opts.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.KebabCaseLower;
+            });
+            services.AddRouting(opts =>
+            {
+                opts.LowercaseUrls = true;
+            });
             services.AddSwaggerGen(options =>
             {
                 options.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo

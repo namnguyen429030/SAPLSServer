@@ -21,7 +21,9 @@ public partial class ClientProfile
 
     public string ShareCode { get; set; } = null!;
 
-    public string? CitizenIdCardImageUrl { get; set; }
+    public string? FrontCitizenIdCardImageUrl { get; set; }
+
+    public string? BackCitizenIdCardImageUrl { get; set; }
 
     public virtual ICollection<SharedVehicle> SharedVehicles { get; set; } = new List<SharedVehicle>();
 

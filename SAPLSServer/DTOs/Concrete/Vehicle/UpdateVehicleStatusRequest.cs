@@ -1,7 +1,7 @@
 ﻿using SAPLSServer.DTOs.Base;
 using System.ComponentModel.DataAnnotations;
 
-namespace SAPLSServer.DTOs.Concrete
+namespace SAPLSServer.DTOs.Concrete.VehicleDto
 {
     public class UpdateVehicleStatusRequest : UpdateRequest
     {

@@ -1,17 +1,17 @@
 ﻿using SAPLSServer.DTOs.Base;
 using System.ComponentModel.DataAnnotations;
+using SAPLSServer.Constants;
 
-namespace SAPLSServer.DTOs.Concrete
+namespace SAPLSServer.DTOs.Concrete.RequestDto
 {
-    public class CreateRequestRequest : CreateRequest
+    public class CreateRequestRequest
     {
-        [Required(ErrorMessage = "Header is required.")]
+        [Required(ErrorMessage = MessageKeys.SHIFT_DIARY_HEADER_REQUIRED)]
         public string Header { get; set; } = null!;
-        [Required(ErrorMessage = "Description is required.")]
+        [Required(ErrorMessage = MessageKeys.SHIFT_DIARY_BODY_REQUIRED)]
         public string Description { get; set; } = null!;
-        [Required(ErrorMessage = "Sender ID is required.")]
-        public string SenderId { get; set; } = null!;
-        public string? Type { get; set; }
+        [EnumDataType(typeof(RequestDataType), ErrorMessage = MessageKeys.INVALID_REQUEST_DATA_TYPE)]
+        public string? DataType { get; set; }
         public string? Data { get; set; }
     }
 }

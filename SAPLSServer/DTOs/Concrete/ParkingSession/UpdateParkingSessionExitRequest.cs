@@ -1,15 +1,16 @@
 ﻿using SAPLSServer.DTOs.Base;
 using System.ComponentModel.DataAnnotations;
+using SAPLSServer.Constants;
 
-namespace SAPLSServer.DTOs.Concrete
+namespace SAPLSServer.DTOs.Concrete.ParkingSessionDto
 {
     public class UpdateParkingSessionExitRequest : UpdateRequest
     {
-        [Required(ErrorMessage = "Exit date and time is required.")]
-        public DateTime ExitDateTime { get; set; }
-        [Required(ErrorMessage = "Exit front capture is required.")]
+        [Required(ErrorMessage = MessageKeys.ENTRY_FRONT_CAPTURE_REQUIRED)]
+        [Url(ErrorMessage = MessageKeys.EXIT_FRONT_CAPTURE_URL_INVALID_FORMAT)]
         public string ExitFrontCaptureUrl { get; set; } = null!;
-        [Required(ErrorMessage = "Exit back capture is required.")]
+        [Required(ErrorMessage = MessageKeys.ENTRY_BACK_CAPTURE_REQUIRED)]
+        [Url(ErrorMessage = MessageKeys.EXIT_BACK_CAPTURE_URL_INVALID_FORMAT)]
         public string ExitBackCaptureUrl { get; set; } = null!;
     }
 }

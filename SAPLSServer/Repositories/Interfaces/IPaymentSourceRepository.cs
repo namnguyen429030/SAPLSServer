@@ -2,7 +2,7 @@ using SAPLSServer.Models;
 
 namespace SAPLSServer.Repositories.Interfaces
 {
-    public interface IPaymentSourceRepository
+    public interface IPaymentSourceRepository : IRepository<PaymentSource, string>
     {
     }
 }

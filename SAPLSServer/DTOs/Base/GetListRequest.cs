@@ -1,9 +1,13 @@
-﻿namespace SAPLSServer.DTOs.Base
+﻿using SAPLSServer.Constants;
+using System.ComponentModel.DataAnnotations;
+
+namespace SAPLSServer.DTOs.Base
 {
-    public class  GetListRequest
+    public abstract class GetListRequest
     {
-        public string Order { get; set; } = "asc";
-        public string Filter { get; set; } = null!;
-        public string SearchCriteria { get; set; } = null!;
+        [EnumDataType(typeof(OrderType), ErrorMessage = MessageKeys.INVALID_ORDER_BY)]
+        public string Order { get; set; } = null!;
+        public string? SortBy { get; set; }
+        public string? SearchCriteria { get; set; }
     }
 }

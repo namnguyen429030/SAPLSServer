@@ -78,7 +78,7 @@ namespace SAPLSServer.Repositories.Interfaces
         /// </summary>
         /// <param name="predicate"></param>
         /// <returns></returns>
-        Task<int> CountAsync(Expression<Func<T, bool>>? predicate = null);
+        Task<int> CountAsync(Expression<Func<T, bool>>[]? criterias = null);
         /// <summary>
         /// Saves all changes made in the context to the database asynchronously.
         /// </summary>

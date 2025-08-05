@@ -1,7 +1,7 @@
 ﻿using SAPLSServer.DTOs.Base;
 using SAPLSServer.Models;
 
-namespace SAPLSServer.DTOs.Concrete
+namespace SAPLSServer.DTOs.Concrete.RequestDto
 {
     public class RequestDetailsDto : RequestSummaryDto
     {
@@ -15,9 +15,8 @@ namespace SAPLSServer.DTOs.Concrete
         public string? LastUpdateAdminFullName { get; set; }
         public RequestDetailsDto(Request request) : base(request)
         {
-            Id = request.Id;
-            Email = request.Sender.Email;
-            FullName = request.Sender.FullName;
+            Email = request.Sender?.Email ?? string.Empty;
+            FullName = request.Sender?.FullName ?? string.Empty;
             Description = request.Description;
             InternalNote = request.InternalNote;
             ResponseMessage = request.ResponseMessage;

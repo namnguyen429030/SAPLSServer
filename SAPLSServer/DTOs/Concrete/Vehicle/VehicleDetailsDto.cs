@@ -1,6 +1,6 @@
 ﻿using SAPLSServer.Models;
 
-namespace SAPLSServer.DTOs.Concrete
+namespace SAPLSServer.DTOs.Concrete.VehicleDto
 {
     public class VehicleDetailsDto : VehicleSummaryDto
     {

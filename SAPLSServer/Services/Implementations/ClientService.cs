@@ -1,25 +1,24 @@
 using SAPLSServer.Constants;
 using SAPLSServer.DTOs.Base;
-using SAPLSServer.DTOs.Concrete;
+using SAPLSServer.DTOs.Concrete.UserDto;
+using SAPLSServer.DTOs.PaginationDto;
 using SAPLSServer.Exceptions;
 using SAPLSServer.Models;
 using SAPLSServer.Repositories.Interfaces;
 using SAPLSServer.Services.Interfaces;
-using SAPLSServer.Helpers;
+using System.Linq.Expressions;
 
 namespace SAPLSServer.Services.Implementations
 {
     public class ClientService : IClientService
     {
         private readonly IClientProfileRepository _clientProfileRepository;
-        private readonly IUserRepository _userRepository;
         private readonly IUserService _userService;
 
-        public ClientService(IUserService userService, IClientProfileRepository clientProfileRepository, IUserRepository userRepository)
+        public ClientService(IUserService userService, IClientProfileRepository clientProfileRepository)
         {
             _userService = userService;
             _clientProfileRepository = clientProfileRepository;
-            _userRepository = userRepository;
         }
 
         public async Task CreateClient(CreateClientProfileRequest request)
@@ -28,6 +27,7 @@ namespace SAPLSServer.Services.Implementations
             if (citizenIdExists)
                 throw new InvalidInformationException(MessageKeys.CITIZEN_ID_ALREADY_EXISTS);
             string userId = await _userService.CreateUser(request);
+
             var clientProfile = new ClientProfile
             {
                 UserId = userId,
@@ -39,43 +39,62 @@ namespace SAPLSServer.Services.Implementations
                 PlaceOfResidence = request.PlaceOfResidence
             };
             await _clientProfileRepository.AddAsync(clientProfile);
-
-            await _userRepository.SaveChangesAsync();
         }
 
         public async Task UpdateClient(UpdateClientProfileRequest request)
         {
-            var clientProfile = await _clientProfileRepository.Find([cp => cp.UserId == request.Id]);
+            var clientProfile = await _clientProfileRepository.FindIncludingUserReadOnly(request.Id);
             if (clientProfile == null)
                 throw new InvalidInformationException(MessageKeys.CLIENT_PROFILE_NOT_FOUND);
 
             clientProfile.CitizenId = request.CitizenId;
-            clientProfile.CitizenIdCardImageUrl = request.CitizenIdCardImageUrl;
+            //clientProfile.CitizenIdCardImageUrl = request.CitizenIdCardImageUrl;
             clientProfile.DateOfBirth = request.DateOfBirth;
             clientProfile.Sex = request.Sex;
             clientProfile.Nationality = request.Nationality;
             clientProfile.PlaceOfOrigin = request.PlaceOfOrigin;
             clientProfile.PlaceOfResidence = request.PlaceOfResidence;
             _clientProfileRepository.Update(clientProfile);
-
+            clientProfile.User.UpdatedAt = DateTime.UtcNow;
             await _clientProfileRepository.SaveChangesAsync();
         }
 
         public async Task<ClientProfileDetailsDto?> GetClientProfileDetails(GetDetailsRequest request)
         {
-            var clientProfile = await _clientProfileRepository.Find([cp => cp.UserId == request.Id]);
-            return clientProfile == null ? null : new ClientProfileDetailsDto(clientProfile);
+            var clientProfile = await _clientProfileRepository.FindIncludingUserReadOnly(request.Id);
+            if (clientProfile == null)
+                return null;
+            return new ClientProfileDetailsDto(clientProfile);
         }
 
-        public async Task<PageResult<ClientProfileDetailsDto>> GetClientProfilesPage(PageRequest pageRequest, GetListRequest request)
+        public async Task<PageResult<ClientProfileSummaryDto>> GetClientProfilesPage(PageRequest pageRequest, GetClientListRequest request)
         {
-            var clients = await _clientProfileRepository.GetPageAsync(pageRequest.PageNumber, pageRequest.PageSize);
-            var items = clients.Select(cp => new ClientProfileDetailsDto(cp)).ToList();
-
-            return new PageResult<ClientProfileDetailsDto>
+            var criterias = new Expression<Func<ClientProfile, bool>>[]
+            {
+                cp => !string.IsNullOrEmpty(request.Status) && cp.User.Status == request.Status,
+                cp => !string.IsNullOrEmpty(request.SearchCriteria) && (
+                        cp.User.FullName.Contains(request.SearchCriteria) ||
+                        cp.User.Email.Contains(request.SearchCriteria) ||
+                        cp.User.Phone.Contains(request.SearchCriteria) ||
+                        cp.CitizenId.Contains(request.SearchCriteria)
+                    )
+            };
+            var totalCount = await _clientProfileRepository.CountAsync(criterias);
+            var clients = await _clientProfileRepository.GetPageAsync(
+                                        pageRequest.PageNumber, pageRequest.PageSize, 
+                                        criterias, null, request.Order == OrderType.Asc.ToString());
+            var items = new List<ClientProfileSummaryDto>();
+            foreach (var client in clients)
+            {
+                var clientIncludingUser = await _clientProfileRepository.FindIncludingUserReadOnly(client.UserId);
+                if(clientIncludingUser == null)
+                    continue; // Skip if client profile is not found
+                items.Add(new ClientProfileSummaryDto(clientIncludingUser));
+            }
+            return new PageResult<ClientProfileSummaryDto>
             {
                 Items = items,
-                TotalCount = items.Count,
+                TotalCount = totalCount,
                 PageNumber = pageRequest.PageNumber,
                 PageSize = pageRequest.PageSize,
             };

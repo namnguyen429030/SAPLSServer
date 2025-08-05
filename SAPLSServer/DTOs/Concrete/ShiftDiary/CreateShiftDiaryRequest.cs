@@ -1,17 +1,15 @@
-﻿using SAPLSServer.DTOs.Base;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
+using SAPLSServer.Constants;
 
-namespace SAPLSServer.DTOs.Concrete
+namespace SAPLSServer.DTOs.Concrete.ShiftDiaryDto
 {
-    public class CreateShiftDiaryRequest : CreateRequest
+    public class CreateShiftDiaryRequest
     {
-        [Required(ErrorMessage = "Header is required.")]
+        [Required(ErrorMessage = MessageKeys.SHIFT_DIARY_HEADER_REQUIRED)]
         public string Header { get; set; } = null!;
-        [Required(ErrorMessage = "Body is required.")]
+        [Required(ErrorMessage = MessageKeys.SHIFT_DIARY_BODY_REQUIRED)]
         public string Body { get; set; } = null!;
-        [Required(ErrorMessage = "Parking lot ID is required.")]
+        [Required(ErrorMessage = MessageKeys.PARKING_LOT_ID_REQUIRED)]
         public string ParkingLotId { get; set; } = null!;
-        [Required(ErrorMessage = "Sender ID is required.")]
-        public string SenderId { get; set; } = null!;
     }
 }

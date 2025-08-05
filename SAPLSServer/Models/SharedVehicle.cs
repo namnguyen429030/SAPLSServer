@@ -19,9 +19,9 @@ public partial class SharedVehicle
 
     public string? Note { get; set; }
 
-    public string SharedPersonId { get; set; } = null!;
+    public string? SharedPersonId { get; set; }
 
-    public virtual ClientProfile SharedPerson { get; set; } = null!;
+    public virtual ClientProfile? SharedPerson { get; set; }
 
     public virtual Vehicle Vehicle { get; set; } = null!;
 }

@@ -1,4 +1,6 @@
 using SAPLSServer.DTOs.Concrete;
+using SAPLSServer.DTOs.Concrete.UserDto;
+using SAPLSServer.DTOs.PaginationDto;
 
 namespace SAPLSServer.Services.Interfaces
 {
@@ -27,12 +29,12 @@ namespace SAPLSServer.Services.Interfaces
         /// <param name="id">The unique identifier of the staff profile.</param>
         /// <returns>The staff profile details if found; otherwise, <see langword="null"/>.</returns>
         Task<StaffProfileDetailsDto?> GetStaffProfileDetails(string id);
-
         /// <summary>
-        /// Retrieves a paginated list of staff profiles for a parking lot with optional search criteria.
+        /// Retrieves a paginated list of staff profiles with optional search criteria.
         /// </summary>
-        /// <param name="request">The pagination and filter request.</param>
-        /// <returns>A paginated result of staff profile details.</returns>
-        Task<PageResult<StaffProfileDetailsDto>> GetStaffsPageByParkingLot(PageRequest request);
+        /// <param name="pageRequest">The pagination request.</param>
+        /// <param name="request">The optional search criteria.</param>
+        /// <returns>A task representing the asynchronous operation, with a paginated result of staff profile details.</returns>
+        Task<PageResult<StaffProfileSummaryDto>> GetStaffProfilesPage(PageRequest pageRequest, GetStaffListRequest request);
     }
 }

@@ -1,9 +1,9 @@
 using SAPLSServer.DTOs.Base;
 using System.ComponentModel.DataAnnotations;
 
-namespace SAPLSServer.DTOs.Concrete
+namespace SAPLSServer.DTOs.Concrete.OcrDto
 {
-    public class VehicleRegistrationOcrRequest : CreateRequest
+    public class VehicleRegistrationOcrRequest
     {
         [Required(ErrorMessage = "Front image data is required.")]
         public string FrontImageBase64 { get; set; } = null!;
@@ -11,7 +11,5 @@ namespace SAPLSServer.DTOs.Concrete
         public string BackImageBase64 { get; set; } = null!;
         [Required(ErrorMessage = "Image format is required.")]
         public string ImageFormat { get; set; } = null!;
-        public string Language { get; set; } = "vi";
-        public bool EnhanceAccuracy { get; set; }
     }
 }

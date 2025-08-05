@@ -1,6 +1,5 @@
-﻿using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
-using SAPLSServer.DTOs.Concrete;
+﻿using SAPLSServer.Constants;
+using SAPLSServer.DTOs.Concrete.OcrDto;
 using SAPLSServer.Services.Interfaces;
 using System.Diagnostics;
 using System.Globalization;
@@ -17,7 +16,6 @@ namespace SAPLSServer.Services.Implementations
         private readonly ILogger<GeminiOcrService> _logger;
         private readonly string _apiKey;
         private readonly string _baseUrl;
-        private const string DEFAULT_BASE_URL = "https://generativelanguage.googleapis.com/v1beta";
 
         public GeminiOcrService(
             IHttpClientFactory httpClientFactory,
@@ -29,10 +27,10 @@ namespace SAPLSServer.Services.Implementations
             _logger = logger;
 
             _apiKey = _configuration["GeminiApi:ApiKey"]
-                      ?? throw new InvalidOperationException("Gemini API key is not configured");
+                      ?? throw new InvalidOperationException(MessageKeys.OCR_SYSTEM_NOT_FOUND);
 
             _baseUrl = _configuration["GeminiApi:BaseUrl"]
-                      ?? DEFAULT_BASE_URL;
+                      ?? throw new InvalidOperationException(MessageKeys.OCR_SYSTEM_NOT_FOUND);
 
             ConfigureHttpClient();
         }
@@ -51,13 +49,11 @@ namespace SAPLSServer.Services.Implementations
             {
                 _logger.LogInformation("Starting Citizen ID OCR extraction");
 
-                var prompt = CreateCitizenIdPrompt(request.Language, request.EnhanceAccuracy);
+                var prompt = CreateCitizenIdPrompt();
                 var geminiRequest = CreateGeminiVisionRequest(prompt, request.FrontImageBase64, request.BackImageBase64, request.ImageFormat);
 
                 var response = await SendGeminiRequestAsync(geminiRequest);
-                var extractedData = ParseCitizenIdResponse(response);
-
-                stopwatch.Stop();
+                var extractedData = ParseGeminiResponse(response);
 
                 // Check for model errors or empty/invalid results
                 if (extractedData.Count == 0 || extractedData.Values.All(string.IsNullOrWhiteSpace))
@@ -65,7 +61,6 @@ namespace SAPLSServer.Services.Implementations
 
                 var result = new CitizenIdOcrResponse
                 {
-                    Id = Guid.NewGuid().ToString(),
                     CitizenId = extractedData.GetValueOrDefault("citizenId", ""),
                     FullName = extractedData.GetValueOrDefault("fullName", ""),
                     DateOfBirth = DateOnly.TryParseExact(extractedData.GetValueOrDefault("dateOfBirth"), "dd/MM/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out var dob) ? dob : null,
@@ -85,9 +80,12 @@ namespace SAPLSServer.Services.Implementations
             }
             catch (Exception ex)
             {
-                stopwatch.Stop();
                 _logger.LogError(ex, "Error during Citizen ID OCR extraction");
                 throw new InvalidOperationException($"Failed to extract Citizen ID data: {ex.Message}", ex);
+            }
+            finally
+            {
+                stopwatch.Stop();
             }
         }
 
@@ -98,13 +96,11 @@ namespace SAPLSServer.Services.Implementations
             {
                 _logger.LogInformation("Starting Vehicle Registration OCR extraction");
 
-                var prompt = CreateVehicleRegistrationPrompt(request.Language, request.EnhanceAccuracy);
+                var prompt = CreateVehicleRegistrationPrompt();
                 var geminiRequest = CreateGeminiVisionRequest(prompt, request.FrontImageBase64, request.BackImageBase64, request.ImageFormat);
 
                 var response = await SendGeminiRequestAsync(geminiRequest);
-                var extractedData = ParseVehicleRegistrationResponse(response);
-
-                stopwatch.Stop();
+                var extractedData = ParseGeminiResponse(response);
 
                 // Check for model errors or empty/invalid results
                 if (extractedData.Count == 0 || extractedData.Values.All(string.IsNullOrWhiteSpace))
@@ -112,7 +108,6 @@ namespace SAPLSServer.Services.Implementations
 
                 var result = new VehicleRegistrationOcrResponse
                 {
-                    Id = Guid.NewGuid().ToString(),
                     LicensePlate = extractedData.GetValueOrDefault("licensePlate", ""),
                     Brand = extractedData.GetValueOrDefault("brand", ""),
                     Model = extractedData.GetValueOrDefault("model", ""),
@@ -133,9 +128,12 @@ namespace SAPLSServer.Services.Implementations
             }
             catch (Exception ex)
             {
-                stopwatch.Stop();
                 _logger.LogError(ex, "Error during Vehicle Registration OCR extraction");
                 throw new InvalidOperationException($"Failed to extract Vehicle Registration data: {ex.Message}", ex);
+            }
+            finally
+            {
+                stopwatch.Stop();
             }
         }
 
@@ -183,11 +181,9 @@ namespace SAPLSServer.Services.Implementations
             };
         }
 
-        private static string CreateCitizenIdPrompt(string language, bool enhanceAccuracy)
+        private static string CreateCitizenIdPrompt()
         {
-            var prompt = language.ToLower() switch
-            {
-                "vi" => @"Phân tích hình ảnh mặt trước và mặt sau của Căn cước công dân Việt Nam và trích xuất thông tin sau dưới dạng JSON:
+            var prompt = @"Phân tích hình ảnh mặt trước và mặt sau của Căn cước công dân Việt Nam và trích xuất thông tin sau dưới dạng JSON:
 {
   ""citizenId"": ""số căn cước"",
   ""fullName"": ""họ và tên"",
@@ -197,35 +193,15 @@ namespace SAPLSServer.Services.Implementations
   ""placeOfOrigin"": ""quê quán"",
   ""placeOfResidence"": ""nơi thường trú"",
   ""expiryDate"": ""ngày hết hạn (DD/MM/YYYY)""
-}",
-                _ => @"Analyze the front and back images of the Vietnamese Citizen ID card and extract the following information in JSON format:
-{
-  ""citizenId"": ""citizen ID number"",
-  ""fullName"": ""full name"",
-  ""dateOfBirth"": ""date of birth (DD/MM/YYYY)"",
-  ""sex"": ""gender"",
-  ""nationality"": ""nationality"",
-  ""placeOfOrigin"": ""place of origin"",
-  ""placeOfResidence"": ""place of residence"",
-  ""expiryDate"": ""expiry date (DD/MM/YYYY)""
-}"
-            };
+}";
 
-            if (enhanceAccuracy)
-            {
-                prompt += language.ToLower() == "vi"
-                    ? "\n\nLưu ý: Hãy đọc kỹ và chính xác nhất có thể. Nếu không rõ thông tin nào, hãy để trống."
-                    : "\n\nNote: Please read carefully and be as accurate as possible. If any information is unclear, leave it empty.";
-            }
-
+            prompt += "\n\nLưu ý: Hãy đọc kỹ và chính xác nhất có thể. Nếu không rõ thông tin nào, hãy để trống.";
             return prompt;
         }
 
-        private static string CreateVehicleRegistrationPrompt(string language, bool enhanceAccuracy)
+        private static string CreateVehicleRegistrationPrompt()
         {
-            var prompt = language.ToLower() switch
-            {
-                "vi" => @"Phân tích hình ảnh mặt trước và mặt sau của Đăng ký xe/Giấy chứng nhận đăng ký xe Việt Nam và trích xuất thông tin sau dưới dạng JSON:
+            var prompt = @"Phân tích hình ảnh mặt trước và mặt sau của Đăng ký xe/Giấy chứng nhận đăng ký xe Việt Nam và trích xuất thông tin sau dưới dạng JSON:
 {
   ""licensePlate"": ""biển số xe"",
   ""brand"": ""nhãn hiệu"",
@@ -236,28 +212,9 @@ namespace SAPLSServer.Services.Implementations
   ""ownerFullName"": ""tên chủ sở hữu"",
   ""registrationDate"": ""ngày đăng ký (DD/MM/YYYY)"",
   ""vehicleType"": ""loại phương tiện""
-}",
-                _ => @"Analyze the front and back images of the Vietnamese Vehicle Registration Certificate and extract the following information in JSON format:
-{
-  ""licensePlate"": ""license plate number"",
-  ""brand"": ""vehicle brand"",
-  ""model"": ""vehicle model"",
-  ""engineNumber"": ""engine number"",
-  ""chassisNumber"": ""chassis number"",
-  ""color"": ""vehicle color"",
-  ""ownerFullName"": ""owner full name"",
-  ""registrationDate"": ""registration date (DD/MM/YYYY)"",
-  ""vehicleType"": ""vehicle type""
-}"
-            };
+}";
 
-            if (enhanceAccuracy)
-            {
-                prompt += language.ToLower() == "vi"
-                    ? "\n\nLưu ý: Hãy đọc kỹ và chính xác nhất có thể. Nếu không rõ thông tin nào, hãy để trống."
-                    : "\n\nNote: Please read carefully and be as accurate as possible. If any information is unclear, leave it empty.";
-            }
-
+            prompt += "\n\nLưu ý: Hãy đọc kỹ và chính xác nhất có thể. Nếu không rõ thông tin nào, hãy để trống.";
             return prompt;
         }
 
@@ -279,9 +236,6 @@ namespace SAPLSServer.Services.Implementations
 
             return await response.Content.ReadAsStringAsync();
         }
-
-        private Dictionary<string, string> ParseCitizenIdResponse(string response) => ParseGeminiResponse(response);
-        private Dictionary<string, string> ParseVehicleRegistrationResponse(string response) => ParseGeminiResponse(response);
 
         private Dictionary<string, string> ParseGeminiResponse(string response)
         {

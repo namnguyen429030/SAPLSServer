@@ -1,6 +1,6 @@
 ﻿using SAPLSServer.DTOs.Base;
 
-namespace SAPLSServer.DTOs.Concrete
+namespace SAPLSServer.DTOs.Concrete.UserDto
 {
     public class UpdateUserStatusRequest : UpdateRequest
     {

@@ -59,7 +59,7 @@ public partial class SaplsContext : DbContext
     {
         modelBuilder.Entity<AdminProfile>(entity =>
         {
-            entity.HasKey(e => e.UserId).HasName("PK__AdminPro__1788CC4C56347231");
+            entity.HasKey(e => e.UserId).HasName("PK__AdminPro__1788CC4CE4751A99");
 
             entity.ToTable("AdminProfile");
 
@@ -67,9 +67,9 @@ public partial class SaplsContext : DbContext
 
             entity.HasIndex(e => e.Role, "IX_AdminProfile_Role");
 
-            entity.HasIndex(e => e.UserId, "UQ__AdminPro__1788CC4DC1E113D5").IsUnique();
+            entity.HasIndex(e => e.UserId, "UQ__AdminPro__1788CC4DD8C91BA2").IsUnique();
 
-            entity.HasIndex(e => e.AdminId, "UQ__AdminPro__719FE48988C1CBFA").IsUnique();
+            entity.HasIndex(e => e.AdminId, "UQ__AdminPro__719FE4893278F34A").IsUnique();
 
             entity.Property(e => e.UserId).HasMaxLength(36);
             entity.Property(e => e.AdminId).HasMaxLength(20);
@@ -82,7 +82,7 @@ public partial class SaplsContext : DbContext
 
         modelBuilder.Entity<AttachedFile>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__Attached__3214EC0773420A23");
+            entity.HasKey(e => e.Id).HasName("PK__Attached__3214EC07E4AB6E4D");
 
             entity.ToTable("AttachedFile");
 
@@ -90,7 +90,7 @@ public partial class SaplsContext : DbContext
 
             entity.HasIndex(e => e.UploadAt, "IX_AttachedFile_UploadAt");
 
-            entity.HasIndex(e => e.Id, "UQ__Attached__3214EC06B1509C9B").IsUnique();
+            entity.HasIndex(e => e.Id, "UQ__Attached__3214EC069CF63EC4").IsUnique();
 
             entity.Property(e => e.Id).HasMaxLength(36);
             entity.Property(e => e.Name).HasMaxLength(255);
@@ -99,7 +99,7 @@ public partial class SaplsContext : DbContext
 
         modelBuilder.Entity<ClientProfile>(entity =>
         {
-            entity.HasKey(e => e.UserId).HasName("PK__ClientPr__1788CC4C07B7BA9F");
+            entity.HasKey(e => e.UserId).HasName("PK__ClientPr__1788CC4C088F8864");
 
             entity.ToTable("ClientProfile");
 
@@ -107,15 +107,16 @@ public partial class SaplsContext : DbContext
 
             entity.HasIndex(e => e.ShareCode, "IX_ClientProfile_ShareCode");
 
-            entity.HasIndex(e => e.UserId, "UQ__ClientPr__1788CC4D35AAEF69").IsUnique();
+            entity.HasIndex(e => e.UserId, "UQ__ClientPr__1788CC4D922DF55A").IsUnique();
 
-            entity.HasIndex(e => e.ShareCode, "UQ__ClientPr__208770413BAB0902").IsUnique();
+            entity.HasIndex(e => e.ShareCode, "UQ__ClientPr__208770411C2E5E47").IsUnique();
 
-            entity.HasIndex(e => e.CitizenId, "UQ__ClientPr__6E49FA0DA6B0F1C5").IsUnique();
+            entity.HasIndex(e => e.CitizenId, "UQ__ClientPr__6E49FA0D3E44AD25").IsUnique();
 
             entity.Property(e => e.UserId).HasMaxLength(36);
+            entity.Property(e => e.BackCitizenIdCardImageUrl).HasMaxLength(500);
             entity.Property(e => e.CitizenId).HasMaxLength(50);
-            entity.Property(e => e.CitizenIdCardImageUrl).HasMaxLength(500);
+            entity.Property(e => e.FrontCitizenIdCardImageUrl).HasMaxLength(500);
             entity.Property(e => e.Nationality).HasMaxLength(100);
             entity.Property(e => e.PlaceOfOrigin).HasMaxLength(255);
             entity.Property(e => e.PlaceOfResidence).HasMaxLength(255);
@@ -129,11 +130,11 @@ public partial class SaplsContext : DbContext
 
         modelBuilder.Entity<IncidenceEvidence>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__Incidenc__3214EC0725A8A24C");
+            entity.HasKey(e => e.Id).HasName("PK__Incidenc__3214EC07194AA9EF");
 
             entity.ToTable("IncidenceEvidence");
 
-            entity.HasIndex(e => e.Id, "UQ__Incidenc__3214EC06A3702B07").IsUnique();
+            entity.HasIndex(e => e.Id, "UQ__Incidenc__3214EC06222FE1FC").IsUnique();
 
             entity.Property(e => e.Id).HasMaxLength(36);
             entity.Property(e => e.IncidenceReportId).HasMaxLength(36);
@@ -178,7 +179,7 @@ public partial class SaplsContext : DbContext
 
             entity.HasOne(d => d.ParkingLot).WithMany(p => p.IncidenceReports)
                 .HasForeignKey(d => d.ParkingLotId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
+                .OnDelete(DeleteBehavior.SetNull)
                 .HasConstraintName("FK_IncidenceReport_ParkingLot");
 
             entity.HasOne(d => d.Reporter).WithMany(p => p.IncidenceReports)
@@ -188,7 +189,7 @@ public partial class SaplsContext : DbContext
 
         modelBuilder.Entity<ParkingFeeSchedule>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__ParkingF__3214EC072533CD44");
+            entity.HasKey(e => e.Id).HasName("PK__ParkingF__3214EC074B624F3F");
 
             entity.ToTable("ParkingFeeSchedule");
 
@@ -198,7 +199,7 @@ public partial class SaplsContext : DbContext
 
             entity.HasIndex(e => e.ParkingLotId, "IX_ParkingFeeSchedule_ParkingLotId");
 
-            entity.HasIndex(e => e.Id, "UQ__ParkingF__3214EC067ED1ED17").IsUnique();
+            entity.HasIndex(e => e.Id, "UQ__ParkingF__3214EC0675353B44").IsUnique();
 
             entity.Property(e => e.Id).HasMaxLength(36);
             entity.Property(e => e.AdditionalFee).HasColumnType("decimal(8, 2)");
@@ -254,15 +255,15 @@ public partial class SaplsContext : DbContext
 
         modelBuilder.Entity<ParkingLotOwnerProfile>(entity =>
         {
-            entity.HasKey(e => e.UserId).HasName("PK__ParkingL__1788CC4C461C8DDB");
+            entity.HasKey(e => e.UserId).HasName("PK__ParkingL__1788CC4C6E170A53");
 
             entity.ToTable("ParkingLotOwnerProfile");
 
             entity.HasIndex(e => e.ParkingLotOwnerId, "IX_ParkingLotOwnerProfile_ParkingLotOwnerId");
 
-            entity.HasIndex(e => e.UserId, "UQ__ParkingL__1788CC4D2C170C27").IsUnique();
+            entity.HasIndex(e => e.UserId, "UQ__ParkingL__1788CC4D0B965F24").IsUnique();
 
-            entity.HasIndex(e => e.ParkingLotOwnerId, "UQ__ParkingL__F2333F3FA5015388").IsUnique();
+            entity.HasIndex(e => e.ParkingLotOwnerId, "UQ__ParkingL__F2333F3FF0F8151B").IsUnique();
 
             entity.Property(e => e.UserId).HasMaxLength(36);
             entity.Property(e => e.ParkingLotOwnerId).HasMaxLength(20);
@@ -339,6 +340,7 @@ public partial class SaplsContext : DbContext
 
             entity.HasIndex(e => e.Id, "UQ__PaymentS__3214EC064155607D").IsUnique();
 
+            entity.Property(e => e.Id).HasMaxLength(36);
             entity.Property(e => e.AccountName).HasMaxLength(255);
             entity.Property(e => e.AccountNumber).HasMaxLength(50);
             entity.Property(e => e.BankName).HasMaxLength(100);
@@ -368,6 +370,7 @@ public partial class SaplsContext : DbContext
             entity.HasIndex(e => e.Id, "UQ__Request__3214EC06DDE85BED").IsUnique();
 
             entity.Property(e => e.Id).HasMaxLength(36);
+            entity.Property(e => e.DataType).HasMaxLength(50);
             entity.Property(e => e.Description).HasMaxLength(2000);
             entity.Property(e => e.Header).HasMaxLength(255);
             entity.Property(e => e.InternalNote)
@@ -382,27 +385,25 @@ public partial class SaplsContext : DbContext
                 .HasMaxLength(20)
                 .HasDefaultValue("Open");
             entity.Property(e => e.SubmittedAt).HasDefaultValueSql("(getdate())");
-            entity.Property(e => e.Type).HasMaxLength(50);
             entity.Property(e => e.UpdatedAt).HasDefaultValueSql("(getdate())");
 
             entity.HasOne(d => d.LastUpdatePerson).WithMany(p => p.Requests)
                 .HasForeignKey(d => d.LastUpdatePersonId)
-                .OnDelete(DeleteBehavior.Cascade)
                 .HasConstraintName("Request_fk8");
 
             entity.HasOne(d => d.Sender).WithMany(p => p.Requests)
                 .HasForeignKey(d => d.SenderId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
+                .OnDelete(DeleteBehavior.SetNull)
                 .HasConstraintName("Request_fk_Sender");
         });
 
         modelBuilder.Entity<RequestAttachedFile>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__RequestA__3214EC074C99AEB9");
+            entity.HasKey(e => e.Id).HasName("PK__RequestA__3214EC07B9EE57B9");
 
             entity.ToTable("RequestAttachedFile");
 
-            entity.HasIndex(e => e.Id, "UQ__RequestA__3214EC06C2C43B6C").IsUnique();
+            entity.HasIndex(e => e.Id, "UQ__RequestA__3214EC06152DDA3B").IsUnique();
 
             entity.Property(e => e.Id).HasMaxLength(36);
             entity.Property(e => e.RequestId).HasMaxLength(36);
@@ -441,7 +442,7 @@ public partial class SaplsContext : DbContext
 
             entity.HasOne(d => d.SharedPerson).WithMany(p => p.SharedVehicles)
                 .HasForeignKey(d => d.SharedPersonId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
+                .OnDelete(DeleteBehavior.SetNull)
                 .HasConstraintName("SharedVehicle_fk7");
 
             entity.HasOne(d => d.Vehicle).WithMany(p => p.SharedVehicles)
@@ -451,7 +452,7 @@ public partial class SaplsContext : DbContext
 
         modelBuilder.Entity<ShiftDiary>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__ShiftDia__3214EC0741C06B6B");
+            entity.HasKey(e => e.Id).HasName("PK__ShiftDia__3214EC0708509E2F");
 
             entity.ToTable("ShiftDiary");
 
@@ -461,7 +462,7 @@ public partial class SaplsContext : DbContext
 
             entity.HasIndex(e => e.SenderId, "IX_ShiftDiary_SenderId");
 
-            entity.HasIndex(e => e.Id, "UQ__ShiftDia__3214EC06394E68B1").IsUnique();
+            entity.HasIndex(e => e.Id, "UQ__ShiftDia__3214EC06C45A8081").IsUnique();
 
             entity.Property(e => e.Id).HasMaxLength(36);
             entity.Property(e => e.Body).HasMaxLength(2000);
@@ -476,13 +477,13 @@ public partial class SaplsContext : DbContext
 
             entity.HasOne(d => d.Sender).WithMany(p => p.ShiftDiaries)
                 .HasForeignKey(d => d.SenderId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
+                .OnDelete(DeleteBehavior.SetNull)
                 .HasConstraintName("ShiftDiary_fk5");
         });
 
         modelBuilder.Entity<StaffProfile>(entity =>
         {
-            entity.HasKey(e => e.UserId).HasName("PK__StaffPro__1788CC4CAFCD2EA0");
+            entity.HasKey(e => e.UserId).HasName("PK__StaffPro__1788CC4CACF4A0F8");
 
             entity.ToTable("StaffProfile");
 
@@ -490,9 +491,9 @@ public partial class SaplsContext : DbContext
 
             entity.HasIndex(e => e.StaffId, "IX_StaffProfile_StaffId");
 
-            entity.HasIndex(e => e.UserId, "UQ__StaffPro__1788CC4DEBE8406F").IsUnique();
+            entity.HasIndex(e => e.UserId, "UQ__StaffPro__1788CC4D3B12EFC1").IsUnique();
 
-            entity.HasIndex(e => e.StaffId, "UQ__StaffPro__96D4AB1667A0D540").IsUnique();
+            entity.HasIndex(e => e.StaffId, "UQ__StaffPro__96D4AB161AE0F057").IsUnique();
 
             entity.Property(e => e.UserId).HasMaxLength(36);
             entity.Property(e => e.ParkingLotId).HasMaxLength(36);
@@ -500,6 +501,7 @@ public partial class SaplsContext : DbContext
 
             entity.HasOne(d => d.ParkingLot).WithMany(p => p.StaffProfiles)
                 .HasForeignKey(d => d.ParkingLotId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("StaffProfile_fk2");
 
             entity.HasOne(d => d.User).WithOne(p => p.StaffProfile)
@@ -544,7 +546,7 @@ public partial class SaplsContext : DbContext
 
         modelBuilder.Entity<Vehicle>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__Vehicle__3214EC070791C79B");
+            entity.HasKey(e => e.Id).HasName("PK__Vehicle__3214EC073BBDFC5B");
 
             entity.ToTable("Vehicle");
 
@@ -558,16 +560,18 @@ public partial class SaplsContext : DbContext
 
             entity.HasIndex(e => e.Status, "IX_Vehicle_Status");
 
-            entity.HasIndex(e => e.LicensePlate, "UQ__Vehicle__026BC15C32994F63").IsUnique();
+            entity.HasIndex(e => e.LicensePlate, "UQ__Vehicle__026BC15CAE30AED6").IsUnique();
 
-            entity.HasIndex(e => e.Id, "UQ__Vehicle__3214EC06B23BA738").IsUnique();
+            entity.HasIndex(e => e.Id, "UQ__Vehicle__3214EC0678F92770").IsUnique();
 
             entity.Property(e => e.Id).HasMaxLength(36);
+            entity.Property(e => e.BackVehicleRegistrationCertificateUrl).HasMaxLength(500);
             entity.Property(e => e.Brand).HasMaxLength(50);
             entity.Property(e => e.ChassisNumber).HasMaxLength(50);
             entity.Property(e => e.Color).HasMaxLength(50);
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getdate())");
             entity.Property(e => e.EngineNumber).HasMaxLength(50);
+            entity.Property(e => e.FrontVehicleRegistrationCertificateUrl).HasMaxLength(500);
             entity.Property(e => e.LicensePlate).HasMaxLength(20);
             entity.Property(e => e.Model).HasMaxLength(50);
             entity.Property(e => e.OwnerId).HasMaxLength(36);
@@ -579,16 +583,16 @@ public partial class SaplsContext : DbContext
                 .HasMaxLength(20)
                 .HasDefaultValue("Inactive");
             entity.Property(e => e.UpdatedAt).HasDefaultValueSql("(getdate())");
-            entity.Property(e => e.VehicleRegistrationCertificateUrl).HasMaxLength(500);
 
             entity.HasOne(d => d.Owner).WithMany(p => p.Vehicles)
                 .HasForeignKey(d => d.OwnerId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("Vehicle_fk12");
         });
 
         modelBuilder.Entity<WhiteList>(entity =>
         {
-            entity.HasKey(e => new { e.ParkingLotId, e.ClientId }).HasName("PK__WhiteLis__3140FF2BC4A11819");
+            entity.HasKey(e => new { e.ParkingLotId, e.ClientId });
 
             entity.ToTable("WhiteList");
 
@@ -598,6 +602,8 @@ public partial class SaplsContext : DbContext
 
             entity.HasIndex(e => e.ExpireAt, "IX_WhiteList_ExpiredDate");
 
+            entity.HasIndex(e => new { e.ParkingLotId, e.ClientId }, "UQ_WhiteList_ParkingLot_Client").IsUnique();
+
             entity.Property(e => e.ParkingLotId).HasMaxLength(36);
             entity.Property(e => e.ClientId).HasMaxLength(36);
             entity.Property(e => e.AddedAt).HasDefaultValueSql("(CONVERT([date],getdate()))");
@@ -606,11 +612,12 @@ public partial class SaplsContext : DbContext
             entity.HasOne(d => d.Client).WithMany(p => p.WhiteLists)
                 .HasForeignKey(d => d.ClientId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("WhiteList_fk1");
+                .HasConstraintName("FK_WhiteList_fk1");
 
             entity.HasOne(d => d.ParkingLot).WithMany(p => p.WhiteLists)
                 .HasForeignKey(d => d.ParkingLotId)
-                .HasConstraintName("WhiteList_fk0");
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_WhiteList_fk0");
         });
 
         OnModelCreatingPartial(modelBuilder);

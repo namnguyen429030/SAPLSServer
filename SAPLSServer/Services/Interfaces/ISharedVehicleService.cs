@@ -1,5 +1,6 @@
 using SAPLSServer.DTOs.Base;
-using SAPLSServer.DTOs.Concrete;
+using SAPLSServer.DTOs.Concrete.SharedVehicleDto;
+using SAPLSServer.DTOs.PaginationDto;
 
 namespace SAPLSServer.Services.Interfaces
 {
@@ -23,21 +24,13 @@ namespace SAPLSServer.Services.Interfaces
         /// <param name="pageRequest"></param>
         /// <param name="request"></param>
         /// <returns></returns>
-        Task<PageResult<SharedVehicleSummaryDto>> GetSharedVehiclesPage(PageRequest pageRequest, GetListRequest request);
+        Task<PageResult<SharedVehicleSummaryDto>> GetSharedVehiclesPage(PageRequest pageRequest, GetSharedVehicleList request);
         /// <summary>
-        /// Retrieves a paginated list of shared vehicles owned by a specific owner, identified by their unique identifier (ownerId).
+        /// Updates the sharing status of a vehicle based on the provided request.
         /// </summary>
-        /// <param name="ownerId"></param>
-        /// <param name="request"></param>
-        /// <returns></returns>
-        Task<PageResult<SharedVehicleSummaryDto>> GetSharedVehiclesByOwnerPage(string ownerId, PageRequest request);
-        /// <summary>
-        /// Retrieves a paginated list of shared vehicles associated with a specific shared person, identified by their unique identifier (sharedPersonId).
-        /// </summary>
-        /// <param name="sharedPersonId"></param>
-        /// <param name="request"></param>
-        /// <returns></returns>
-        Task<PageResult<SharedVehicleSummaryDto>> GetSharedVehiclesBySharedPersonPage(string sharedPersonId, PageRequest request);
+        /// <param name="request">The request containing the details required to update the vehicle's sharing status. This cannot be null.</param>
+        /// <returns>A task that represents the asynchronous operation.</returns>
+        Task UpdateVehicleSharingStatus(UpdateVehicleSharingStatusRequest request);
     }
 }
 

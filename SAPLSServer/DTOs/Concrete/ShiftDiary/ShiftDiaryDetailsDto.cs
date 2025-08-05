@@ -1,13 +1,16 @@
-﻿using SAPLSServer.DTOs.Base;
-using SAPLSServer.Models;
+﻿using SAPLSServer.Models;
 
-namespace SAPLSServer.DTOs.Concrete
+namespace SAPLSServer.DTOs.Concrete.ShiftDiaryDto
 {
-    public class ShiftDiaryDetailsDto : GetResult
+    public class ShiftDiaryDetailsDto : ShiftDiarySummaryDto
     {
-        public ShiftDiaryDetailsDto(ShiftDiary shiftDiary)
+        public string StaffId { get; set; }
+        public string StaffName { get; set; }
+        
+        public ShiftDiaryDetailsDto(ShiftDiary shiftDiary) : base(shiftDiary)
         {
-
+            StaffId = shiftDiary.Sender?.StaffId ?? string.Empty;
+            StaffName = shiftDiary.Sender?.User.FullName ?? string.Empty;
         }
     }
 }

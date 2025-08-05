@@ -1,9 +1,12 @@
-﻿using SAPLSServer.DTOs.Base;
+﻿using SAPLSServer.Constants;
+using SAPLSServer.DTOs.Base;
+using System.ComponentModel.DataAnnotations;
 
-namespace SAPLSServer.DTOs.Concrete
+namespace SAPLSServer.DTOs.Concrete.UserDto
 {
     public class UpdateUserProfileImageRequest : UpdateRequest
     {
-        public string ProfileImageUrl { get; set; } = null!;
+        [DataType(DataType.Upload, ErrorMessage = MessageKeys.INVALID_FILE_UPLOADED)]
+        public IFormFile? ProfileImage { get; set; } = null!;
     }
 }

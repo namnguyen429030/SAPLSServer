@@ -1,24 +1,27 @@
 using SAPLSServer.DTOs.Base;
 using SAPLSServer.DTOs.Concrete;
+using SAPLSServer.DTOs.Concrete.RequestDto;
+using SAPLSServer.DTOs.PaginationDto;
 
 namespace SAPLSServer.Services.Interfaces
 {
     public interface IRequestService
     {
         /// <summary>
-        /// Creates a new pageRequest with the provided details.
+        /// Creates a new request with the provided details.
         /// </summary>
         /// <param name="request"></param>
+        /// <param name="senderId"></param>
         /// <returns></returns>
-        Task CreateRequest(CreateRequestRequest request);
+        Task CreateRequest(CreateRequestRequest request, string senderId);
         /// <summary>
-        /// Updates an existing pageRequest with the provided details.
+        /// Updates an existing request with the provided details.
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
         Task UpdateRequest(UpdateRequestRequest request);
         /// <summary>
-        /// Retrieves the details of a pageRequest by its unique identifier (ID).
+        /// Retrieves the details of a request by its unique identifier (ID).
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>

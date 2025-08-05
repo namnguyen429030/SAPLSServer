@@ -1,20 +1,17 @@
 ﻿using SAPLSServer.DTOs.Base;
 using SAPLSServer.Models;
 
-namespace SAPLSServer.DTOs.Concrete
+namespace SAPLSServer.DTOs.Concrete.ParkingLotDto
 {
     public class ParkingLotSummaryDto : GetResult
     {
-        public string Name { get; set; } = null!;
-        public string Address { get; set; } = null!;
-
-        public ParkingLotSummaryDto() { }
-
-        public ParkingLotSummaryDto(ParkingLot model)
+        public string Name { get; set; }
+        public string Address { get; set; }
+        public ParkingLotSummaryDto(ParkingLot parkingLot)
         {
-            Id = model.Id;
-            Name = model.Name;
-            Address = model.Address;
+            Id = parkingLot.Id;
+            Name = parkingLot.Name;
+            Address = parkingLot.Address;
         }
     }
 }

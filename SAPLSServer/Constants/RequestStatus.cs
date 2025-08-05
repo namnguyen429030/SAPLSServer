@@ -4,7 +4,7 @@
     {
         Open = 0,
         Close = 1,
-        Inprogress = 2,
+        InProgress = 2,
         Resolved = 3,
     }
 }

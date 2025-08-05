@@ -1,8 +1,8 @@
 using SAPLSServer.DTOs.Base;
 
-namespace SAPLSServer.DTOs.Concrete
+namespace SAPLSServer.DTOs.Concrete.OcrDto
 {
-    public class CitizenIdOcrResponse : GetResult
+    public class CitizenIdOcrResponse
     {
         public string? CitizenId { get; set; }
         public string? FullName { get; set; }

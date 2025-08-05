@@ -1,4 +1,4 @@
-using SAPLSServer.DTOs.Concrete;
+using SAPLSServer.DTOs.Concrete.UserDto;
 
 namespace SAPLSServer.Services.Interfaces
 {

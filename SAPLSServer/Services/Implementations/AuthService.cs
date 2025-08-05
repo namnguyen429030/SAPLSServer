@@ -1,4 +1,3 @@
-using SAPLSServer.DTOs.Concrete;
 using SAPLSServer.Models;
 using SAPLSServer.Repositories.Interfaces;
 using SAPLSServer.Services.Interfaces;
@@ -8,6 +7,9 @@ using System.Security.Claims;
 using System.Text;
 using Microsoft.IdentityModel.Tokens;
 using System.Security.Cryptography;
+using SAPLSServer.Constants;
+using System.Security.Authentication;
+using SAPLSServer.DTOs.Concrete.UserDto;
 
 namespace SAPLSServer.Services.Implementations
 {
@@ -29,8 +31,12 @@ namespace SAPLSServer.Services.Implementations
 
         public async Task<AuthenticateUserResponse?> AuthenticateUser(AuthenticateUserRequest request)
         {
+            if(string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Password))
+            {
+                return null;
+            }
             var user = await _userRepository.Find([u => u.Email == request.Email]);
-            if (user == null || user.Status != "Active")
+            if (user == null || user.Status != UserStatus.Active.ToString())
                 return null;
 
             if (!PasswordHelper.VerifyPassword(request.Password, user.Password))
@@ -51,19 +57,28 @@ namespace SAPLSServer.Services.Implementations
 
         public async Task<AuthenticateUserResponse?> AuthenticateClientProfile(AuthenticateClientProfileRequest request)
         {
-            var user = await _userRepository.Find([u => u.Email == request.Email]);
-            if (user == null || user.Status != "Active")
-                return null;
-
-            if (!PasswordHelper.VerifyPassword(request.Password, user.Password))
-                return null;
-
-            if (!string.IsNullOrEmpty(request.CitizenId))
+            if (string.IsNullOrWhiteSpace(request.EmailOrCitizenIdNo) || string.IsNullOrWhiteSpace(request.Password))
             {
-                var clientProfile = await _clientProfileRepository.Find([cp => cp.UserId == user.Id, cp => cp.CitizenId == request.CitizenId]);
-                if (clientProfile == null)
-                    return null;
+                return null;
             }
+            User? user = null;
+            if (request.EmailOrCitizenIdNo.All(char.IsDigit))
+            {
+                var clientProfile = await _clientProfileRepository.Find([c => c.CitizenId == request.EmailOrCitizenIdNo]);
+                if(clientProfile == null)
+                {
+                    return null;
+                }
+                user = await _userRepository.Find([u => u.Id == clientProfile.UserId]);
+            }
+            else
+            {
+                user = await _userRepository.Find([u => u.Email == request.EmailOrCitizenIdNo]);
+            }
+            if (user == null || user.Status != UserStatus.Active.ToString())
+                return null;
+            if (!PasswordHelper.VerifyPassword(request.Password, user.Password))
+                throw new InvalidCredentialException(MessageKeys.WRONG_PASSWORD);
 
             var accessToken = GenerateAccessToken(user);
             var refreshToken = GenerateRefreshToken();

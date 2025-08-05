@@ -1,23 +1,25 @@
 ﻿using SAPLSServer.DTOs.Base;
 using SAPLSServer.Models;
 
-namespace SAPLSServer.DTOs.Concrete
+namespace SAPLSServer.DTOs.Concrete.ParkingSessionDto
 {
     public class ParkingSessionSummaryForParkingLotDto : GetResult
     {
-        public string VehicleNumber { get; set; }
+        public string LicensePlate { get; set; }
         public DateTime EntryDateTime { get; set; }
         public DateTime? ExitDateTime { get; set; }
         public decimal Cost { get; set; }
+        public string Status { get; set; }
         public string PaymentStatus { get; set; }
         public ParkingSessionSummaryForParkingLotDto(ParkingSession parkingSession)
         {
             Id = parkingSession.Id;
-            VehicleNumber = parkingSession.Vehicle.LicensePlate;
+            LicensePlate = parkingSession.Vehicle.LicensePlate;
             EntryDateTime = parkingSession.EntryDateTime;
             ExitDateTime = parkingSession.ExitDateTime;
             Cost = parkingSession.Cost;
-            //TODO: Add Payment's Payment status and status
+            Status = parkingSession.Status;
+            PaymentStatus = parkingSession.PaymentStatus;
         }
     }
 }

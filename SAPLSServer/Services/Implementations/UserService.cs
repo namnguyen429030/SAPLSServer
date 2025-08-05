@@ -1,5 +1,6 @@
 using SAPLSServer.Constants;
 using SAPLSServer.DTOs.Concrete;
+using SAPLSServer.DTOs.Concrete.UserDto;
 using SAPLSServer.Exceptions;
 using SAPLSServer.Helpers;
 using SAPLSServer.Models;
@@ -32,7 +33,7 @@ namespace SAPLSServer.Services.Implementations
                 Password = PasswordHelper.HashPassword(request.Password),
                 FullName = request.FullName,
                 Phone = request.Phone,
-                ProfileImageUrl = request.ProfileImageUrl,
+                //ProfileImageUrl = request.ProfileImageUrl,
                 Status = UserStatus.Inactive.ToString(),
                 Role = UserRole.Client.ToString(),
                 CreatedAt = DateTime.UtcNow,
@@ -63,7 +64,7 @@ namespace SAPLSServer.Services.Implementations
             if (user == null)
                 throw new InvalidInformationException(MessageKeys.USER_NOT_FOUND);
 
-            user.ProfileImageUrl = request.ProfileImageUrl;
+            //user.ProfileImageUrl = request.ProfileImage;
             user.UpdatedAt = DateTime.UtcNow;
 
             _userRepository.Update(user);

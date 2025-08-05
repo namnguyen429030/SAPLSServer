@@ -1,26 +1,28 @@
 ﻿using SAPLSServer.DTOs.Base;
 using System.ComponentModel.DataAnnotations;
+using SAPLSServer.Constants;
 
-namespace SAPLSServer.DTOs.Concrete
+namespace SAPLSServer.DTOs.Concrete.UserDto
 {
-    public class CreateUserRequest : CreateRequest
+    public abstract class CreateUserRequest
     {
-        [Required(ErrorMessage = "Email is required.")]
-        [EmailAddress(ErrorMessage = "Invalid email format.")]
+        [Required(ErrorMessage = MessageKeys.EMAIL_REQUIRED)]
+        [EmailAddress(ErrorMessage = MessageKeys.INVALID_EMAIL_FORMAT)]
         public string Email { get; set; } = null!;
 
-        [Required(ErrorMessage = "Password is required.")]
-        [Length(minimumLength: 8, maximumLength: 24, ErrorMessage = "Password must be between 8 and 24 characters.")]
+        [Required(ErrorMessage = MessageKeys.PASSWORD_REQUIRED)]
+        [Length(minimumLength: 8, maximumLength: 24, ErrorMessage = MessageKeys.PASSWORD_LENGTH)]
         [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\da-zA-Z]).{8,24}$", 
-            ErrorMessage = "Password must contain at least 1 uppercase letter, 1 lowercase letter, 1 number, and 1 special character.")]
+            ErrorMessage = MessageKeys.PASSWORD_COMPLEXITY)]
         public string Password { get; set; } = null!;
-        [Required(ErrorMessage = "Full name is required.")]
-        [RegularExpression(@"^[a-zA-Z\s]+$", ErrorMessage = "Full name should contain only letters and spaces.")]
+        [Required(ErrorMessage = MessageKeys.FULL_NAME_REQUIRED)]
+        [RegularExpression(@"^[a-zA-Z\s]+$", ErrorMessage = MessageKeys.FULL_NAME_LETTERS_ONLY)]
         public string FullName { get; set; } = null!;
 
-        [Required(ErrorMessage = "Phone number is required.")]
-        [RegularExpression(@"^\d+$", ErrorMessage = "Phone number should contain only digits.")]
+        [Required(ErrorMessage = MessageKeys.PHONE_NUMBER_REQUIRED)]
+        [RegularExpression(@"^\d+$", ErrorMessage = MessageKeys.PHONE_NUMBER_DIGITS_ONLY)]
         public string Phone { get; set; } = null!;
-        public string? ProfileImageUrl { get; set; }
+        [DataType(DataType.Upload, ErrorMessage = MessageKeys.INVALID_FILE_UPLOADED)]
+        public IFormFile? ProfileImageUrl { get; set; }
     }
 }

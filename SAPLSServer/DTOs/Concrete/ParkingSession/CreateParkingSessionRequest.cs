@@ -1,19 +1,20 @@
 ﻿using SAPLSServer.DTOs.Base;
 using System.ComponentModel.DataAnnotations;
+using SAPLSServer.Constants;
 
-namespace SAPLSServer.DTOs.Concrete
+namespace SAPLSServer.DTOs.Concrete.ParkingSessionDto
 {
-    public class CreateParkingSessionRequest : CreateRequest
+    public class CreateParkingSessionRequest
     {
-        [Required(ErrorMessage = "Vehicle ID is required.")]
+        [Required(ErrorMessage = MessageKeys.VEHICLE_ID_REQUIRED)]
         public string VehicleId { get; set; } = null!;
-        [Required(ErrorMessage = "Parking Lot ID is required.")]
+        [Required(ErrorMessage = MessageKeys.PARKING_LOT_ID_REQUIRED)]
         public string ParkingLotId { get; set; } = null!;
-        [Required(ErrorMessage = "Entry Date and Time is required.")]
-        public DateTime EntryDateTime { get; set; }
-        [Required(ErrorMessage = "Entry Front Capture is required.")]
-        public string EntryFrontCaptureUrl { get; set; } = null!;
-        [Required(ErrorMessage = "Entry Back Capture is required.")]
-        public string EntryBackCaptureUrl { get; set; } = null!;
+        [Required(ErrorMessage = MessageKeys.ENTRY_FRONT_CAPTURE_REQUIRED)]
+        [DataType(DataType.Upload, ErrorMessage = MessageKeys.INVALID_FILE_UPLOADED)]
+        public IFormFile? EntryFrontCaptureUrl { get; set; }
+        [Required(ErrorMessage = MessageKeys.ENTRY_BACK_CAPTURE_REQUIRED)]
+        [DataType(DataType.Upload, ErrorMessage = MessageKeys.INVALID_FILE_UPLOADED)]
+        public IFormFile? EntryBackCaptureUrl { get; set; }
     }
 }

@@ -15,39 +15,64 @@ namespace SAPLSServer.Repositories.Implementations
             _context = context;
             _dbSet = context.Set<T>();
         }
-        public virtual async Task<IEnumerable<T>> GetAllAsync(Expression<Func<T, bool>>[]? filters = null, Expression<Func<T, object>>? sortBy = null, bool isAscending = true)
+
+        public virtual async Task<IEnumerable<T>> GetAllAsync(
+            Expression<Func<T, bool>>[]? filters = null,
+            Expression<Func<T, object>>? sortBy = null,
+            bool isAscending = true)
         {
-            var query = ApplyFilters(_dbSet.AsQueryable(), filters ?? Array.Empty<Expression<Func<T, bool>>>());
+            var query = _dbSet.AsQueryable();
+            query = ApplyFilters(query, filters ?? Array.Empty<Expression<Func<T, bool>>>());
+
+            // Apply sorting
             if (sortBy != null)
             {
                 query = isAscending ? query.OrderBy(sortBy) : query.OrderByDescending(sortBy);
             }
+
             return await query.ToListAsync();
         }
-        public virtual async Task<IEnumerable<T>> GetPageAsync(int pageNumber = 1, int pageSize = 20, Expression<Func<T, bool>>[]? filters = null, Expression<Func<T, object>>? sortBy = null, bool isAscending = true)
+
+        public virtual async Task<IEnumerable<T>> GetPageAsync(
+            int pageNumber = 1,
+            int pageSize = 20,
+            Expression<Func<T, bool>>[]? filters = null,
+            Expression<Func<T, object>>? sortBy = null,
+            bool isAscending = true)
         {
-            var query = ApplyFilters(_dbSet.AsQueryable(), filters ?? Array.Empty<Expression<Func<T, bool>>>());
+            var query = _dbSet.AsQueryable();
+
+            // Apply filters
+            query = ApplyFilters(query, filters ?? Array.Empty<Expression<Func<T, bool>>>());
+
+            // Apply sorting
             if (sortBy != null)
             {
                 query = isAscending ? query.OrderBy(sortBy) : query.OrderByDescending(sortBy);
             }
 
             return await query.Skip(pageSize * (pageNumber - 1))
-                                    .Take(pageSize)
-                                    .ToListAsync();
+                              .Take(pageSize)
+                              .ToListAsync();
         }
 
         public virtual async Task<T?> Find(TKey id)
         {
-            return await _dbSet.FindAsync(id);
+            var query = _dbSet.AsQueryable();
+
+            // Use the abstract method to create ID predicate since FindAsync doesn't work with includes
+            return await query.FirstOrDefaultAsync(CreateIdPredicate(id));
         }
-        public async Task<T?> Find(Expression<Func<T, bool>>[] criterias)
+
+        public async Task<T?> Find(
+            Expression<Func<T, bool>>[] criterias)
         {
             if (criterias == null || criterias.Length == 0)
                 return null;
 
             var query = _dbSet.AsQueryable();
 
+            // Apply criteria filters
             foreach (var criteria in criterias.Where(c => c != null))
             {
                 query = query.Where(criteria);
@@ -91,17 +116,20 @@ namespace SAPLSServer.Repositories.Implementations
             return await _dbSet.AnyAsync(predicate);
         }
 
-        public virtual async Task<int> CountAsync(Expression<Func<T, bool>>? predicate = null)
+        public virtual async Task<int> CountAsync(Expression<Func<T, bool>>[]? criterias = null)
         {
-            if (predicate == null)
+            if (criterias == null)
                 return await _dbSet.CountAsync();
-            return await _dbSet.CountAsync(predicate);
+
+            var query = ApplyFilters(_dbSet.AsQueryable(), criterias);
+            return await query.CountAsync();
         }
 
         public virtual async Task<int> SaveChangesAsync()
         {
             return await _context.SaveChangesAsync();
         }
+
         private static IQueryable<T> ApplyFilters(IQueryable<T> query, params Expression<Func<T, bool>>[] filters)
         {
             foreach (var filter in filters.Where(f => f != null))
@@ -110,5 +138,7 @@ namespace SAPLSServer.Repositories.Implementations
             }
             return query;
         }
+
+        protected abstract Expression<Func<T, bool>> CreateIdPredicate(TKey id);
     }
 }

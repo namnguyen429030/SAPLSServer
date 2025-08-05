@@ -1,13 +1,14 @@
 ﻿using Microsoft.Identity.Client;
+using SAPLSServer.Constants;
 using System.ComponentModel.DataAnnotations;
 
-namespace SAPLSServer.DTOs.Concrete
+namespace SAPLSServer.DTOs.Concrete.UserDto
 {
     public class CreateStaffProfileRequest : CreateUserRequest
     {
-        [Required(ErrorMessage = "Staff ID is required.")]
+        [Required(ErrorMessage = MessageKeys.STAFF_PROFILE_ID_REQUIRED)]
         public string StaffId { get; set; } = null!;
-        [Required(ErrorMessage = "Parking Lot ID is required.")]
+        [Required(ErrorMessage = MessageKeys.PARKING_LOT_ID_REQUIRED)]
         public string ParkingLotId { get; set; } = null!;
     }
 }

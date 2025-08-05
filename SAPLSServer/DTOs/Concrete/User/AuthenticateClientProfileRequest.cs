@@ -1,7 +1,12 @@
-﻿namespace SAPLSServer.DTOs.Concrete
+﻿using SAPLSServer.Constants;
+using System.ComponentModel.DataAnnotations;
+
+namespace SAPLSServer.DTOs.Concrete.UserDto
 {
-    public class AuthenticateClientProfileRequest : AuthenticateUserRequest
+    public class AuthenticateClientProfileRequest
     {
-        public string? CitizenId { get; set; }
+        [Required(ErrorMessage = MessageKeys.EMAIL_OR_CITIZEN_ID_NUMBER_IS_REQUIRED)]
+        public string? EmailOrCitizenIdNo { get; set; }
+        public string? Password { get; set; }
     }
 }

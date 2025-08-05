@@ -1,16 +1,17 @@
-﻿using SAPLSServer.DTOs.Base;
+﻿using SAPLSServer.Constants;
+using SAPLSServer.DTOs.Base;
 using System.ComponentModel.DataAnnotations;
 
-namespace SAPLSServer.DTOs.Concrete
+namespace SAPLSServer.DTOs.Concrete.UserDto
 {
     public class UpdateUserPasswordRequest : UpdateRequest
     {
-        [Required(ErrorMessage = "Old password is required.")]
+        [Required(ErrorMessage = MessageKeys.OLD_PASSWORD_REQUIRED)]
         public string OldPassword { get; set; } = null!;
-        [Required(ErrorMessage = "New password is required.")]
-        [Length(minimumLength: 8, maximumLength: 24, ErrorMessage = "Password must be between 8 and 24 characters.")]
+        [Required(ErrorMessage = MessageKeys.NEW_PASSWORD_REQUIRED)]
+        [Length(minimumLength: 8, maximumLength: 24, ErrorMessage = MessageKeys.PASSWORD_LENGTH)]
         [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\da-zA-Z]).{8,24}$", 
-            ErrorMessage = "Password must contain at least 1 uppercase letter, 1 lowercase letter, 1 number, and 1 special character.")]
+            ErrorMessage = MessageKeys.PASSWORD_COMPLEXITY)]
         public string NewPassword { get; set; } = null!;
     }
 }

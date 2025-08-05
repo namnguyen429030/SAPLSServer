@@ -1,5 +1,6 @@
 using SAPLSServer.Models;
 using SAPLSServer.Repositories.Interfaces;
+using System.Linq.Expressions;
 
 namespace SAPLSServer.Repositories.Implementations
 {
@@ -7,6 +8,10 @@ namespace SAPLSServer.Repositories.Implementations
     {
         public RequestAttachedFileRepository(SaplsContext context) : base(context)
         {
+        }
+        protected override Expression<Func<RequestAttachedFile, bool>> CreateIdPredicate(string id)
+        {
+            return raf => raf.Id == id;
         }
     }
 }

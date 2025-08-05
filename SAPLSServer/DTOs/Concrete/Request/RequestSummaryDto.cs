@@ -1,7 +1,7 @@
 ﻿using SAPLSServer.DTOs.Base;
 using SAPLSServer.Models;
 
-namespace SAPLSServer.DTOs.Concrete
+namespace SAPLSServer.DTOs.Concrete.RequestDto
 {
     public class RequestSummaryDto : GetResult
     {

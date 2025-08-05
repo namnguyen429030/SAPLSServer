@@ -1,10 +1,11 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using SAPLSServer.Constants;
+using System.ComponentModel.DataAnnotations;
 
 namespace SAPLSServer.DTOs.Base
 {
     public class DeleteRequest
     {
-        [Required(ErrorMessage = "ID is required.")]
+        [Required(ErrorMessage = MessageKeys.ID_REQUIRED)]
         public string Id { get; set; } = null!;
     }
 }

@@ -1,23 +1,14 @@
 ﻿using SAPLSServer.Models;
 
-namespace SAPLSServer.DTOs.Concrete
+namespace SAPLSServer.DTOs.Concrete.UserDto
 {
     public class StaffProfileDetailsDto : UserDetailsDto
     {
-        public string ParkingLotOwnerId { get; set; }
+        public string ParkingLotId { get; set; }
 
-        public StaffProfileDetailsDto(StaffProfile model)
+        public StaffProfileDetailsDto(StaffProfile staff) : base(staff.User)
         {
-            Id = model.UserId;
-            Email = model.User.Email;
-            FullName = model.User.FullName;
-            CreatedAt = model.User.CreatedAt;
-            Status = model.User.Status;
-            ProfileImageUrl = model.User.ProfileImageUrl;
-            Phone = model.User.Phone;
-            UpdatedAt = model.User.UpdatedAt;
-
-            ParkingLotOwnerId = model.ParkingLotId;
+            ParkingLotId = staff.ParkingLotId;
         }
     }
 }

@@ -1,15 +1,17 @@
-﻿using SAPLSServer.DTOs.Base;
+﻿using SAPLSServer.Constants;
 using System.ComponentModel.DataAnnotations;
 
-namespace SAPLSServer.DTOs.Concrete
+namespace SAPLSServer.DTOs.Concrete.SharedVehicleDto
 {
-    public class CreateSharedVehicleRequest : CreateRequest
+    public class CreateSharedVehicleRequest
     {
-        [Required(ErrorMessage = "Vehicle ID is required.")]
+        [Required(ErrorMessage = MessageKeys.VEHICLE_ID_REQUIRED)]
         public string VehicleId { get; set; } = null!;
+        [Required(ErrorMessage = MessageKeys.OWNER_ID_REQUIRED)]
+        public string OwnerId { get; set; } = null!;
         public int? AccessDuration { get; set; }
         public string? Note { get; set; }
-        [Required(ErrorMessage = "Shared Person ID is required.")]
+        [Required(ErrorMessage = MessageKeys.SHARED_PERSON_ID_REQUIRED)]
         public string SharedPersonId { get; set; } = null!;
     }
 }

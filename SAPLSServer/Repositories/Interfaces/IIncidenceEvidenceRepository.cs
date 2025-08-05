@@ -2,7 +2,7 @@ using SAPLSServer.Models;
 
 namespace SAPLSServer.Repositories.Interfaces
 {
-    public interface IIncidenceEvidenceRepository
+    public interface IIncidenceEvidenceRepository : IRepository<IncidenceEvidence, string>
     {
     }
 }

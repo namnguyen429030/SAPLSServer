@@ -5,7 +5,7 @@ namespace SAPLSServer.Models;
 
 public partial class PaymentSource
 {
-    public int Id { get; set; }
+    public string Id { get; set; } = null!;
 
     public string BankName { get; set; } = null!;
 

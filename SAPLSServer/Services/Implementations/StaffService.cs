@@ -1,10 +1,12 @@
 using SAPLSServer.Constants;
 using SAPLSServer.DTOs.Concrete;
+using SAPLSServer.DTOs.Concrete.UserDto;
+using SAPLSServer.DTOs.PaginationDto;
 using SAPLSServer.Exceptions;
 using SAPLSServer.Models;
 using SAPLSServer.Repositories.Interfaces;
 using SAPLSServer.Services.Interfaces;
-using SAPLSServer.Helpers;
+using System.Linq.Expressions;
 
 namespace SAPLSServer.Services.Implementations
 {
@@ -54,21 +56,44 @@ namespace SAPLSServer.Services.Implementations
 
         public async Task<StaffProfileDetailsDto?> GetStaffProfileDetails(string id)
         {
-            var staffProfile = await _staffProfileRepository.Find([sp => sp.UserId == id]);
-            return staffProfile == null ? null : new StaffProfileDetailsDto(staffProfile);
+            var staffProfile = await _staffProfileRepository.FindIncludingUserReadOnly(id);
+            if (staffProfile == null)
+                return null;
+            return new StaffProfileDetailsDto(staffProfile);
         }
 
-        public async Task<PageResult<StaffProfileDetailsDto>> GetStaffsPageByParkingLot(PageRequest request)
+        public async Task<PageResult<StaffProfileSummaryDto>> GetStaffProfilesPage(PageRequest pageRequest, GetStaffListRequest request)
         {
-            var staffProfiles = await _staffProfileRepository.GetPageAsync(request.PageNumber, request.PageSize);
-            var items = staffProfiles.Select(sp => new StaffProfileDetailsDto(sp)).ToList();
-
-            return new PageResult<StaffProfileDetailsDto>
+            var criterias = new Expression<Func<StaffProfile, bool>>[]
+            {
+                sp => !string.IsNullOrEmpty(request.Status) && sp.User.Status == request.Status,
+                sp => !string.IsNullOrEmpty(request.ParkingLotId) && sp.ParkingLotId == request.ParkingLotId,
+                sp => !string.IsNullOrEmpty(request.SearchCriteria) && (
+                        sp.User.FullName.Contains(request.SearchCriteria) ||
+                        sp.User.Email.Contains(request.SearchCriteria) ||
+                        sp.User.Phone.Contains(request.SearchCriteria) ||
+                        sp.StaffId.Contains(request.SearchCriteria)
+                    )
+            };
+            var totalCount = await _staffProfileRepository.CountAsync(criterias);
+            var staffs = await _staffProfileRepository.GetPageAsync(
+                                        pageRequest.PageNumber, pageRequest.PageSize, criterias);
+            var items = new List<StaffProfileSummaryDto>();
+            foreach (var staff in staffs)
+            {
+                var staffIncludingUser = await _staffProfileRepository.FindIncludingUserReadOnly(staff.UserId);
+                if (staffIncludingUser == null)
+                {
+                    continue; // Skip null staff profiles
+                }
+                items.Add(new StaffProfileSummaryDto(staffIncludingUser));
+            }
+            return new PageResult<StaffProfileSummaryDto>
             {
                 Items = items,
-                TotalCount = items.Count,
-                PageNumber = request.PageNumber,
-                PageSize = request.PageSize,
+                TotalCount = totalCount,
+                PageNumber = pageRequest.PageNumber,
+                PageSize = pageRequest.PageSize,
             };
         }
     }

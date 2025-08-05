@@ -1,19 +1,17 @@
-﻿using SAPLSServer.DTOs.Base;
-using SAPLSServer.DTOs.Concrete;
+﻿using SAPLSServer.DTOs.Concrete.UserDto;
+using SAPLSServer.Models;
 
-namespace SAPLSServer.DTOs.Concrete
+namespace SAPLSServer.DTOs.Concrete.IncidentReportDto
 {
-    public class IncidentReportDetailsDto : GetResult
+    public class IncidentReportDetailsDto : IncidentReportSummaryDto
     {
-        public string Header { get; set; } = null!;
+        public string Description { get; set; }
 
-        public DateTime ReportedDate { get; set; }
-
-        public string Priority { get; set; } = null!;
-
-        public string Description { get; set; } = null!;
-
-        public string Status { get; set; } = null!;
-        public StaffProfileSummaryDto Reporter { get; set; } = null!;
+        public StaffProfileSummaryDto Reporter { get; set; }
+        public IncidentReportDetailsDto(IncidenceReport incidentReport) : base(incidentReport)
+        {
+            Description = incidentReport.Description;
+            Reporter = new StaffProfileSummaryDto(incidentReport.Reporter);
+        }
     }
 }

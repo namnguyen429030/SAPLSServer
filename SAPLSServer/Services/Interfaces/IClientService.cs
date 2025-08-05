@@ -1,5 +1,6 @@
 using SAPLSServer.DTOs.Base;
-using SAPLSServer.DTOs.Concrete;
+using SAPLSServer.DTOs.Concrete.UserDto;
+using SAPLSServer.DTOs.PaginationDto;
 
 namespace SAPLSServer.Services.Interfaces
 {
@@ -35,6 +36,6 @@ namespace SAPLSServer.Services.Interfaces
         /// <param name="pageRequest">The pagination request.</param>
         /// <param name="request">The search/filter criteria.</param>
         /// <returns>A paginated result of client profile details.</returns>
-        Task<PageResult<ClientProfileDetailsDto>> GetClientProfilesPage(PageRequest pageRequest, GetListRequest request);
+        Task<PageResult<ClientProfileSummaryDto>> GetClientProfilesPage(PageRequest pageRequest, GetClientListRequest request);
     }
 }

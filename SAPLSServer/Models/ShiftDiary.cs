@@ -15,9 +15,9 @@ public partial class ShiftDiary
 
     public string ParkingLotId { get; set; } = null!;
 
-    public string SenderId { get; set; } = null!;
+    public string? SenderId { get; set; }
 
     public virtual ParkingLot ParkingLot { get; set; } = null!;
 
-    public virtual StaffProfile Sender { get; set; } = null!;
+    public virtual StaffProfile? Sender { get; set; }
 }

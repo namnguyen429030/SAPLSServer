@@ -1,6 +1,6 @@
 ﻿namespace SAPLSServer.DTOs.Concrete
 {
-    public class RemoveAttendantFromWhitelistRequest
+    public class RemoveAttendantFromWhiteListRequest
     {
         public string ParkingLotId { get; set; } = null!;
 

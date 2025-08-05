@@ -1,17 +1,18 @@
 ﻿using SAPLSServer.DTOs.Base;
 using System.ComponentModel.DataAnnotations;
+using SAPLSServer.Constants;
 
-namespace SAPLSServer.DTOs.Concrete
+namespace SAPLSServer.DTOs.Concrete.PaymentSourceDto
 {
-    public class CreatePaymenSourceRequest : CreateRequest
+    public class CreatePaymenSourceRequest
     {
-        [Required(ErrorMessage = "Bank name is required.")]
+        [Required(ErrorMessage = MessageKeys.BANK_NAME_REQUIRED)]
         public string BankName { get; set; } = null!;
-        [Required(ErrorMessage = "Account name is required.")]
+        [Required(ErrorMessage = MessageKeys.ACCOUNT_NAME_REQUIRED)]
         public string AccountName { get; set; } = null!;
-        [Required(ErrorMessage = "Account number is required.")]
+        [Required(ErrorMessage = MessageKeys.ACCOUNT_NUMBER_REQUIRED)]
         public string AccountNumber { get; set; } = null!;
-        [Required(ErrorMessage = "Parking lot owner id is required.")]
+        [Required(ErrorMessage = MessageKeys.PARKING_LOT_OWNER_ID_REQUIRED)]
         public string ParkingLotOwnerId { get; set; } = null!;
     }
 }

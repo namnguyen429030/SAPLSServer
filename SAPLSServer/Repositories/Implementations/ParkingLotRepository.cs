@@ -1,5 +1,7 @@
+using Microsoft.EntityFrameworkCore;
 using SAPLSServer.Models;
 using SAPLSServer.Repositories.Interfaces;
+using System.Linq.Expressions;
 
 namespace SAPLSServer.Repositories.Implementations
 {
@@ -7,6 +9,17 @@ namespace SAPLSServer.Repositories.Implementations
     {
         public ParkingLotRepository(SaplsContext context) : base(context)
         {
+        }
+
+        public Task<ParkingLot?> FindIncludingParkingLotOwnerReadOnly(string id)
+        {
+            return _dbSet.Include(pl => pl.ParkingLotOwner).AsNoTracking()
+                         .FirstOrDefaultAsync(CreateIdPredicate(id));
+        }
+
+        protected override Expression<Func<ParkingLot, bool>> CreateIdPredicate(string id)
+        {
+            return pl => pl.Id == id;
         }
     }
 }

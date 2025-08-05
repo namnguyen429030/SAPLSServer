@@ -1,21 +1,16 @@
 ﻿using SAPLSServer.Models;
 
-namespace SAPLSServer.DTOs.Concrete
+namespace SAPLSServer.DTOs.Concrete.UserDto
 {
     public class AdminProfileSummaryDto : UserSummaryDto
     {
         public string AdminId { get; set; }
-        public string Role { get; set; }
+        public string AdminRole { get; set; }
 
-        public AdminProfileSummaryDto(AdminProfile model)
+        public AdminProfileSummaryDto(AdminProfile model) : base(model.User)
         {
-            Id = model.UserId;
-            Email = model.User.Email;
-            FullName = model.User.FullName;
-            CreatedAt = model.User.CreatedAt;
-            Status = model.User.Status;
             AdminId = model.AdminId;
-            Role = model.Role;
+            AdminRole = model.Role;
         }
     }
 }
