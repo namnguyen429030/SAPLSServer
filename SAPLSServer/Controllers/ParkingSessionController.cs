@@ -76,7 +76,7 @@ namespace SAPLSServer.Controllers
             return Ok(result);
         }
 
-        [HttpGet("client")]
+        [HttpGet("client/page")]
         public async Task<IActionResult> GetParkingSessionsForClientPage(
             [FromQuery] PageRequest pageRequest,
             [FromQuery] GetParkingSessionListByClientIdRequest request)
@@ -88,10 +88,19 @@ namespace SAPLSServer.Controllers
             return Ok(result);
         }
 
+        [HttpGet("client")]
+        public async Task<IActionResult> GetParkingSessionsForClient([FromQuery] GetParkingSessionListByClientIdRequest request) {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var result = await _parkingSessionService.GetParkingSessionsForClient(request);
+            return Ok(result);
+        }
+
         [HttpGet("parking-lot")]
         public async Task<IActionResult> GetParkingSessionsForParkingLotPage(
             [FromQuery] PageRequest pageRequest,
-            [FromQuery] GetParkingSessionListByClientIdRequest request)
+            [FromQuery] GetParkingSessionListByParkingLotIdRequest request)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);

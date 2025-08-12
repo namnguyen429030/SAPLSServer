@@ -69,20 +69,26 @@ namespace SAPLSServer.Services.Implementations
 
         public async Task<PageResult<ClientProfileSummaryDto>> GetClientProfilesPage(PageRequest pageRequest, GetClientListRequest request)
         {
-            var criterias = new Expression<Func<ClientProfile, bool>>[]
-            {
-                cp => !string.IsNullOrEmpty(request.Status) && cp.User.Status == request.Status,
-                cp => !string.IsNullOrEmpty(request.SearchCriteria) && (
-                        cp.User.FullName.Contains(request.SearchCriteria) ||
-                        cp.User.Email.Contains(request.SearchCriteria) ||
-                        cp.User.Phone.Contains(request.SearchCriteria) ||
-                        cp.CitizenId.Contains(request.SearchCriteria)
-                    )
-            };
-            var totalCount = await _clientProfileRepository.CountAsync(criterias);
+            var criteriaList = new List<Expression<Func<ClientProfile, bool>>>();
+            
+            // Ch? thêm ?i?u ki?n khi giá tr? t?n t?i
+            if (!string.IsNullOrEmpty(request.Status))
+                criteriaList.Add(cp => cp.User.Status == request.Status);
+                
+            if (!string.IsNullOrEmpty(request.SearchCriteria))
+                criteriaList.Add(cp => cp.User.FullName.Contains(request.SearchCriteria) ||
+                                      cp.User.Email.Contains(request.SearchCriteria) ||
+                                      cp.User.Phone.Contains(request.SearchCriteria) ||
+                                      cp.CitizenId.Contains(request.SearchCriteria));
+            
+            var totalCount = await _clientProfileRepository.CountAsync(
+                criteriaList.Count > 0 ? criteriaList.ToArray() : null);
+                
             var clients = await _clientProfileRepository.GetPageAsync(
-                                        pageRequest.PageNumber, pageRequest.PageSize, 
-                                        criterias, null, request.Order == OrderType.Asc.ToString());
+                                    pageRequest.PageNumber, pageRequest.PageSize, 
+                                    criteriaList.Count > 0 ? criteriaList.ToArray() : null, 
+                                    null, request.Order == OrderType.Asc.ToString());
+            
             var items = new List<ClientProfileSummaryDto>();
             foreach (var client in clients)
             {
@@ -91,6 +97,7 @@ namespace SAPLSServer.Services.Implementations
                     continue; // Skip if client profile is not found
                 items.Add(new ClientProfileSummaryDto(clientIncludingUser));
             }
+            
             return new PageResult<ClientProfileSummaryDto>
             {
                 Items = items,
@@ -98,6 +105,36 @@ namespace SAPLSServer.Services.Implementations
                 PageNumber = pageRequest.PageNumber,
                 PageSize = pageRequest.PageSize,
             };
+        }
+
+        public async Task<List<ClientProfileSummaryDto>> GetAllClients(GetClientListRequest request)
+        {
+            var criteriaList = new List<Expression<Func<ClientProfile, bool>>>();
+            
+            // Ch? thêm ?i?u ki?n khi giá tr? t?n t?i
+            if (!string.IsNullOrEmpty(request.Status))
+                criteriaList.Add(cp => cp.User.Status == request.Status);
+                
+            if (!string.IsNullOrEmpty(request.SearchCriteria))
+                criteriaList.Add(cp => cp.User.FullName.Contains(request.SearchCriteria) ||
+                                      cp.User.Email.Contains(request.SearchCriteria) ||
+                                      cp.User.Phone.Contains(request.SearchCriteria) ||
+                                      cp.CitizenId.Contains(request.SearchCriteria));
+        
+            var clients = await _clientProfileRepository.GetAllAsync(
+                criteriaList.Count > 0 ? criteriaList.ToArray() : null, 
+                null, 
+                request.Order == OrderType.Asc.ToString());
+                
+            var result = new List<ClientProfileSummaryDto>();
+            foreach(var client in clients) {
+                var clientIncludingUser = await _clientProfileRepository.FindIncludingUserReadOnly(client.UserId);
+                if(clientIncludingUser == null) {
+                    continue;
+                }
+                result.Add(new ClientProfileSummaryDto(clientIncludingUser));
+            }
+            return result;
         }
     }
 }

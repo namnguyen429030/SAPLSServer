@@ -63,7 +63,7 @@ namespace SAPLSServer.Controllers
         /// <param name="pageRequest">Pagination parameters.</param>
         /// <param name="request">Filter criteria for shared vehicles.</param>
         /// <returns>Paginated list of shared vehicles.</returns>
-        [HttpGet]
+        [HttpGet("page")]
         public async Task<IActionResult> GetSharedVehiclesPage(
             [FromQuery] PageRequest pageRequest,
             [FromQuery] GetSharedVehicleList request)

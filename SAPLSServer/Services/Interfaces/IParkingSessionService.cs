@@ -44,12 +44,18 @@ namespace SAPLSServer.Services.Interfaces
         /// <returns></returns>
         Task<PageResult<ParkingSessionSummaryForClientDto>> GetParkingSessionsForClientPage(PageRequest pageRequest, GetParkingSessionListByClientIdRequest request);
         /// <summary>
+        /// Retrieves all parking sessions for a specific client with optional search criteria.
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        Task<List<ParkingSessionSummaryForClientDto>> GetParkingSessionsForClient(GetParkingSessionListByClientIdRequest request);
+        /// <summary>
         /// Retrieves a paginated list of parking sessions for a specific parking lot with optional search criteria.
         /// </summary>
         /// <param name="pageRequest"></param>
         /// <param name="request"></param>
         /// <returns></returns>
-        Task<PageResult<ParkingSessionSummaryForParkingLotDto>> GetParkingSessionsForParkingLotPage(PageRequest pageRequest, GetParkingSessionListByClientIdRequest request);
+        Task<PageResult<ParkingSessionSummaryForParkingLotDto>> GetParkingSessionsForParkingLotPage(PageRequest pageRequest, GetParkingSessionListByParkingLotIdRequest request);
     }
 }
 

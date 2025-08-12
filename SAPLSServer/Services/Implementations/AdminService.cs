@@ -1,4 +1,4 @@
-using SAPLSServer.Constants;
+﻿using SAPLSServer.Constants;
 using SAPLSServer.DTOs.Base;
 using SAPLSServer.DTOs.Concrete.UserDto;
 using SAPLSServer.DTOs.PaginationDto;
@@ -63,21 +63,28 @@ namespace SAPLSServer.Services.Implementations
 
         public async Task<PageResult<AdminProfileSummaryDto>> GetAdminProfilesPage(PageRequest pageRequest, GetAdminListRequest request)
         {
-            var criterias = new Expression<Func<AdminProfile, bool>>[]
-            {
-                ap => !string.IsNullOrEmpty(request.Role) && ap.Role == request.Role,
-                ap => !string.IsNullOrEmpty(request.Status) && ap.User.Status == request.Status,
-                ap => !string.IsNullOrEmpty(request.SearchCriteria) && (
-                        ap.AdminId.Contains(request.SearchCriteria) ||
-                        ap.User.FullName.Contains(request.SearchCriteria) ||
-                        ap.User.Email.Contains(request.SearchCriteria) ||
-                        ap.User.Phone.Contains(request.SearchCriteria)
-                    )
-            };
-            var totalCount = await _adminProfileRepository.CountAsync(criterias);
+            var criteriaList = new List<Expression<Func<AdminProfile, bool>>>();
+            
+            // Chỉ thêm điều kiện khi giá trị tồn tại
+            if (!string.IsNullOrEmpty(request.Role))
+                criteriaList.Add(ap => ap.Role == request.Role);
+                
+            if (!string.IsNullOrEmpty(request.Status))
+                criteriaList.Add(ap => ap.User.Status == request.Status);
+                
+            if (!string.IsNullOrEmpty(request.SearchCriteria))
+                criteriaList.Add(ap => ap.AdminId.Contains(request.SearchCriteria.Trim()) ||
+                                      ap.User.FullName.Contains(request.SearchCriteria.Trim()) ||
+                                      ap.User.Email.Contains(request.SearchCriteria.Trim()) ||
+                                      ap.User.Phone.Contains(request.SearchCriteria.Trim()));
+        
+            var totalCount = await _adminProfileRepository.CountAsync(
+                criteriaList.Count > 0 ? criteriaList.ToArray() : null);
+                
             var admins = await _adminProfileRepository.GetPageAsync(
                                         pageRequest.PageNumber, pageRequest.PageSize, 
-                                        criterias, null, request.Order == OrderType.Asc.ToString());
+                                        criteriaList.Count > 0 ? criteriaList.ToArray() : null, 
+                                        null, request.Order == OrderType.Asc.ToString());
             var items = new List<AdminProfileSummaryDto>();
             foreach (var admin in admins)
             {
@@ -97,21 +104,35 @@ namespace SAPLSServer.Services.Implementations
 
         public async Task<List<AdminProfileSummaryDto>> GetAdminProfiles(GetAdminListRequest request)
         {
-            var criterias = new Expression<Func<AdminProfile, bool>>[]
-            {
-                ap => !string.IsNullOrEmpty(request.Role) && ap.Role == request.Role,
-                ap => !string.IsNullOrEmpty(request.Status) && ap.User.Status == request.Status,
-                ap => !string.IsNullOrEmpty(request.SearchCriteria) && (
-                        ap.AdminId.Contains(request.SearchCriteria) ||
-                        ap.User.FullName.Contains(request.SearchCriteria) ||
-                        ap.User.Email.Contains(request.SearchCriteria) ||
-                        ap.User.Phone.Contains(request.SearchCriteria)
-                    )
-            };
-            var admins = await _adminProfileRepository.GetAllAsync(criterias, null, request.Order == OrderType.Asc.ToString());
-            return admins
-                .Select(admin => new AdminProfileSummaryDto(admin))
-                .ToList();
+            var criteriaList = new List<Expression<Func<AdminProfile, bool>>>();
+            
+            // Chỉ thêm điều kiện khi giá trị tồn tại
+            if (!string.IsNullOrEmpty(request.Role))
+                criteriaList.Add(ap => ap.Role == request.Role);
+                
+            if (!string.IsNullOrEmpty(request.Status))
+                criteriaList.Add(ap => ap.User.Status == request.Status);
+                
+            if (!string.IsNullOrEmpty(request.SearchCriteria))
+                criteriaList.Add(ap => ap.AdminId.Contains(request.SearchCriteria) ||
+                                      ap.User.FullName.Contains(request.SearchCriteria) ||
+                                      ap.User.Email.Contains(request.SearchCriteria) ||
+                                      ap.User.Phone.Contains(request.SearchCriteria));
+        
+            var admins = await _adminProfileRepository.GetAllAsync(
+                criteriaList.Count > 0 ? criteriaList.ToArray() : null, 
+                null, 
+                request.Order == OrderType.Asc.ToString());
+                
+            var result = new List<AdminProfileSummaryDto>();
+            foreach(var admin in admins) {
+                var adminIncludingUser = await _adminProfileRepository.FindIncludingUserReadOnly(admin.UserId);
+                if(adminIncludingUser == null) {
+                    continue;
+                }
+                result.Add(new AdminProfileSummaryDto(adminIncludingUser));
+            }
+            return result;
         }
     }
 }

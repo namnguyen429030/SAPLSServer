@@ -77,7 +77,7 @@ namespace SAPLSServer.Services.Implementations
 
         public async Task<ParkingSessionDetailsForParkingLotDto?> GetParkingSessionDetailsForParkingLot(GetDetailsRequest request)
         {
-            var session = await _parkingSessionRepository.FindIncludingVehicleReadOnly(request.Id);
+            var session = await _parkingSessionRepository.FindIncludingVehicleAndParkingLotReadOnly(request.Id);
             if (session == null)
                 return null;
             return new ParkingSessionDetailsForParkingLotDto(session);
@@ -85,21 +85,27 @@ namespace SAPLSServer.Services.Implementations
 
         public async Task<PageResult<ParkingSessionSummaryForClientDto>> GetParkingSessionsForClientPage(PageRequest pageRequest, GetParkingSessionListByClientIdRequest request)
         {
-            var criterias = new List<Expression<Func<ParkingSession, bool>>>
-            {
-                ps => !string.IsNullOrEmpty(request.ClientId) && ps.VehicleId == request.ClientId,
-                ps => !string.IsNullOrEmpty(request.Status) && ps.Status == request.Status,
-            };
-
-            var totalCount = await _parkingSessionRepository.CountAsync(criterias.ToArray());
+            var criteriaList = new List<Expression<Func<ParkingSession, bool>>>();
+            
+            // Ch? thêm ?i?u ki?n khi giá tr? t?n t?i
+            if (!string.IsNullOrEmpty(request.ClientId))
+                criteriaList.Add(ps => ps.DriverId == request.ClientId);
+                
+            if (!string.IsNullOrEmpty(request.Status))
+                criteriaList.Add(ps => ps.Status == request.Status);
+            
+            var totalCount = await _parkingSessionRepository.CountAsync(
+                criteriaList.Count > 0 ? criteriaList.ToArray() : null);
+                
             var sessions = await _parkingSessionRepository.GetPageAsync(
-                pageRequest.PageNumber, pageRequest.PageSize, criterias.ToArray());
+                pageRequest.PageNumber, pageRequest.PageSize,
+                criteriaList.Count > 0 ? criteriaList.ToArray() : null);
 
             var items = new List<ParkingSessionSummaryForClientDto>();
             foreach(var session in sessions)
             {
                 var sessionIncludingDependencies = await _parkingSessionRepository
-                    .FindIncludingVehicleReadOnly(session.Id);
+                    .FindIncludingVehicleAndParkingLotReadOnly(session.Id);
                 if(sessionIncludingDependencies == null)
                 {
                     continue; // Skip if session not found
@@ -115,22 +121,74 @@ namespace SAPLSServer.Services.Implementations
             };
         }
 
-        public async Task<PageResult<ParkingSessionSummaryForParkingLotDto>> GetParkingSessionsForParkingLotPage(PageRequest pageRequest, GetParkingSessionListByClientIdRequest request)
+        public async Task<List<ParkingSessionSummaryForClientDto>> GetParkingSessionsForClient(GetParkingSessionListByClientIdRequest request)
         {
-            var criterias = new List<Expression<Func<ParkingSession, bool>>>
-            {
-                ps => !string.IsNullOrEmpty(request.Status) && ps.Status == request.Status
-            };
+            var criteriaList = new List<Expression<Func<ParkingSession, bool>>>();
 
-            var totalCount = await _parkingSessionRepository.CountAsync(criterias.ToArray());
+            // Ch? thêm ?i?u ki?n khi giá tr? t?n t?i
+            if (!string.IsNullOrEmpty(request.ClientId))
+                criteriaList.Add(ps => ps.DriverId == request.ClientId);
+
+            if (!string.IsNullOrEmpty(request.Status))
+                criteriaList.Add(ps => ps.Status == request.Status);
+                
+            // Thêm các ?i?u ki?n ngày tháng n?u có
+            if (request.StartEntryDate.HasValue)
+                criteriaList.Add(ps => ps.EntryDateTime.Date >= request.StartEntryDate.Value.ToDateTime(TimeOnly.MinValue));
+                
+            if (request.EndEntryDate.HasValue)
+                criteriaList.Add(ps => ps.EntryDateTime.Date <= request.EndEntryDate.Value.ToDateTime(TimeOnly.MaxValue));
+                
+            if (request.StartExitDate.HasValue)
+                criteriaList.Add(ps => ps.ExitDateTime != null && ps.ExitDateTime.Value.Date >= request.StartExitDate.Value.ToDateTime(TimeOnly.MinValue));
+                
+            if (request.EndExitDate.HasValue)
+                criteriaList.Add(ps => ps.ExitDateTime != null && ps.ExitDateTime.Value.Date <= request.EndExitDate.Value.ToDateTime(TimeOnly.MaxValue));
+
+            // L?y t?t c? sessions mà không phân trang
+            var sessions = await _parkingSessionRepository.GetAllAsync(
+                criteriaList.Count > 0 ? criteriaList.ToArray() : null, 
+                null, 
+                true); // M?c ??nh s?p x?p t?ng d?n
+
+            var items = new List<ParkingSessionSummaryForClientDto>();
+            foreach (var session in sessions)
+            {
+                var sessionIncludingDependencies = await _parkingSessionRepository
+                    .FindIncludingVehicleAndParkingLotReadOnly(session.Id);
+                if (sessionIncludingDependencies == null)
+                {
+                    continue; // Skip if session not found
+                }
+                items.Add(new ParkingSessionSummaryForClientDto(sessionIncludingDependencies));
+            }
+            
+            return items;
+        }
+
+        public async Task<PageResult<ParkingSessionSummaryForParkingLotDto>> GetParkingSessionsForParkingLotPage(PageRequest pageRequest, GetParkingSessionListByParkingLotIdRequest request)
+        {
+            var criteriaList = new List<Expression<Func<ParkingSession, bool>>>();
+            
+            // Ch? thêm ?i?u ki?n khi giá tr? t?n t?i
+            if (!string.IsNullOrEmpty(request.ParkingLotId))
+                criteriaList.Add(ps => ps.ParkingLotId == request.ParkingLotId);
+                
+            if (!string.IsNullOrEmpty(request.Status))
+                criteriaList.Add(ps => ps.Status == request.Status);
+            
+            var totalCount = await _parkingSessionRepository.CountAsync(
+                criteriaList.Count > 0 ? criteriaList.ToArray() : null);
+                
             var sessions = await _parkingSessionRepository.GetPageAsync(
-                pageRequest.PageNumber, pageRequest.PageSize, criterias.ToArray());
+                pageRequest.PageNumber, pageRequest.PageSize,
+                criteriaList.Count > 0 ? criteriaList.ToArray() : null);
 
             var items = new List<ParkingSessionSummaryForParkingLotDto>();
             foreach(var session in sessions)
             {
                 var sessionIncludingDependencies = await _parkingSessionRepository
-                    .FindIncludingVehicleAndParkingLot(session.VehicleId);
+                    .FindIncludingVehicleAndParkingLotReadOnly(session.Id);
                 if(sessionIncludingDependencies == null)
                     continue; // Skip if session not found
                 items.Add(new ParkingSessionSummaryForParkingLotDto(sessionIncludingDependencies));

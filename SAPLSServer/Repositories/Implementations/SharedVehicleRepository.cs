@@ -18,7 +18,10 @@ namespace SAPLSServer.Repositories.Implementations
 
         public async Task<SharedVehicle?> FindIncludingVehicleAndOwnerReadOnly(string id)
         {
-            return await _dbSet.Include(sv => sv.Vehicle.Owner)
+            return await _dbSet
+                .Include(sv => sv.Vehicle)
+                .Include(sv => sv.Vehicle.Owner)
+                .Include(sv => sv.Vehicle.Owner.User)
                 .AsNoTracking()
                 .FirstOrDefaultAsync(CreateIdPredicate(id));
         }

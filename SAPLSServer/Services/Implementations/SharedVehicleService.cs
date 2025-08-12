@@ -62,21 +62,25 @@ namespace SAPLSServer.Services.Implementations
         }
         public async Task<PageResult<SharedVehicleSummaryDto>> GetSharedVehiclesPage(PageRequest pageRequest, GetSharedVehicleList request)
         {
-            var criterias = new Expression<Func<SharedVehicle, bool>>[]
-            {
-                x => string.IsNullOrEmpty(request.SharedPersonId) || x.SharedPersonId == request.SharedPersonId,
-            };
-            var totalCount = await _sharedVehicleRepository.CountAsync(criterias);
+            var criteriaList = new List<Expression<Func<SharedVehicle, bool>>>();
+            
+            // Chỉ thêm điều kiện khi giá trị tồn tại
+            if (!string.IsNullOrEmpty(request.SharedPersonId))
+                criteriaList.Add(x => x.SharedPersonId == request.SharedPersonId);
+            
+            var totalCount = await _sharedVehicleRepository.CountAsync(
+                criteriaList.Count > 0 ? criteriaList.ToArray() : null);
+                
             var sharedVehicles = await _sharedVehicleRepository.GetPageAsync(
                 pageRequest.PageNumber,
                 pageRequest.PageSize,
-                criterias
+                criteriaList.Count > 0 ? criteriaList.ToArray() : null
             );
 
             var items = new List<SharedVehicleSummaryDto>();
             foreach(var sharedVehicle in sharedVehicles)
             {
-                var sharedVehicleWithDependencies = await _sharedVehicleRepository.FindIncludingVehicleAndOwnerReadOnly(sharedVehicle.Id);
+                var sharedVehicleWithDependencies = await _sharedVehicleRepository.FindIncludingVehicleAndOwnerReadOnly(sharedVehicle.VehicleId);
                 if(sharedVehicleWithDependencies == null)
                     continue;
                 items.Add(new SharedVehicleSummaryDto(sharedVehicleWithDependencies));

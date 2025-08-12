@@ -37,5 +37,12 @@ namespace SAPLSServer.Services.Interfaces
         /// <param name="request">The search/filter criteria.</param>
         /// <returns>A paginated result of client profile details.</returns>
         Task<PageResult<ClientProfileSummaryDto>> GetClientProfilesPage(PageRequest pageRequest, GetClientListRequest request);
+        
+        /// <summary>
+        /// Retrieves all client profiles with optional search criteria.
+        /// </summary>
+        /// <param name="request">The search/filter criteria.</param>
+        /// <returns>A list of client profile summaries.</returns>
+        Task<List<ClientProfileSummaryDto>> GetAllClients(GetClientListRequest request);
     }
 }

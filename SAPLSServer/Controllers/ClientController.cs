@@ -64,5 +64,20 @@ namespace SAPLSServer.Controllers
             var result = await _clientService.GetClientProfilesPage(pageRequest, request);
             return Ok(result);
         }
+
+        /// <summary>
+        /// Retrieves all client profiles with optional filtering.
+        /// </summary>
+        /// <param name="request">The filter criteria for client profiles.</param>
+        /// <returns>List of all client profiles.</returns>
+        [HttpGet("all")]
+        public async Task<IActionResult> GetAllClients([FromQuery] GetClientListRequest request)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var result = await _clientService.GetAllClients(request);
+            return Ok(result);
+        }
     }
 }
