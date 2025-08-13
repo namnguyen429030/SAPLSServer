@@ -1,7 +1,7 @@
 using SAPLSServer.Constants;
 using SAPLSServer.DTOs.Base;
 using SAPLSServer.DTOs.Concrete;
-using SAPLSServer.DTOs.Concrete.UserDto;
+using SAPLSServer.DTOs.Concrete.UserDtos;
 using SAPLSServer.DTOs.PaginationDto;
 using SAPLSServer.Exceptions;
 using SAPLSServer.Models;
@@ -23,14 +23,14 @@ namespace SAPLSServer.Services.Implementations
             _parkingLotOwnerProfileRepository = parkingLotOwnerProfileRepository;
         }
 
-        public async Task CreateParkingLotOwner(CreateParkingLotOwnerProfileRequest request)
+        public async Task Create(CreateParkingLotOwnerProfileRequest request)
         {
             // Check for unique ParkingLotId
             bool ownerIdExists = await _parkingLotOwnerProfileRepository.ExistsAsync(o => o.ParkingLotOwnerId == request.ParkingLotOwnerId);
             if (ownerIdExists)
                 throw new InvalidInformationException(MessageKeys.PARKING_LOT_OWNER_ID_ALREADY_EXISTS);
 
-            var userId = await _userService.CreateUser(request);
+            var userId = await _userService.Create(request);
 
             var ownerProfile = new ParkingLotOwnerProfile
             {
@@ -38,17 +38,18 @@ namespace SAPLSServer.Services.Implementations
                 ParkingLotOwnerId = request.ParkingLotOwnerId
             };
             await _parkingLotOwnerProfileRepository.AddAsync(ownerProfile);
+            await _parkingLotOwnerProfileRepository.SaveChangesAsync();
         }
 
-        public async Task UpdateParkingLotOwner(UpdateParkingLotOwnerProfileRequest request)
+        public async Task Update(UpdateParkingLotOwnerProfileRequest request)
         {
             var ownerProfile = await _parkingLotOwnerProfileRepository.FindIncludingUser(request.Id);
             if (ownerProfile == null)
                 throw new InvalidInformationException(MessageKeys.PARKING_LOT_OWNER_PROFILE_NOT_FOUND);
 
             ownerProfile.ParkingLotOwnerId = request.ParkingLotOwnerId;
-            _parkingLotOwnerProfileRepository.Update(ownerProfile);
             ownerProfile.User.UpdatedAt = DateTime.UtcNow;
+            _parkingLotOwnerProfileRepository.Update(ownerProfile);
             await _parkingLotOwnerProfileRepository.SaveChangesAsync();
         }
 
@@ -92,6 +93,40 @@ namespace SAPLSServer.Services.Implementations
                 PageNumber = pageRequest.PageNumber,
                 PageSize = pageRequest.PageSize,
             };
+        }
+
+        public async Task<List<ParkingLotOwnerProfileSummaryDto>> GetParkingLotOwnerProfiles(GetParkingLotOwnerListRequest request)
+        {
+            var criterias = new List<Expression<Func<ParkingLotOwnerProfile, bool>>>();
+            if (!string.IsNullOrWhiteSpace(request.Status))
+            {
+                criterias.Add(plo => plo.User.Status == request.Status);
+            }
+            if (!string.IsNullOrWhiteSpace(request.SearchCriteria))
+            {
+                criterias.Add(plo => plo.ParkingLotOwnerId.Contains(request.SearchCriteria) ||
+                plo.User.FullName.Contains(request.SearchCriteria) ||
+                plo.User.Email.Contains(request.SearchCriteria) ||
+                plo.User.Phone.Contains(request.SearchCriteria));
+            }
+            var owners = await _parkingLotOwnerProfileRepository.GetAllAsync(criterias.ToArray(), null, request.Order == OrderType.Asc.ToString());
+            return owners
+                .Select(owner => new ParkingLotOwnerProfileSummaryDto(owner))
+                .ToList();
+        }
+
+        public async Task<ParkingLotOwnerProfileDetailsDto?> GetByParkingLotOwnerId(string parkingLotOwnerId)
+        {
+            var ownerProfile = await _parkingLotOwnerProfileRepository.FindIncludingUserReadOnly(parkingLotOwnerId)
+                ?? throw new InvalidInformationException(MessageKeys.PARKING_LOT_OWNER_PROFILE_NOT_FOUND);
+            return new ParkingLotOwnerProfileDetailsDto(ownerProfile);
+        }
+
+        public async Task<ParkingLotOwnerProfileDetailsDto?> GetByUserId(string userId)
+        {
+            var ownerProfile = await _parkingLotOwnerProfileRepository.FindIncludingUserReadOnly([o => o.UserId == userId])
+                ?? throw new InvalidInformationException(MessageKeys.PARKING_LOT_OWNER_PROFILE_NOT_FOUND);
+            return new ParkingLotOwnerProfileDetailsDto(ownerProfile);
         }
     }
 }

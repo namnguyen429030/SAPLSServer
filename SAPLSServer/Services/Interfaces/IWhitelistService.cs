@@ -1,46 +1,53 @@
-using SAPLSServer.DTOs.Base;
-using SAPLSServer.DTOs.Concrete;
+using SAPLSServer.DTOs.Concrete.WhiteListDtos;
 using SAPLSServer.DTOs.PaginationDto;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace SAPLSServer.Services.Interfaces
 {
-    public interface IWhitelistService
+    /// <summary>
+    /// Provides operations for managing parking lot whitelists.
+    /// </summary>
+    public interface IWhiteListService
     {
         /// <summary>
-        /// Adds an attendant to the whitelist based on the provided request details.
+        /// Checks if a client is in the whitelist of a specific parking lot.
         /// </summary>
-        /// <param name="request">The request object containing the details of the attendant to be added to the whitelist. Cannot be null.</param>
-        /// <returns>A task that represents the asynchronous operation.</returns>
-        Task AddAttendantToWhitelist(AddAttendantToWhiteListRequest request);
+        /// <param name="parkingLotId">The parking lot ID.</param>
+        /// <param name="clientId">The client ID.</param>
+        /// <returns>True if the client is whitelisted, otherwise false.</returns>
+        Task<bool> IsClientWhitelistedAsync(string parkingLotId, string clientId);
+
         /// <summary>
-        /// Updates the expiration date for a whitelist attendant.
+        /// Adds a client to the whitelist of a parking lot.
         /// </summary>
-        /// <param name="request">The request object containing the details required to update the expiration date.</param>
-        /// <returns>A task that represents the asynchronous operation.</returns>
-        Task UpdateWhitelistAttendantExpireDate(UpdateWhiteListAttendantExpireDateRequest request);
+        /// <param name="request">The request containing parking lot and client information.</param>
+        Task AddToWhiteListAsync(AddAttendantToWhiteListRequest request);
         /// <summary>
-        /// Retrieves the details of a whitelist attendant based on the specified request.
+        /// Updates the expiration date of a whitelist entry.
         /// </summary>
-        /// <param name="request">The request containing the identifier of the whitelist attendant to retrieve.</param>
-        /// <returns>A task that represents the asynchronous operation. The task result contains a <see
-        /// cref="WhiteListAttendantDto"/> object with the attendant's details, or <see langword="null"/> if no
-        /// attendant is found.</returns>
-        Task<WhiteListAttendantDto?> GetWhitelistAttendantDetails(GetWhiteListAttendantRequest request);
+        /// <param name="request">The request containing the update information.</param>
+        Task UpdateExpireAtAsync(UpdateWhiteListAttendantExpireDateRequest request);
+
         /// <summary>
-        /// Retrieves a paginated list of whitelist attendants based on the specified criteria.
+        /// Removes a client from the whitelist of a parking lot.
         /// </summary>
-        /// <param name="request">The pagination and sorting information for the request.</param>
-        /// <param name="listRequest">The criteria used to filter the whitelist attendants.</param>
-        /// <returns>A task that represents the asynchronous operation. The task result contains a <see
-        /// cref="PageResult{WhiteListAttendantDto}"/> with the list of whitelist attendants matching the specified
-        /// criteria.</returns>
-        Task<PageResult<WhiteListAttendantDto>> GetWhitelistAttendantsPage(PageRequest request, GetWhiteListAttendantListRequest listRequest);
+        /// <param name="request">The request containing parking lot and client information.</param>
+        Task RemoveFromWhiteListAsync(RemoveAttendantFromWhiteListRequest request);
+
         /// <summary>
-        /// Removes an attendant from the whitelist based on the specified request.
+        /// Gets a list of whitelisted attendants for a parking lot.
         /// </summary>
-        /// <param name="request">The request containing the details of the attendant to be removed from the whitelist.</param>
-        /// <returns>A task that represents the asynchronous operation.</returns>
-        Task RemoveAttendantFromWhitelist(RemoveAttendantFromWhiteListRequest request);
+        /// <param name="request">The request containing filter criteria.</param>
+        /// <returns>List of whitelist attendants.</returns>
+        Task<List<WhiteListAttendantDto>> GetWhiteListAsync(GetWhiteListAttendantListRequest request);
+
+        /// <summary>
+        /// Gets a paginated list of whitelisted attendants for a parking lot.
+        /// </summary>
+        /// <param name="pageRequest">Pagination information.</param>
+        /// <param name="request">The request containing filter criteria.</param>
+        /// <returns>Paginated result of whitelist attendants.</returns>
+        Task<PageResult<WhiteListAttendantDto>> GetWhiteListPageAsync(PageRequest pageRequest, GetWhiteListAttendantListRequest request);
     }
 }
-

@@ -1,5 +1,5 @@
 using SAPLSServer.DTOs.Base;
-using SAPLSServer.DTOs.Concrete.UserDto;
+using SAPLSServer.DTOs.Concrete.UserDtos;
 using SAPLSServer.DTOs.PaginationDto;
 
 namespace SAPLSServer.Services.Interfaces
@@ -14,28 +14,42 @@ namespace SAPLSServer.Services.Interfaces
         /// </summary>
         /// <param name="request">The request containing parking lot owner profile details.</param>
         /// <returns>A task representing the asynchronous operation.</returns>
-        Task CreateParkingLotOwner(CreateParkingLotOwnerProfileRequest request);
+        Task Create(CreateParkingLotOwnerProfileRequest request);
 
         /// <summary>
         /// Updates an existing parking lot owner profile.
         /// </summary>
         /// <param name="request">The request containing updated parking lot owner profile details.</param>
         /// <returns>A task representing the asynchronous operation.</returns>
-        Task UpdateParkingLotOwner(UpdateParkingLotOwnerProfileRequest request);
+        Task Update(UpdateParkingLotOwnerProfileRequest request);
 
         /// <summary>
-        /// Retrieves the details of a parking lot owner profile.
+        /// Retrieves detailed information about a parking lot owner by their parking lot owner identifier.
         /// </summary>
-        /// <param name="request">The request containing the parking lot owner profile identifier.</param>
-        /// <returns>The parking lot owner profile details if found; otherwise, <see langword="null"/>.</returns>
-        Task<ParkingLotOwnerProfileDetailsDto?> GetParkingLotOwnerProfileDetails(GetDetailsRequest request);
+        /// <param name="parkingLotOwnerId">The unique identifier of the parking lot owner.</param>
+        /// <returns>A task that returns the parking lot owner's detailed information.</returns>
+        Task<ParkingLotOwnerProfileDetailsDto?> GetByParkingLotOwnerId(string parkingLotOwnerId);
+
+        /// <summary>
+        /// Retrieves detailed information about a parking lot owner by their user identifier.
+        /// </summary>
+        /// <param name="userId">The unique identifier of the user.</param>
+        /// <returns>A task that returns the parking lot owner's detailed information.</returns>
+        Task<ParkingLotOwnerProfileDetailsDto?> GetByUserId(string userId);
 
         /// <summary>
         /// Retrieves a paginated list of parking lot owner profiles with optional search criteria.
         /// </summary>
-        /// <param name="pageRequest">The pagination request.</param>
-        /// <param name="request">The search/filter criteria.</param>
+        /// <param name="pageRequest">The pagination request containing page number and size.</param>
+        /// <param name="request">The search/filter criteria for parking lot owner profiles.</param>
         /// <returns>A paginated result of parking lot owner profile details.</returns>
         Task<PageResult<ParkingLotOwnerProfileSummaryDto>> GetParkingLotOwnerProfilesPage(PageRequest pageRequest, GetParkingLotOwnerListRequest request);
+
+        /// <summary>
+        /// Retrieves a list of parking lot owner profiles with optional search criteria.
+        /// </summary>
+        /// <param name="request">The search/filter criteria for parking lot owner profiles.</param>
+        /// <returns>A task that returns a list of parking lot owner profile summaries.</returns>
+        Task<List<ParkingLotOwnerProfileSummaryDto>> GetParkingLotOwnerProfiles(GetParkingLotOwnerListRequest request);
     }
 }

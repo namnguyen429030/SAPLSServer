@@ -1,108 +1,198 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using SAPLSServer.Constants;
 using SAPLSServer.DTOs.Base;
-using SAPLSServer.DTOs.Concrete.UserDto;
+using SAPLSServer.DTOs.Concrete.UserDtos;
 using SAPLSServer.DTOs.PaginationDto;
+using SAPLSServer.Exceptions;
 using SAPLSServer.Services.Interfaces;
+using System.Security.Claims;
 
 namespace SAPLSServer.Controllers
 {
-    /// <summary>
-    /// Controller for managing admin profile operations including creation, updates, and retrieval.
-    /// </summary>
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class AdminController : ControllerBase
     {
         private readonly IAdminService _adminService;
 
-        /// <summary>
-        /// Initializes a new instance of the AdminController.
-        /// </summary>
-        /// <param name="adminService">The admin service dependency.</param>
         public AdminController(IAdminService adminService)
         {
             _adminService = adminService;
         }
 
         /// <summary>
-        /// Creates a new admin profile.
+        /// Registers a new admin profile (Only HeadAdmin can create new admins)
         /// </summary>
-        /// <param name="request">The request containing admin profile details.</param>
-        /// <returns>Ok result if successful.</returns>
-        [HttpPost]
-        public async Task<IActionResult> CreateAdmin([FromBody] CreateAdminProfileRequest request)
+        /// <param name="request">Admin profile creation request</param>
+        /// <returns>Success response</returns>
+        [HttpPost("register")]
+        [Authorize(Policy = Accessibility.HEAD_ADMIN_ACCESS)]
+        public async Task<IActionResult> RegisterAdmin([FromBody] CreateAdminProfileRequest request)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
 
-            await _adminService.CreateAdmin(request);
-            return Ok(new { message = "Admin profile created successfully" });
+                var performedByAdminUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (performedByAdminUserId == null)
+                {
+                    return Unauthorized(new { message = MessageKeys.UNAUTHORIZED_ACCESS });
+                }
+                await _adminService.Create(request, performedByAdminUserId);
+                return Ok(new { message = MessageKeys.ADMIN_PROFILE_CREATED_SUCCESSFULLY });
+            }
+            catch (InvalidInformationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, 
+                    new { message = MessageKeys.UNEXPECTED_ERROR });
+            }
         }
 
         /// <summary>
-        /// Updates an existing admin profile.
+        /// Updates an existing admin profile
         /// </summary>
-        /// <param name="request">The request containing updated admin profile details.</param>
-        /// <returns>Ok result if successful.</returns>
+        /// <param name="request">Admin profile update request</param>
+        /// <returns>Success response</returns>
         [HttpPut]
+        [Authorize(Policy = Accessibility.HEAD_ADMIN_ACCESS)]
         public async Task<IActionResult> UpdateAdmin([FromBody] UpdateAdminProfileRequest request)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
 
-            await _adminService.UpdateAdmin(request);
-            return Ok(new { message = "Admin profile updated successfully" });
+                var performedByAdminUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (performedByAdminUserId == null)
+                {
+                    return Unauthorized(new { message = MessageKeys.UNAUTHORIZED_ACCESS });
+                }
+                await _adminService.Update(request, performedByAdminUserId);
+                return Ok(new { message = MessageKeys.ADMIN_PROFILE_UPDATED_SUCCESSFULLY });
+            }
+            catch (InvalidInformationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, 
+                    new { message = MessageKeys.UNEXPECTED_ERROR });
+            }
         }
 
         /// <summary>
-        /// Retrieves the details of a specific admin profile.
+        /// Gets admin profile by admin ID
         /// </summary>
-        /// <param name="request">The request containing admin profile identifier.</param>
-        /// <returns>The admin profile details or NotFound if not exists.</returns>
-        [HttpGet("details")]
-        public async Task<IActionResult> GetAdminProfileDetails([FromQuery] GetDetailsRequest request)
+        /// <param name="adminId">Admin ID</param>
+        /// <returns>Admin profile details</returns>
+        [HttpGet("{adminId}")]
+        [Authorize(Policy = Accessibility.WEB_APP_ACCESS)]
+        public async Task<ActionResult<AdminProfileDetailsDto>> GetByAdminId(string adminId)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            try
+            {
+                var result = await _adminService.GetByAdminIdAsync(adminId);
+                if (result == null)
+                {
+                    return NotFound(new { message = MessageKeys.ADMIN_PROFILE_NOT_FOUND });
+                }
 
-            var result = await _adminService.GetAdminProfileDetails(request);
-            if (result == null)
-                return NotFound(new { message = "Admin profile not found" });
-
-            return Ok(result);
+                return Ok(result);
+            }
+            catch (InvalidInformationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, 
+                    new { message = MessageKeys.UNEXPECTED_ERROR });
+            }
         }
 
         /// <summary>
-        /// Retrieves a paginated list of admin profiles.
+        /// Gets admin profile by user ID
         /// </summary>
-        /// <param name="pageRequest">Pagination parameters.</param>
-        /// <param name="request">Filter criteria for admin profiles.</param>
-        /// <returns>Paginated list of admin profiles.</returns>
+        /// <param name="userId">User ID</param>
+        /// <returns>Admin profile details</returns>
+        [HttpGet("user/{userId}")]
+        [Authorize(Policy = Accessibility.WEB_APP_ACCESS)]
+        public async Task<ActionResult<AdminProfileDetailsDto>> GetByUserId(string userId)
+        {
+            try
+            {
+                var result = await _adminService.GetByUserIdAsync(userId);
+                if (result == null)
+                {
+                    return NotFound(new { message = MessageKeys.ADMIN_PROFILE_NOT_FOUND });
+                }
+
+                return Ok(result);
+            }
+            catch (InvalidInformationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, 
+                    new { message = MessageKeys.UNEXPECTED_ERROR });
+            }
+        }
+
+        /// <summary>
+        /// Gets paginated list of admin profiles
+        /// </summary>
+        /// <param name="pageRequest">Pagination parameters</param>
+        /// <param name="request">Filter criteria</param>
+        /// <returns>Paginated admin profiles</returns>
         [HttpGet("page")]
-        public async Task<IActionResult> GetAdminProfilesPage(
-            [FromQuery] PageRequest pageRequest,
-            [FromQuery] GetAdminListRequest request)
+        [Authorize(Policy = Accessibility.WEB_APP_ACCESS)]
+        public async Task<ActionResult<PageResult<AdminProfileSummaryDto>>> GetAdminProfilesPage([FromQuery] PageRequest pageRequest, [FromQuery] GetAdminListRequest request)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
-            var result = await _adminService.GetAdminProfilesPage(pageRequest, request);
-            return Ok(result);
+            try
+            {
+                var result = await _adminService.GetAdminProfilesPage(pageRequest, request);
+                return Ok(result);
+            }
+            catch (Exception)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, 
+                    new { message = MessageKeys.UNEXPECTED_ERROR });
+            }
         }
 
         /// <summary>
-        /// Retrieves a list of admin profiles without pagination.
+        /// Gets list of admin profiles
         /// </summary>
-        /// <param name="request">Filter criteria for admin profiles.</param>
-        /// <returns>List of admin profiles.</returns>
+        /// <param name="request">Filter criteria</param>
+        /// <returns>List of admin profiles</returns>
         [HttpGet]
-        public async Task<IActionResult> GetAdminProfiles([FromQuery] GetAdminListRequest request)
+        [Authorize(Policy = Accessibility.WEB_APP_ACCESS)]
+        public async Task<ActionResult<List<AdminProfileSummaryDto>>> GetAdminProfiles([FromQuery] GetAdminListRequest request)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
-            var result = await _adminService.GetAdminProfiles(request);
-            return Ok(result);
+            try
+            {
+                var result = await _adminService.GetAdminProfiles(request);
+                return Ok(result);
+            }
+            catch (Exception)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, 
+                    new { message = MessageKeys.UNEXPECTED_ERROR });
+            }
         }
     }
 }

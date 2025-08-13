@@ -15,7 +15,7 @@ public partial class PaymentSource
 
     public string Status { get; set; } = null!;
 
-    public DateTime UpdatedAt { get; set; }
+    public DateTime CreatedAt { get; set; }
 
     public string ParkingLotOwnerId { get; set; } = null!;
 

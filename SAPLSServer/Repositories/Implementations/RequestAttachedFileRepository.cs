@@ -11,7 +11,7 @@ namespace SAPLSServer.Repositories.Implementations
         }
         protected override Expression<Func<RequestAttachedFile, bool>> CreateIdPredicate(string id)
         {
-            return raf => raf.Id == id;
+            return raf => raf.AttachedFileId == id;
         }
     }
 }

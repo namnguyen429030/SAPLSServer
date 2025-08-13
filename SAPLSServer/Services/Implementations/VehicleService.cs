@@ -1,6 +1,7 @@
 using SAPLSServer.Constants;
 using SAPLSServer.DTOs.Base;
-using SAPLSServer.DTOs.Concrete.VehicleDto;
+using SAPLSServer.DTOs.Concrete.FileUploadDtos;
+using SAPLSServer.DTOs.Concrete.VehicleDtos;
 using SAPLSServer.DTOs.PaginationDto;
 using SAPLSServer.Exceptions;
 using SAPLSServer.Models;
@@ -15,47 +16,96 @@ namespace SAPLSServer.Services.Implementations
         private readonly IVehicleRepository _vehicleRepository;
         private readonly IClientProfileRepository _clientProfileRepository;
         private readonly IUserRepository _userRepository;
+        private readonly IFileService _fileService;
 
         public VehicleService(
             IVehicleRepository vehicleRepository,
             IClientProfileRepository clientProfileRepository,
-            IUserRepository userRepository)
+            IUserRepository userRepository,
+            IFileService fileService)
         {
             _vehicleRepository = vehicleRepository;
             _clientProfileRepository = clientProfileRepository;
             _userRepository = userRepository;
+            _fileService = fileService;
         }
 
-        public async Task CreateVehicle(CreateVehicleRequest request)
+        public async Task Create(CreateVehicleRequest request)
         {
-            var existingVehicle = await _vehicleRepository.ExistsAsync(v => v.LicensePlate == request.LicensePlate);
-            if (existingVehicle)
+            // Check for unique License Plate
+            bool licensePlateExists = await _vehicleRepository.ExistsAsync(v => v.LicensePlate == request.LicensePlate);
+            if (licensePlateExists)
                 throw new InvalidInformationException(MessageKeys.VEHICLE_ALREADY_EXISTS);
+
+            var vehicleId = Guid.NewGuid().ToString();
+
+            var frontCertUploadRequest = new FileUploadRequest
+            {
+                File = request.FrontVehicleRegistrationCertImage,
+                Container = "vehicle-certificates",
+                SubFolder = $"vehicle-{vehicleId}",
+                GenerateUniqueFileName = true,
+                Metadata = new Dictionary<string, string>
+                {
+                    { "VehicleId", vehicleId },
+                    { "CertificateType", "Front" }
+                }
+            };
+
+            var frontCertResult = await _fileService.UploadFileAsync(frontCertUploadRequest);
+
+            var backCertUploadRequest = new FileUploadRequest
+            {
+                File = request.BackVehicleRegistrationCertImage,
+                Container = "vehicle-certificates",
+                SubFolder = $"vehicle-{vehicleId}",
+                GenerateUniqueFileName = true,
+                Metadata = new Dictionary<string, string>
+                {
+                    { "VehicleId", vehicleId },
+                    { "CertificateType", "Back" }
+                }
+            };
+
+            var backCertResult = await _fileService.UploadFileAsync(backCertUploadRequest);
+
+            // Create the vehicle entity
             var vehicle = new Vehicle
             {
-                Id = Guid.NewGuid().ToString(),
+                Id = vehicleId,
                 LicensePlate = request.LicensePlate,
+                OwnerId = request.OwnerId,
+                CurrentHolderId = request.OwnerId,
                 Brand = request.Brand,
                 Model = request.Model,
-                EngineNumber = request.EngineNumber,
-                ChassisNumber = request.ChassisNumber,
                 Color = request.Color,
+                FrontVehicleRegistrationCertificateUrl = frontCertResult.CloudUrl,
+                BackVehicleRegistrationCertificateUrl = backCertResult.CloudUrl,
+                ChassisNumber = request.ChassisNumber,
+                EngineNumber = request.EngineNumber,
                 OwnerVehicleFullName = request.OwnerVehicleFullName,
                 Status = VehicleStatus.Active.ToString(),
                 SharingStatus = VehicleSharingStatus.Available.ToString(),
                 CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow,
-                OwnerId = request.OwnerId
+                UpdatedAt = DateTime.UtcNow
             };
+
             await _vehicleRepository.AddAsync(vehicle);
             await _vehicleRepository.SaveChangesAsync();
         }
 
-        public async Task UpdateVehicle(UpdateVehicleRequest request)
+        public async Task Update(UpdateVehicleRequest request, string currentUserId)
         {
             var vehicle = await _vehicleRepository.Find(request.Id);
             if (vehicle == null)
                 throw new InvalidInformationException(MessageKeys.VEHICLE_NOT_FOUND);
+
+            // Only owner can update vehicle
+            if (currentUserId != vehicle.OwnerId)
+            {
+                throw new UnauthorizedAccessException(MessageKeys.UNAUTHORIZED_ACCESS);
+            }
+
             vehicle.LicensePlate = request.LicensePlate;
             vehicle.Brand = request.Brand;
             vehicle.Model = request.Model;
@@ -68,51 +118,75 @@ namespace SAPLSServer.Services.Implementations
             await _vehicleRepository.SaveChangesAsync();
         }
 
-        public async Task UpdateVehicleStatus(UpdateVehicleStatusRequest request)
+        public async Task UpdateStatus(UpdateVehicleStatusRequest request, string currentUserId)
         {
-            var vehicle = await _vehicleRepository.Find(request.Id);
-            if (vehicle == null)
+            var vehicle = await _vehicleRepository.Find(request.Id) ??
                 throw new InvalidInformationException(MessageKeys.VEHICLE_NOT_FOUND);
-            if (Enum.TryParse<VehicleStatus>(request.Status, out var status))
+
+            // Only owner can update status
+            if (currentUserId != vehicle.OwnerId)
             {
-                vehicle.Status = status.ToString();
+                throw new UnauthorizedAccessException(MessageKeys.UNAUTHORIZED_ACCESS);
             }
-            else
-            {
-                throw new InvalidInformationException(MessageKeys.INVALID_VEHICLE_STATUS);
-            }
+
+            vehicle.Status = request.Status;
             vehicle.UpdatedAt = DateTime.UtcNow;
             _vehicleRepository.Update(vehicle);
             await _vehicleRepository.SaveChangesAsync();
         }
 
-        public async Task<VehicleDetailsDto?> GetVehicleDetails(GetDetailsRequest request)
+        public async Task UpdateCurrentDriver(string id, string currentUserId)
         {
-            var vehicle = await _vehicleRepository.Find(request.Id);
+            var vehicle = await _vehicleRepository.Find(id) ??
+                throw new InvalidInformationException(MessageKeys.VEHICLE_NOT_FOUND);
+
+            vehicle.CurrentHolderId = currentUserId;
+            vehicle.UpdatedAt = DateTime.UtcNow;
+            _vehicleRepository.Update(vehicle);
+            await _vehicleRepository.SaveChangesAsync();
+        }
+
+
+        public async Task DeleteVehicle(DeleteRequest request, string currentUserId)
+        {
+            var vehicle = await _vehicleRepository.Find(request.Id) ??
+                throw new InvalidInformationException(MessageKeys.VEHICLE_NOT_FOUND);
+
+            // Only owner can delete vehicle
+            if (currentUserId != vehicle.OwnerId)
+            {
+                throw new UnauthorizedAccessException(MessageKeys.UNAUTHORIZED_ACCESS);
+            }
+
+            _vehicleRepository.Remove(vehicle);
+            await _vehicleRepository.SaveChangesAsync();
+        }
+
+        public async Task<VehicleDetailsDto?> GetById(string id)
+        {
+            var vehicle = await _vehicleRepository.Find(id);
             if (vehicle == null)
                 return null;
-            vehicle.Owner = await _clientProfileRepository.Find(vehicle.OwnerId) ?? new ClientProfile();
-            if (vehicle.Owner != null)
-                vehicle.Owner.User = await _userRepository.Find(vehicle.Owner.UserId) ?? new User();
+            return new VehicleDetailsDto(vehicle);
+        }
+
+        public async Task<VehicleDetailsDto?> GetByLicensePlate(string licensePlate)
+        {
+            var vehicle = await _vehicleRepository.Find([v => v.LicensePlate == licensePlate]);
+            if (vehicle == null)
+                return null;
             return new VehicleDetailsDto(vehicle);
         }
 
         public async Task<PageResult<VehicleSummaryDto>> GetVehiclesPage(PageRequest pageRequest, GetVehicleListRequest request)
         {
-            var criterias = new Expression<Func<Vehicle, bool>>[]
-            {
-                v => v.OwnerId == request.OwnerId,
-                v => string.IsNullOrEmpty(request.SharingStatus) || v.SharingStatus == request.SharingStatus
-            };
-            var totalCount = await _vehicleRepository.CountAsync(criterias);
+            var criterias = BuildVehicleCriteria(request);
+            var criteriasArray = criterias.ToArray();
+            var totalCount = await _vehicleRepository.CountAsync(criteriasArray);
             var vehicles = await _vehicleRepository.GetPageAsync(
-                pageRequest.PageNumber, pageRequest.PageSize, criterias);
-            foreach (var v in vehicles)
-            {
-                v.Owner = await _clientProfileRepository.Find(v.OwnerId) ?? new ClientProfile();
-                if (v.Owner != null)
-                    v.Owner.User = await _userRepository.Find(v.Owner.UserId) ?? new User();
-            }
+                pageRequest.PageNumber, pageRequest.PageSize, criteriasArray, null,
+                request.Order == OrderType.Asc.ToString());
+
             var items = vehicles.Select(v => new VehicleSummaryDto(v)).ToList();
             return new PageResult<VehicleSummaryDto>
             {
@@ -123,12 +197,58 @@ namespace SAPLSServer.Services.Implementations
             };
         }
 
-        public async Task DeleteVehicle(DeleteRequest request)
+        public async Task<List<VehicleSummaryDto>> GetAllVehicles(GetVehicleListRequest request)
+        {
+            var criterias = BuildVehicleCriteria(request);
+            var criteriasArray = criterias.ToArray();
+            var vehicles = await _vehicleRepository.GetAllAsync(criteriasArray, null,
+                request.Order == OrderType.Asc.ToString());
+            return vehicles.Select(v => new VehicleSummaryDto(v)).ToList();
+        }
+
+        private List<Expression<Func<Vehicle, bool>>> BuildVehicleCriteria(GetVehicleListRequest request)
+        {
+            var criterias = new List<Expression<Func<Vehicle, bool>>>
+            {
+                // OwnerId is required, so always filter by it
+                v => v.OwnerId == request.OwnerId
+            };
+
+            if (!string.IsNullOrEmpty(request.SharingStatus))
+            {
+                criterias.Add(v => v.SharingStatus == request.SharingStatus);
+            }
+
+            if (!string.IsNullOrEmpty(request.Status))
+            {
+                criterias.Add(v => v.Status == request.Status);
+            }
+
+            if (!string.IsNullOrEmpty(request.SearchCriteria))
+            {
+                criterias.Add(v => v.LicensePlate.Contains(request.SearchCriteria) ||
+                                  v.Brand.Contains(request.SearchCriteria) ||
+                                  v.Model.Contains(request.SearchCriteria) ||
+                                  v.Color.Contains(request.SearchCriteria));
+            }
+
+            return criterias;
+        }
+        public async Task UpdateVehicleSharingStatus(UpdateVehicleSharingStatusRequest request, string currentUserId)
         {
             var vehicle = await _vehicleRepository.Find(request.Id);
             if (vehicle == null)
-                throw new InvalidInformationException("Vehicle not found.");
-            _vehicleRepository.Remove(vehicle);
+                throw new InvalidInformationException(MessageKeys.VEHICLE_NOT_FOUND);
+
+            // Only owner or person who is shared the vehicle with can change sharing status
+            if (currentUserId != vehicle.OwnerId && currentUserId != vehicle.CurrentHolderId)
+            {
+                throw new UnauthorizedAccessException(MessageKeys.UNAUTHORIZED_ACCESS);
+            }
+
+            vehicle.SharingStatus = request.SharingStatus;
+            vehicle.UpdatedAt = DateTime.UtcNow;
+            _vehicleRepository.Update(vehicle);
             await _vehicleRepository.SaveChangesAsync();
         }
     }

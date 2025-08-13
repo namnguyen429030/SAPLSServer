@@ -25,6 +25,12 @@ public partial class User
 
     public string? OneTimePassword { get; set; }
 
+    public string? GoogleId { get; set; }
+
+    public string? RefreshToken { get; set; }
+
+    public DateTime? RefreshTokenExpiresAt { get; set; }
+
     public string Role { get; set; } = null!;
 
     public virtual AdminProfile? AdminProfile { get; set; }

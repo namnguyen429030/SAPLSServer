@@ -11,7 +11,7 @@ namespace SAPLSServer.Repositories.Implementations
         }
         protected override Expression<Func<IncidenceEvidence, bool>> CreateIdPredicate(string id)
         {
-            return ie => ie.Id == id;
+            return ie => ie.AttachedFileId == id;
         }
     }
 }

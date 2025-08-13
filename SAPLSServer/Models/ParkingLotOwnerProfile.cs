@@ -13,5 +13,7 @@ public partial class ParkingLotOwnerProfile
 
     public virtual ICollection<PaymentSource> PaymentSources { get; set; } = new List<PaymentSource>();
 
+    public virtual ICollection<Receipt> Receipts { get; set; } = new List<Receipt>();
+
     public virtual User User { get; set; } = null!;
 }

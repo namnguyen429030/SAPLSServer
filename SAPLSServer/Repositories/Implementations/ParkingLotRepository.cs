@@ -13,8 +13,10 @@ namespace SAPLSServer.Repositories.Implementations
 
         public Task<ParkingLot?> FindIncludingParkingLotOwnerReadOnly(string id)
         {
-            return _dbSet.Include(pl => pl.ParkingLotOwner).AsNoTracking()
-                         .FirstOrDefaultAsync(CreateIdPredicate(id));
+            return _dbSet.Include(pl => pl.ParkingLotOwner)
+                .ThenInclude(p => p.User)
+                .AsNoTracking()
+                .FirstOrDefaultAsync(CreateIdPredicate(id));
         }
 
         protected override Expression<Func<ParkingLot, bool>> CreateIdPredicate(string id)

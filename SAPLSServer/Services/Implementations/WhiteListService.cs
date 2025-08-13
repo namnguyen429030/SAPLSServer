@@ -1,33 +1,40 @@
-﻿using SAPLSServer.DTOs.Concrete;
+using SAPLSServer.Constants;
+using SAPLSServer.DTOs.Concrete.WhiteListDtos;
 using SAPLSServer.DTOs.PaginationDto;
 using SAPLSServer.Exceptions;
 using SAPLSServer.Models;
 using SAPLSServer.Repositories.Interfaces;
 using SAPLSServer.Services.Interfaces;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
+using System.Threading.Tasks;
 
 namespace SAPLSServer.Services.Implementations
 {
-    public class WhiteListService : IWhitelistService
+    public class WhiteListService : IWhiteListService
     {
         private readonly IWhiteListRepository _whiteListRepository;
-        private readonly IClientProfileRepository _clientProfileRepository;
-        private readonly IUserRepository _userRepository;
 
-        public WhiteListService(IWhiteListRepository whiteListRepository, IClientProfileRepository clientProfileRepository, IUserRepository userRepository)
+        public WhiteListService(IWhiteListRepository whiteListRepository)
         {
             _whiteListRepository = whiteListRepository;
-            _clientProfileRepository = clientProfileRepository;
-            _userRepository = userRepository;
         }
 
-        public async Task AddAttendantToWhitelist(AddAttendantToWhiteListRequest request)
+        public async Task<bool> IsClientWhitelistedAsync(string parkingLotId, string clientId)
         {
-            // Check if already exists
-            bool exists = await _whiteListRepository.ExistsAsync(wl =>
-                wl.ParkingLotId == request.ParkingLotId && wl.ClientId == request.ClientId);
-            if (exists)
-                throw new InvalidInformationException("Attendant is already in the whitelist.");
+            var key = new WhiteListKey { ParkingLotId = parkingLotId, ClientId = clientId };
+            var entity = await _whiteListRepository.FindIncludingClientReadOnly(key);
+            return entity != null;
+        }
+
+        public async Task AddToWhiteListAsync(AddAttendantToWhiteListRequest request)
+        {
+            var key = new WhiteListKey { ParkingLotId = request.ParkingLotId, ClientId = request.ClientId };
+            var exists = await _whiteListRepository.FindIncludingClientReadOnly(key);
+            if (exists != null)
+                throw new InvalidInformationException(MessageKeys.CLIENT_NOT_IN_WHITE_LIST);
 
             var entity = new WhiteList
             {
@@ -40,80 +47,71 @@ namespace SAPLSServer.Services.Implementations
             await _whiteListRepository.SaveChangesAsync();
         }
 
-        public async Task<WhiteListAttendantDto?> GetWhitelistAttendantDetails(GetWhiteListAttendantRequest request)
+        public async Task UpdateExpireAtAsync(UpdateWhiteListAttendantExpireDateRequest request)
         {
-            var criterias = new Expression<Func<WhiteList, bool>>[]
-            {
-                wl => wl.ParkingLotId == request.ParkingLotId && wl.ClientId == request.ClientId
-            };
-            var entity = await _whiteListRepository.Find(criterias);
+            var key = new WhiteListKey { ParkingLotId = request.ParkingLotId, ClientId = request.ClientId };
+            var entity = await _whiteListRepository.FindIncludingClient(key);
             if (entity == null)
-                return null;
-            entity.Client = await _clientProfileRepository.Find(entity.ClientId) ?? new ClientProfile();
-            if (entity.Client != null)
-                entity.Client.User = await _userRepository.Find(entity.Client.UserId) ?? new User();
-            return new WhiteListAttendantDto(entity);
+                throw new InvalidInformationException(MessageKeys.CLIENT_NOT_IN_WHITE_LIST);
+
+            entity.ExpireAt = request.ExpiredDate;
+            _whiteListRepository.Update(entity);
+            await _whiteListRepository.SaveChangesAsync();
         }
 
-        public async Task<PageResult<WhiteListAttendantDto>> GetWhitelistAttendantsPage(PageRequest request, GetWhiteListAttendantListRequest listRequest)
+        public async Task RemoveFromWhiteListAsync(RemoveAttendantFromWhiteListRequest request)
         {
-            var criterias = new Expression<Func<WhiteList, bool>>[]
-            {
-                wl => wl.ParkingLotId == listRequest.ParkingLotId,
-                wl => string.IsNullOrEmpty(listRequest.SearchCriteria) ||
-                      (wl.Client != null && (
-                        wl.Client.User.FullName.Contains(listRequest.SearchCriteria) ||
-                        wl.Client.User.Email.Contains(listRequest.SearchCriteria)
-                      ))
-            };
-            var totalCount = await _whiteListRepository.CountAsync(criterias);
-            var items = (await _whiteListRepository.GetPageAsync(
-                request.PageNumber, request.PageSize, criterias))
-                .ToList();
-            foreach (var wl in items)
-            {
-                wl.Client = await _clientProfileRepository.Find(wl.ClientId) ?? new ClientProfile();
-                if (wl.Client != null)
-                    wl.Client.User = await _userRepository.Find(wl.Client.UserId) ?? new User();
-            }
-            var dtos = items.Select(wl => new WhiteListAttendantDto(wl)).ToList();
-
-            return new PageResult<WhiteListAttendantDto>
-            {
-                Items = dtos,
-                TotalCount = totalCount,
-                PageNumber = request.PageNumber,
-                PageSize = request.PageSize
-            };
-        }
-
-        public async Task RemoveAttendantFromWhitelist(RemoveAttendantFromWhiteListRequest request)
-        {
-            var criterias = new Expression<Func<WhiteList, bool>>[]
-            {
-                wl => wl.ParkingLotId == request.ParkingLotId && wl.ClientId == request.ClientId
-            };
-            var entity = await _whiteListRepository.Find(criterias);
+            var key = new WhiteListKey { ParkingLotId = request.ParkingLotId, ClientId = request.ClientId };
+            var entity = await _whiteListRepository.FindIncludingClient(key);
             if (entity == null)
-                throw new InvalidInformationException("Whitelist attendant not found.");
+                throw new InvalidInformationException(MessageKeys.CLIENT_NOT_IN_WHITE_LIST);
 
             _whiteListRepository.Remove(entity);
             await _whiteListRepository.SaveChangesAsync();
         }
 
-        public async Task UpdateWhitelistAttendantExpireDate(UpdateWhiteListAttendantExpireDateRequest request)
+        public async Task<List<WhiteListAttendantDto>> GetWhiteListAsync(GetWhiteListAttendantListRequest request)
         {
-            var criterias = new Expression<Func<WhiteList, bool>>[]
-            {
-                wl => wl.ParkingLotId == request.ParkingLotId && wl.ClientId == request.ClientId
-            };
-            var entity = await _whiteListRepository.Find(criterias);
-            if (entity == null)
-                throw new InvalidInformationException("Whitelist attendant not found.");
+            var criterias = new List<Expression<Func<WhiteList, bool>>>();
+            if (!string.IsNullOrWhiteSpace(request.ParkingLotId))
+                criterias.Add(wl => wl.ParkingLotId == request.ParkingLotId);
 
-            entity.ExpireAt = request.ExpiredDate;
-            _whiteListRepository.Update(entity);
-            await _whiteListRepository.SaveChangesAsync();
+            if (!string.IsNullOrWhiteSpace(request.SearchCriteria))
+                criterias.Add(wl => wl.Client.User.FullName.Contains(request.SearchCriteria) ||
+                                    wl.ClientId.Contains(request.SearchCriteria));
+
+            var entities = await _whiteListRepository.GetAllAsync(criterias.ToArray(), 
+                null, request.Order == OrderType.Asc.ToString());
+            return entities.Select(wl => new WhiteListAttendantDto(wl)).ToList();
+        }
+
+        public async Task<PageResult<WhiteListAttendantDto>> GetWhiteListPageAsync(PageRequest pageRequest, GetWhiteListAttendantListRequest request)
+        {
+            var criterias = new List<Expression<Func<WhiteList, bool>>>();
+            if (!string.IsNullOrWhiteSpace(request.ParkingLotId))
+                criterias.Add(wl => wl.ParkingLotId == request.ParkingLotId);
+
+            if (!string.IsNullOrWhiteSpace(request.SearchCriteria))
+                criterias.Add(wl => wl.Client.User.FullName.Contains(request.SearchCriteria) ||
+                                    wl.ClientId.Contains(request.SearchCriteria));
+
+            var totalCount = await _whiteListRepository.CountAsync(criterias.ToArray());
+            var entities = await _whiteListRepository.GetPageAsync(
+                pageRequest.PageNumber,
+                pageRequest.PageSize,
+                criterias.ToArray(),
+                null,
+                request.Order == OrderType.Asc.ToString()
+            );
+
+            var items = entities.Select(wl => new WhiteListAttendantDto(wl)).ToList();
+            return new PageResult<WhiteListAttendantDto>
+            {
+                Items = items,
+                TotalCount = totalCount,
+                PageNumber = pageRequest.PageNumber,
+                PageSize = pageRequest.PageSize,
+            };
         }
     }
 }

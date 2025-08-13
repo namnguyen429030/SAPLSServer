@@ -1,14 +1,16 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using SAPLSServer.DTOs.Concrete.UserDto;
+using SAPLSServer.Constants;
+using SAPLSServer.DTOs.Concrete.UserDtos;
+using SAPLSServer.Exceptions;
 using SAPLSServer.Services.Interfaces;
+using System.Security.Claims;
 
 namespace SAPLSServer.Controllers
 {
-    /// <summary>
-    /// Controller for managing user operations including creation, updates, and profile management.
-    /// </summary>
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class UserController : ControllerBase
     {
         private readonly IUserService _userService;
@@ -18,44 +20,126 @@ namespace SAPLSServer.Controllers
             _userService = userService;
         }
 
-        [HttpPost]
-        public async Task<IActionResult> CreateUser([FromBody] CreateUserRequest request)
+        /// <summary>
+        /// Gets user details by user ID
+        /// </summary>
+        /// <param name="userId">User ID</param>
+        /// <returns>User details</returns>
+        [HttpGet("{userId}")]
+        [Authorize]
+        public async Task<ActionResult<UserDetailsDto>> GetUserById(string userId)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            try
+            {
+                var result = await _userService.GetById(userId);
+                if (result == null)
+                {
+                    return NotFound(new { message = MessageKeys.USER_NOT_FOUND });
+                }
 
-            var userId = await _userService.CreateUser(request);
-            return Ok(new { message = "User created successfully", userId });
+                return Ok(result);
+            }
+            catch (Exception)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, 
+                    new { message = MessageKeys.UNEXPECTED_ERROR });
+            }
         }
 
-        [HttpPut("password")]
-        public async Task<IActionResult> UpdateUserPassword([FromBody] UpdateUserPasswordRequest request)
+        /// <summary>
+        /// Gets user details by phone or email
+        /// </summary>
+        /// <param name="phoneOrEmail">Phone number or email address</param>
+        /// <returns>User details</returns>
+        [HttpGet("search/{phoneOrEmail}")]
+        [Authorize(Policy = Accessibility.WEB_APP_ACCESS)]
+        public async Task<ActionResult<UserDetailsDto>> GetUserByPhoneOrEmail(string phoneOrEmail)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            try
+            {
+                var result = await _userService.GetByPhoneOrEmail(phoneOrEmail);
+                if (result == null)
+                {
+                    return NotFound(new { message = MessageKeys.USER_NOT_FOUND });
+                }
 
-            await _userService.UpdateUserPassword(request);
-            return Ok(new { message = "User password updated successfully" });
+                return Ok(result);
+            }
+            catch (Exception)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, 
+                    new { message = MessageKeys.UNEXPECTED_ERROR });
+            }
         }
 
+        /// <summary>
+        /// Updates user profile image
+        /// </summary>
+        /// <param name="request">Profile image update request</param>
+        /// <returns>Success response</returns>
         [HttpPut("profile-image")]
-        public async Task<IActionResult> UpdateUserProfileImage([FromBody] UpdateUserProfileImageRequest request)
+        [Authorize]
+        public async Task<IActionResult> UpdateProfileImage([FromForm] UpdateUserProfileImageRequest request)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
 
-            await _userService.UpdateUserProfileImage(request);
-            return Ok(new { message = "User profile image updated successfully" });
+                // Ensure user can only update their own profile or admin can update any
+                var currentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
+                
+                if (currentUserId != request.Id && 
+                    userRole != UserRole.Admin.ToString())
+                {
+                    return Forbid();
+                }
+
+                await _userService.UpdateProfileImage(request);
+                return Ok(new { message = MessageKeys.PROFILE_IMAGE_UPDATED_SUCCESSFULLY });
+            }
+            catch (InvalidInformationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, 
+                    new { message = MessageKeys.UNEXPECTED_ERROR });
+            }
         }
 
+        /// <summary>
+        /// Updates user status (Admin only)
+        /// </summary>
+        /// <param name="request">Status update request</param>
+        /// <returns>Success response</returns>
         [HttpPut("status")]
+        [Authorize(Policy = Accessibility.WEB_APP_ACCESS)]
         public async Task<IActionResult> UpdateUserStatus([FromBody] UpdateUserStatusRequest request)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
 
-            await _userService.UpdateUserStatus(request);
-            return Ok(new { message = "User status updated successfully" });
+                await _userService.UpdateStatus(request);
+                return Ok(new { message = MessageKeys.USER_UPDATED_SUCCESSFULLY });
+            }
+            catch (InvalidInformationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, 
+                    new { message = MessageKeys.UNEXPECTED_ERROR });
+            }
         }
     }
 }

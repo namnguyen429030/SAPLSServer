@@ -1,5 +1,5 @@
 using SAPLSServer.DTOs.Base;
-using SAPLSServer.DTOs.Concrete.ParkingLotDto;
+using SAPLSServer.DTOs.Concrete.ParkingLotDtos;
 using SAPLSServer.DTOs.PaginationDto;
 
 namespace SAPLSServer.Services.Interfaces
@@ -27,9 +27,9 @@ namespace SAPLSServer.Services.Interfaces
         /// <summary>
         /// Retrieves the details of a parking lot by its unique identifier (ID).
         /// </summary>
-        /// <param name="request"></param>
+        /// <param name="parkingLotId"></param>
         /// <returns></returns>
-        Task<ParkingLotDetailsDto?> GetParkingLotDetails(GetDetailsRequest request);
+        Task<ParkingLotDetailsDto?> GetParkingLotDetails(string parkingLotId);
         /// <summary>
         /// Retrieves a paginated list of owned parking lots based on the provided page request and filter criteria.
         /// </summary>

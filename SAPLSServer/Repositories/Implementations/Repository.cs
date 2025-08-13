@@ -130,7 +130,7 @@ namespace SAPLSServer.Repositories.Implementations
             return await _context.SaveChangesAsync();
         }
 
-        private static IQueryable<T> ApplyFilters(IQueryable<T> query, params Expression<Func<T, bool>>[] filters)
+        protected static IQueryable<T> ApplyFilters(IQueryable<T> query, params Expression<Func<T, bool>>[] filters)
         {
             foreach (var filter in filters.Where(f => f != null))
             {

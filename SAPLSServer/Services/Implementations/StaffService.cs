@@ -1,6 +1,6 @@
 using SAPLSServer.Constants;
 using SAPLSServer.DTOs.Concrete;
-using SAPLSServer.DTOs.Concrete.UserDto;
+using SAPLSServer.DTOs.Concrete.UserDtos;
 using SAPLSServer.DTOs.PaginationDto;
 using SAPLSServer.Exceptions;
 using SAPLSServer.Models;
@@ -13,23 +13,22 @@ namespace SAPLSServer.Services.Implementations
     public class StaffService : IStaffService
     {
         private readonly IStaffProfileRepository _staffProfileRepository;
-        private readonly IUserRepository _userRepository;
         private readonly IUserService _userService;
 
-        public StaffService(IUserService userService, IStaffProfileRepository staffProfileRepository, IUserRepository userRepository)
+        public StaffService(IUserService userService, IStaffProfileRepository staffProfileRepository)
         {
             _userService = userService;
             _staffProfileRepository = staffProfileRepository;
-            _userRepository = userRepository;
         }
 
-        public async Task CreateStaff(CreateStaffProfileRequest request)
+        public async Task Create(CreateStaffProfileRequest request)
         {
             // Check for unique StaffId
             bool staffIdExists = await _staffProfileRepository.ExistsAsync(s => s.StaffId == request.StaffId);
             if (staffIdExists)
                 throw new InvalidInformationException(MessageKeys.STAFF_ID_ALREADY_EXISTS);
-            var userId = await _userService.CreateUser(request);
+
+            var userId = await _userService.Create(request);
 
             var staffProfile = new StaffProfile
             {
@@ -38,54 +37,51 @@ namespace SAPLSServer.Services.Implementations
                 ParkingLotId = request.ParkingLotId
             };
             await _staffProfileRepository.AddAsync(staffProfile);
-
-            await _userRepository.SaveChangesAsync();
+            await _staffProfileRepository.SaveChangesAsync();
         }
 
-        public async Task UpdateStaff(UpdateStaffProfileRequest request)
+        public async Task Update(UpdateStaffProfileRequest request)
         {
-            var staffProfile = await _staffProfileRepository.Find([sp => sp.UserId == request.Id]);
+            var staffProfile = await _staffProfileRepository.FindIncludingUser([sp => sp.UserId == request.Id]);
             if (staffProfile == null)
                 throw new InvalidInformationException(MessageKeys.STAFF_PROFILE_NOT_FOUND);
 
             staffProfile.StaffId = request.StaffId;
+            staffProfile.User.UpdatedAt = DateTime.UtcNow;
             _staffProfileRepository.Update(staffProfile);
-
             await _staffProfileRepository.SaveChangesAsync();
-        }
-
-        public async Task<StaffProfileDetailsDto?> GetStaffProfileDetails(string id)
-        {
-            var staffProfile = await _staffProfileRepository.FindIncludingUserReadOnly(id);
-            if (staffProfile == null)
-                return null;
-            return new StaffProfileDetailsDto(staffProfile);
         }
 
         public async Task<PageResult<StaffProfileSummaryDto>> GetStaffProfilesPage(PageRequest pageRequest, GetStaffListRequest request)
         {
-            var criterias = new Expression<Func<StaffProfile, bool>>[]
+            var criterias = new List<Expression<Func<StaffProfile, bool>>>();
+            if (!string.IsNullOrWhiteSpace(request.Status))
             {
-                sp => !string.IsNullOrEmpty(request.Status) && sp.User.Status == request.Status,
-                sp => !string.IsNullOrEmpty(request.ParkingLotId) && sp.ParkingLotId == request.ParkingLotId,
-                sp => !string.IsNullOrEmpty(request.SearchCriteria) && (
-                        sp.User.FullName.Contains(request.SearchCriteria) ||
-                        sp.User.Email.Contains(request.SearchCriteria) ||
-                        sp.User.Phone.Contains(request.SearchCriteria) ||
-                        sp.StaffId.Contains(request.SearchCriteria)
-                    )
-            };
-            var totalCount = await _staffProfileRepository.CountAsync(criterias);
+                criterias.Add(sp => sp.User.Status == request.Status);
+            }
+            if (!string.IsNullOrWhiteSpace(request.ParkingLotId))
+            {
+                criterias.Add(sp => sp.ParkingLotId == request.ParkingLotId);
+            }
+            if (!string.IsNullOrWhiteSpace(request.SearchCriteria))
+            {
+                criterias.Add(sp => sp.StaffId.Contains(request.SearchCriteria) ||
+                sp.User.FullName.Contains(request.SearchCriteria) ||
+                sp.User.Email.Contains(request.SearchCriteria) ||
+                sp.User.Phone.Contains(request.SearchCriteria));
+            }
+            var criteriasArray = criterias.ToArray();
+
+            var totalCount = await _staffProfileRepository.CountAsync(criteriasArray);
             var staffs = await _staffProfileRepository.GetPageAsync(
-                                        pageRequest.PageNumber, pageRequest.PageSize, criterias);
+                                        pageRequest.PageNumber, pageRequest.PageSize,
+                                        criteriasArray, null, request.Order == OrderType.Asc.ToString());
             var items = new List<StaffProfileSummaryDto>();
             foreach (var staff in staffs)
             {
                 var staffIncludingUser = await _staffProfileRepository.FindIncludingUserReadOnly(staff.UserId);
                 if (staffIncludingUser == null)
-                {
-                    continue; // Skip null staff profiles
-                }
+                    continue; // Skip if staff profile is not found
                 items.Add(new StaffProfileSummaryDto(staffIncludingUser));
             }
             return new PageResult<StaffProfileSummaryDto>
@@ -95,6 +91,53 @@ namespace SAPLSServer.Services.Implementations
                 PageNumber = pageRequest.PageNumber,
                 PageSize = pageRequest.PageSize,
             };
+        }
+
+        public async Task<List<StaffProfileSummaryDto>> GetStaffProfiles(GetStaffListRequest request)
+        {
+            var criterias = new List<Expression<Func<StaffProfile, bool>>>();
+            if (!string.IsNullOrWhiteSpace(request.Status))
+            {
+                criterias.Add(sp => sp.User.Status == request.Status);
+            }
+            if (!string.IsNullOrWhiteSpace(request.ParkingLotId))
+            {
+                criterias.Add(sp => sp.ParkingLotId == request.ParkingLotId);
+            }
+            if (!string.IsNullOrWhiteSpace(request.SearchCriteria))
+            {
+                criterias.Add(sp => sp.StaffId.Contains(request.SearchCriteria) ||
+                sp.User.FullName.Contains(request.SearchCriteria) ||
+                sp.User.Email.Contains(request.SearchCriteria) ||
+                sp.User.Phone.Contains(request.SearchCriteria));
+            }
+            var staffs = await _staffProfileRepository.GetAllAsync(criterias.ToArray(), null, request.Order == OrderType.Asc.ToString());
+            return staffs
+                .Select(staff => new StaffProfileSummaryDto(staff))
+                .ToList();
+        }
+
+        public async Task<StaffProfileDetailsDto?> FindByStaffId(string staffId)
+        {
+            var staffProfile = await _staffProfileRepository.FindIncludingUserReadOnly(staffId)
+                ?? throw new InvalidInformationException(MessageKeys.STAFF_PROFILE_NOT_FOUND);
+            return new StaffProfileDetailsDto(staffProfile);
+        }
+
+        public async Task<StaffProfileDetailsDto?> FindByUserId(string userId)
+        {
+            var staffProfile = await _staffProfileRepository.FindIncludingUserReadOnly([s => s.UserId == userId])
+                ?? throw new InvalidInformationException(MessageKeys.STAFF_PROFILE_NOT_FOUND);
+            return new StaffProfileDetailsDto(staffProfile);
+        }
+
+        public async Task<string> GetParkingLotId(string userIdOrstaffId)
+        {
+            // Check if the input is a user ID or staff ID
+            var staffProfile = await _staffProfileRepository.Find([u => u.StaffId == userIdOrstaffId 
+                                                                     || u.UserId == userIdOrstaffId])
+                ?? throw new InvalidInformationException(MessageKeys.STAFF_PROFILE_NOT_FOUND);
+            return staffProfile.ParkingLotId;
         }
     }
 }

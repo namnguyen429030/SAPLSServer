@@ -21,15 +21,21 @@ public partial class ClientProfile
 
     public string ShareCode { get; set; } = null!;
 
+    public string? DeviceToken { get; set; }
+
     public string? FrontCitizenIdCardImageUrl { get; set; }
 
     public string? BackCitizenIdCardImageUrl { get; set; }
+
+    public virtual ICollection<ParkingSession> ParkingSessions { get; set; } = new List<ParkingSession>();
 
     public virtual ICollection<SharedVehicle> SharedVehicles { get; set; } = new List<SharedVehicle>();
 
     public virtual User User { get; set; } = null!;
 
-    public virtual ICollection<Vehicle> Vehicles { get; set; } = new List<Vehicle>();
+    public virtual ICollection<Vehicle> VehicleCurrentHolders { get; set; } = new List<Vehicle>();
+
+    public virtual ICollection<Vehicle> VehicleOwners { get; set; } = new List<Vehicle>();
 
     public virtual ICollection<WhiteList> WhiteLists { get; set; } = new List<WhiteList>();
 }

@@ -1,71 +1,116 @@
 ﻿using SAPLSServer.Constants;
 using SAPLSServer.DTOs.Base;
-using SAPLSServer.DTOs.Concrete.SharedVehicleDto;
+using SAPLSServer.DTOs.Concrete.SharedVehicleDtos;
+using SAPLSServer.DTOs.Concrete.VehicleDtos;
 using SAPLSServer.DTOs.PaginationDto;
 using SAPLSServer.Exceptions;
 using SAPLSServer.Models;
 using SAPLSServer.Repositories.Interfaces;
 using SAPLSServer.Services.Interfaces;
 using System.Linq.Expressions;
+using Microsoft.EntityFrameworkCore;
 
 namespace SAPLSServer.Services.Implementations
 {
     public class SharedVehicleService : ISharedVehicleService
     {
+        private readonly IVehicleService _vehicleService;
         private readonly ISharedVehicleRepository _sharedVehicleRepository;
         private readonly IVehicleRepository _vehicleRepository;
-        public SharedVehicleService(ISharedVehicleRepository sharedVehicleRepository, 
-            IVehicleRepository vehicleRepository)
+        private readonly ISharedVehicleNotificationService _notificationService;
+        private readonly IUserService _userService;
+
+        public SharedVehicleService(IVehicleService vehicleService, 
+            ISharedVehicleRepository sharedVehicleRepository, 
+            IVehicleRepository vehicleRepository,
+            ISharedVehicleNotificationService notificationService,
+            IUserService userService)
         {
+            _vehicleService = vehicleService;
             _sharedVehicleRepository = sharedVehicleRepository;
             _vehicleRepository = vehicleRepository;
+            _notificationService = notificationService;
+            _userService = userService;
         }
-        public async Task CreateSharedVehicle(CreateSharedVehicleRequest request)
+
+        public async Task Create(CreateSharedVehicleRequest request)
         {
             var vehicle = await _vehicleRepository.Find(request.VehicleId);
             if(vehicle == null)
                 throw new InvalidInformationException(MessageKeys.VEHICLE_NOT_FOUND);
+            
             if (vehicle.SharingStatus == VehicleSharingStatus.Shared.ToString())
             {
                 throw new InvalidInformationException(MessageKeys.VEHICLE_ALREADY_SHARED);
             }
+            
             if(vehicle.OwnerId != request.OwnerId)
             {
-                throw new InvalidInformationException(MessageKeys.UNAUTHORIZED_ACCESS);
+                throw new UnauthorizedAccessException(MessageKeys.UNAUTHORIZED_ACCESS);
             }
+
             var sharedVehicle = new SharedVehicle
             {
                 Id = Guid.NewGuid().ToString(),
                 VehicleId = request.VehicleId,
-                AccessDuration = request.AccessDuration,
                 InviteAt = DateTime.UtcNow,
+                ExpireAt = DateTime.UtcNow.AddHours(1),
                 Note = request.Note,
-                SharedPersonId = request.SharedPersonId,
             };
+            
             await _sharedVehicleRepository.AddAsync(sharedVehicle);
+            await _sharedVehicleRepository.SaveChangesAsync();
+
+            // Update vehicle sharing status to Pending
             var updateRequest = new UpdateVehicleSharingStatusRequest
             {
                 Id = request.VehicleId,
                 SharingStatus = VehicleSharingStatus.Pending.ToString()
             };
-            await UpdateVehicleSharingStatus(updateRequest);
+            await _vehicleService.UpdateVehicleSharingStatus(updateRequest, request.OwnerId);
+
+            // Send notification to shared person
+            var owner = await _userService.GetById(request.OwnerId);
+            if (owner != null)
+            {
+                await _notificationService.SendVehicleSharingInvitationAsync(
+                    request.SharedPersonId, vehicle, owner.FullName, request.Note);
+            }
         }
 
-        public async Task<SharedVehicleDetailsDto?> GetSharedVehicleDetails(GetDetailsRequest request)
+        public async Task<SharedVehicleDetailsDto?> GetSharedVehicleDetails(string id, string currentUserId)
         {
-            var sharedVehicle = await _sharedVehicleRepository.FindIncludingVehicleAndOwner(request.Id);
-            if (sharedVehicle != null)
-            {
-                return new SharedVehicleDetailsDto(sharedVehicle);
-            }
-            return null;
+            var sharedVehicle = await _sharedVehicleRepository.FindIncludingVehicleAndOwner(id)
+                                ?? throw new InvalidInformationException(MessageKeys.SHARED_VEHICLE_NOT_FOUND);
+            return new SharedVehicleDetailsDto(sharedVehicle);
         }
+
+        public async Task<List<SharedVehicleSummaryDto>> GetSharedVehiclesList(GetSharedVehicleList request)
+        {
+            var criterias = new Expression<Func<SharedVehicle, bool>>[]
+            {
+                x => x.SharedPersonId == request.SharedPersonId
+            };
+            var sharedVehicles = await _sharedVehicleRepository.GetAllAsync(criterias,
+                null, request.Order == OrderType.Asc.ToString());
+            var items = new List<SharedVehicleSummaryDto>();
+            foreach (var sharedVehicle in sharedVehicles)
+            {
+                var sharedVehicleWithDependencies = await _sharedVehicleRepository.FindIncludingVehicleAndOwnerReadOnly(sharedVehicle.Id);
+                if (sharedVehicleWithDependencies == null)
+                    continue;
+                items.Add(new SharedVehicleSummaryDto(sharedVehicleWithDependencies));
+            }
+            return items;
+        }
+
         public async Task<PageResult<SharedVehicleSummaryDto>> GetSharedVehiclesPage(PageRequest pageRequest, GetSharedVehicleList request)
         {
             var criterias = new Expression<Func<SharedVehicle, bool>>[]
             {
-                x => string.IsNullOrEmpty(request.SharedPersonId) || x.SharedPersonId == request.SharedPersonId,
+                x => x.SharedPersonId == request.SharedPersonId
             };
+
             var totalCount = await _sharedVehicleRepository.CountAsync(criterias);
             var sharedVehicles = await _sharedVehicleRepository.GetPageAsync(
                 pageRequest.PageNumber,
@@ -74,10 +119,10 @@ namespace SAPLSServer.Services.Implementations
             );
 
             var items = new List<SharedVehicleSummaryDto>();
-            foreach(var sharedVehicle in sharedVehicles)
+            foreach (var sharedVehicle in sharedVehicles)
             {
                 var sharedVehicleWithDependencies = await _sharedVehicleRepository.FindIncludingVehicleAndOwnerReadOnly(sharedVehicle.Id);
-                if(sharedVehicleWithDependencies == null)
+                if (sharedVehicleWithDependencies == null)
                     continue;
                 items.Add(new SharedVehicleSummaryDto(sharedVehicleWithDependencies));
             }
@@ -90,22 +135,88 @@ namespace SAPLSServer.Services.Implementations
                 PageSize = pageRequest.PageSize
             };
         }
-        public async Task UpdateVehicleSharingStatus(UpdateVehicleSharingStatusRequest request)
+
+        public async Task AcceptSharedVehicle(string id, string sharedPersonId)
         {
-            var vehicle = await _vehicleRepository.Find(request.Id);
-            if (vehicle == null)
-                throw new InvalidInformationException(MessageKeys.VEHICLE_NOT_FOUND);
-            if (Enum.TryParse<VehicleSharingStatus>(request.SharingStatus, out var sharingStatus))
+            var sharedVehicle = await _sharedVehicleRepository.FindIncludingVehicleAndOwner(id);
+            if(sharedVehicle == null )
+                throw new InvalidInformationException(MessageKeys.SHARED_VEHICLE_NOT_FOUND);
+
+            sharedVehicle.AcceptAt = DateTime.UtcNow;
+            _sharedVehicleRepository.Update(sharedVehicle);
+            await _sharedVehicleRepository.SaveChangesAsync();
+            await _vehicleService.UpdateCurrentDriver(sharedVehicle.VehicleId, sharedPersonId);
+            await _vehicleService.UpdateVehicleSharingStatus(
+                new UpdateVehicleSharingStatusRequest
+                {
+                    Id = sharedVehicle.VehicleId,
+                    SharingStatus = VehicleSharingStatus.Shared.ToString()
+                }, sharedPersonId);
+
+            // Send notification to vehicle owner
+            var sharedPerson = await _userService.GetById(sharedPersonId);
+            if (sharedPerson != null)
             {
-                vehicle.SharingStatus = sharingStatus.ToString();
+                await _notificationService.SendVehicleSharingAcceptedAsync(
+                    sharedVehicle.Vehicle.OwnerId, sharedVehicle, sharedPerson.FullName);
             }
-            else
+        }
+
+        public async Task RejectSharedVehicle(string id, string sharedPersonId)
+        {
+            var sharedVehicle = await _sharedVehicleRepository.FindIncludingVehicle(id);
+
+            if (sharedVehicle == null)
+                throw new InvalidInformationException(MessageKeys.SHARED_VEHICLE_NOT_FOUND);
+
+            _sharedVehicleRepository.Remove(sharedVehicle);
+            await _sharedVehicleRepository.SaveChangesAsync();
+
+            await _vehicleService.UpdateCurrentDriver(sharedVehicle.VehicleId, sharedVehicle.Vehicle.OwnerId);
+
+            await _vehicleService.UpdateVehicleSharingStatus(
+                new UpdateVehicleSharingStatusRequest
+                {
+                    Id = sharedVehicle.VehicleId,
+                    SharingStatus = VehicleSharingStatus.Available.ToString()
+                }, sharedPersonId);
+
+            // Send notification to vehicle owner
+            var sharedPerson = await _userService.GetById(sharedPersonId);
+            if (sharedPerson != null)
             {
-                throw new InvalidInformationException(MessageKeys.INVALID_VEHICLE_SHARING_STATUS);
+                await _notificationService.SendVehicleSharingRejectedAsync(
+                    sharedVehicle.Vehicle.OwnerId, sharedVehicle, sharedPerson.FullName);
             }
-            vehicle.UpdatedAt = DateTime.UtcNow;
-            _vehicleRepository.Update(vehicle);
-            await _vehicleRepository.SaveChangesAsync();
+        }
+
+        public async Task RecallSharedVehicle(string id, string ownerId)
+        {
+            var sharedVehicle = await _sharedVehicleRepository.FindIncludingVehicle(id);
+            if (sharedVehicle == null)
+                throw new InvalidInformationException(MessageKeys.SHARED_VEHICLE_NOT_FOUND);
+            var sharedPersonId = sharedVehicle.SharedPersonId;
+            if(sharedPersonId == null)
+            {
+                throw new InvalidOperationException(MessageKeys.VEHICLE_NOT_SHARED);
+            }
+            _sharedVehicleRepository.Remove(sharedVehicle);
+            await _sharedVehicleRepository.SaveChangesAsync();
+            await _vehicleService.UpdateCurrentDriver(sharedVehicle.VehicleId, ownerId);
+            await _vehicleService.UpdateVehicleSharingStatus(
+                new UpdateVehicleSharingStatusRequest
+                {
+                    Id = sharedVehicle.VehicleId,
+                    SharingStatus = VehicleSharingStatus.Available.ToString()
+                }, ownerId);
+
+            // Send notification to shared person
+            var owner = await _userService.GetById(ownerId);
+            if (owner != null)
+            {
+                await _notificationService.SendVehicleSharingRecalledAsync(sharedPersonId, sharedVehicle, 
+                    owner.FullName);
+            }
         }
     }
 }

@@ -6,7 +6,7 @@ using SAPLSServer.Repositories.Interfaces;
 using SAPLSServer.Constants;
 using System.Linq.Expressions;
 using SAPLSServer.DTOs.PaginationDto;
-using SAPLSServer.DTOs.Concrete.ParkingLotDto;
+using SAPLSServer.DTOs.Concrete.ParkingLotDtos;
 
 namespace SAPLSServer.Services.Implementations
 {
@@ -19,16 +19,22 @@ namespace SAPLSServer.Services.Implementations
             _parkingLotRepository = parkingLotRepository;
         }
 
-        public async Task CreateParkingLot(CreateParkingLotRequest dto)
+        public async Task CreateParkingLot(CreateParkingLotRequest request)
         {
             var entity = new ParkingLot
             {
                 Id = Guid.NewGuid().ToString(),
-                Name = dto.Name,
-                Description = dto.Description,
-                Address = dto.Address,
-                TotalParkingSlot = dto.TotalParkingSlot,
-                ParkingLotOwnerId = dto.ParkingLotOwnerId,
+                Name = request.Name,
+                Description = request.Description,
+                Address = request.Address,
+                TotalParkingSlot = request.TotalParkingSlot,
+                ParkingLotOwnerId = request.ParkingLotOwnerId,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow,
+                ApiKey = request.ApiKey,
+                ClientKey = request.ClientKey,
+                CheckSumKey = request.CheckSumKey,
+                SubscriptionId = request.SubscriptionId,
             };
             await _parkingLotRepository.AddAsync(entity);
             await _parkingLotRepository.SaveChangesAsync();
@@ -60,9 +66,9 @@ namespace SAPLSServer.Services.Implementations
             await _parkingLotRepository.SaveChangesAsync();
         }
 
-        public async Task<ParkingLotDetailsDto?> GetParkingLotDetails(GetDetailsRequest request)
+        public async Task<ParkingLotDetailsDto?> GetParkingLotDetails(string parkingLotId)
         {
-            var parkingLot = await _parkingLotRepository.FindIncludingParkingLotOwnerReadOnly(request.Id);
+            var parkingLot = await _parkingLotRepository.FindIncludingParkingLotOwnerReadOnly(parkingLotId);
             if (parkingLot == null)
                 return null;
             return new ParkingLotDetailsDto(parkingLot);
@@ -70,21 +76,20 @@ namespace SAPLSServer.Services.Implementations
 
         public async Task<PageResult<ParkingLotSummaryDto>> GetParkingLotsPage(PageRequest pageRequest, GetParkingLotListRequest request)
         {
-            var criterias = new Expression<Func<ParkingLot, bool>>[] 
+            var criterias = new List<Expression<Func<ParkingLot, bool>>>();
+            if (!string.IsNullOrWhiteSpace(request.ParkingLotOwnerId))
             {
-                p1 => p1.ParkingLotOwnerId == request.ParkingLotOwnerId,
-                pl => request.Status != null && pl.Status == request.Status,
-                pl => !string.IsNullOrEmpty(request.SearchCriteria) && (
-                        pl.Name.Contains(request.SearchCriteria) || 
-                        pl.Address.Contains(request.SearchCriteria) ||
-                        pl.Id.Contains(request.SearchCriteria)
-                    )
-            };
-            var totalCount = await _parkingLotRepository.CountAsync(criterias);
+                criterias.Add(p1 => p1.ParkingLotOwnerId == request.ParkingLotOwnerId);
+            }
+            criterias.Add(pl => pl.Name.Contains(request.SearchCriteria ?? string.Empty) ||
+                        pl.Address.Contains(request.SearchCriteria ?? string.Empty) ||
+                        pl.Id.Contains(request.SearchCriteria ?? string.Empty));
+            var criteriasArray = criterias.ToArray();
+            var totalCount = await _parkingLotRepository.CountAsync(criteriasArray);
             var parkingLots = await _parkingLotRepository.GetPageAsync(
                 pageRequest.PageNumber,
                 pageRequest.PageSize,
-                criterias,
+                criteriasArray,
                 null,
                 request.Order == OrderType.Asc.ToString()
             );
@@ -100,17 +105,16 @@ namespace SAPLSServer.Services.Implementations
         }
         public async Task<List<ParkingLotSummaryDto>> GetParkingLots(GetParkingLotListRequest request)
         {
-            var criterias = new Expression<Func<ParkingLot, bool>>[]
-                        {
-                p1 => p1.ParkingLotOwnerId == request.ParkingLotOwnerId,
-                pl => request.Status != null && pl.Status == request.Status,
-                pl => !string.IsNullOrEmpty(request.SearchCriteria) && (
-                        pl.Name.Contains(request.SearchCriteria) ||
-                        pl.Address.Contains(request.SearchCriteria) ||
-                        pl.Id.Contains(request.SearchCriteria)
-                    )
-                        };
-            var parkingLots = await _parkingLotRepository.GetAllAsync(criterias, null,request.Order == OrderType.Asc.ToString());
+            var criterias = new List<Expression<Func<ParkingLot, bool>>>();
+            if (!string.IsNullOrWhiteSpace(request.ParkingLotOwnerId))
+            {
+                criterias.Add(p1 => p1.ParkingLotOwnerId == request.ParkingLotOwnerId);
+            }
+            criterias.Add(pl => pl.Name.Contains(request.SearchCriteria ?? string.Empty) ||
+                        pl.Address.Contains(request.SearchCriteria ?? string.Empty) ||
+                        pl.Id.Contains(request.SearchCriteria ?? string.Empty));
+            var criteriasArray = criterias.ToArray();
+            var parkingLots = await _parkingLotRepository.GetAllAsync(criteriasArray, null,request.Order == OrderType.Asc.ToString());
 
             return parkingLots.Select(pl => new ParkingLotSummaryDto(pl)).ToList();
         }

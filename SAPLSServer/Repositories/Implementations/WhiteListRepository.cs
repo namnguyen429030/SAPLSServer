@@ -5,26 +5,28 @@ using System.Linq.Expressions;
 
 namespace SAPLSServer.Repositories.Implementations
 {
-    public class WhiteListRepository : Repository<WhiteList, string[]>, IWhiteListRepository
+    public class WhiteListRepository : Repository<WhiteList, WhiteListKey>, IWhiteListRepository
     {
         public WhiteListRepository(SaplsContext context) : base(context)
         {
         }
 
-        public async Task<WhiteList?> FindIncludingClientReadOnly(string[] ids)
+        public async Task<WhiteList?> FindIncludingClientReadOnly(WhiteListKey key)
         {
             return await _dbSet.Include(wl => wl.Client)
+                .ThenInclude(c => c.User)
                 .AsNoTracking()
-                .FirstOrDefaultAsync(CreateIdPredicate(ids));
+                .FirstOrDefaultAsync(CreateIdPredicate(key));
         }
-        public async Task<WhiteList?> FindIncludingClient(string[] ids)
+        public async Task<WhiteList?> FindIncludingClient(WhiteListKey key)
         {
             return await _dbSet.Include(wl => wl.Client)
-                .FirstOrDefaultAsync(CreateIdPredicate(ids));
+                .ThenInclude(c => c.User)
+                .FirstOrDefaultAsync(CreateIdPredicate(key));
         }
-        protected override Expression<Func<WhiteList, bool>> CreateIdPredicate(string[] id)
+        protected override Expression<Func<WhiteList, bool>> CreateIdPredicate(WhiteListKey key)
         {
-            return wl => wl.ParkingLotId == id[0] && wl.ClientId == id[1];
+            return wl => wl.ParkingLotId == key.ParkingLotId && wl.ClientId == key.ClientId;
         }
     }
 }

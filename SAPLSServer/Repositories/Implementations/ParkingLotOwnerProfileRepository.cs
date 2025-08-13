@@ -7,26 +7,37 @@ namespace SAPLSServer.Repositories.Implementations
 {
     public class ParkingLotOwnerProfileRepository : Repository<ParkingLotOwnerProfile, string>, IParkingLotOwnerProfileRepository
     {
-        public ParkingLotOwnerProfileRepository(SaplsContext context) : base(context)
-        {
-        }
+        public ParkingLotOwnerProfileRepository(SaplsContext context) : base(context) { }
 
         public async Task<ParkingLotOwnerProfile?> FindIncludingUser(string userId)
         {
-            return await _dbSet.Include(plo => plo.User)
-                            .FirstOrDefaultAsync(plo => plo.UserId == userId);
+            return await _dbSet.Include(po => po.User).FirstOrDefaultAsync(po => po.UserId == userId);
         }
 
         public async Task<ParkingLotOwnerProfile?> FindIncludingUserReadOnly(string userId)
         {
-            return await _dbSet.Include(plo => plo.User)
+            return await _dbSet.Include(po => po.User)
                 .AsNoTracking()
-                .FirstOrDefaultAsync(plo => plo.UserId == userId);
+                .FirstOrDefaultAsync(po => po.UserId == userId);
+        }
+
+        public async Task<ParkingLotOwnerProfile?> FindIncludingUser(Expression<Func<ParkingLotOwnerProfile, bool>>[] criterias)
+        {
+            var query = _dbSet.Include(po => po.User).AsQueryable();
+            query = ApplyFilters(query, criterias);
+            return await query.FirstOrDefaultAsync();
+        }
+
+        public async Task<ParkingLotOwnerProfile?> FindIncludingUserReadOnly(Expression<Func<ParkingLotOwnerProfile, bool>>[] criterias)
+        {
+            var query = _dbSet.Include(po => po.User).AsNoTracking();
+            query = ApplyFilters(query, criterias);
+            return await query.FirstOrDefaultAsync();
         }
 
         protected override Expression<Func<ParkingLotOwnerProfile, bool>> CreateIdPredicate(string id)
         {
-            return plo => plo.UserId == id;
+            return po => po.UserId == id;
         }
     }
 }
