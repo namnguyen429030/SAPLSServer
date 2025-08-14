@@ -13,8 +13,6 @@ namespace SAPLSServer.DTOs.Concrete.IncidenceReportDtos
         public string Priority { get; set; } = null!;
         [Required(ErrorMessage = MessageKeys.SHIFT_DIARY_BODY_REQUIRED)]
         public string Description { get; set; } = null!;
-        [Required(ErrorMessage = MessageKeys.PARKING_LOT_ID_REQUIRED)]
-        public string ParkingLotId { get; set; } = null!;
         [MaxLength(6, ErrorMessage = MessageKeys.MAX_FILES_NUMBER_LIMIT)]
         public IFormFile[]? Evidences { get; set; }
     }

@@ -28,4 +28,6 @@ public partial class ParkingFeeSchedule
     public string ParkingLotId { get; set; } = null!;
 
     public virtual ParkingLot ParkingLot { get; set; } = null!;
+
+    public virtual ICollection<ParkingSession> ParkingSessions { get; set; } = new List<ParkingSession>();
 }

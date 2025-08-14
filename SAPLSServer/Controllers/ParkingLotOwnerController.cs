@@ -6,6 +6,7 @@ using SAPLSServer.DTOs.Concrete.UserDtos;
 using SAPLSServer.DTOs.PaginationDto;
 using SAPLSServer.Exceptions;
 using SAPLSServer.Services.Interfaces;
+using System.Security.Claims;
 
 namespace SAPLSServer.Controllers
 {
@@ -27,7 +28,7 @@ namespace SAPLSServer.Controllers
         /// <param name="request">Parking lot owner profile creation request</param>
         /// <returns>Success response</returns>
         [HttpPost("register")]
-        [Authorize(Policy = Accessibility.HEAD_ADMIN_ACCESS)]
+        [Authorize(Policy = Accessibility.ADMIN_ACCESS)]
         public async Task<IActionResult> RegisterParkingLotOwner([FromBody] CreateParkingLotOwnerProfileRequest request)
         {
             try
@@ -36,8 +37,12 @@ namespace SAPLSServer.Controllers
                 {
                     return BadRequest(ModelState);
                 }
-
-                await _parkingLotOwnerService.Create(request);
+                var performedByAdminUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if(string.IsNullOrWhiteSpace(performedByAdminUserId))
+                {
+                    return Unauthorized(new { message = MessageKeys.UNAUTHORIZED_ACCESS });
+                }
+                await _parkingLotOwnerService.Create(request, performedByAdminUserId);
                 return Ok(new { message = MessageKeys.PARKING_LOT_OWNER_PROFILE_CREATED_SUCCESSFULLY });
             }
             catch (InvalidInformationException ex)
@@ -57,7 +62,7 @@ namespace SAPLSServer.Controllers
         /// <param name="request">Parking lot owner profile update request</param>
         /// <returns>Success response</returns>
         [HttpPut]
-        [Authorize(Policy = Accessibility.PARKING_LOT_OWNER_ACCESS)]
+        [Authorize(Policy = Accessibility.ADMIN_ACCESS)]
         public async Task<IActionResult> UpdateParkingLotOwner([FromBody] UpdateParkingLotOwnerProfileRequest request)
         {
             try
@@ -66,8 +71,12 @@ namespace SAPLSServer.Controllers
                 {
                     return BadRequest(ModelState);
                 }
-
-                await _parkingLotOwnerService.Update(request);
+                var performedByAdminUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrWhiteSpace(performedByAdminUserId))
+                {
+                    return Unauthorized(new { message = MessageKeys.UNAUTHORIZED_ACCESS });
+                }
+                await _parkingLotOwnerService.Update(request, performedByAdminUserId);
                 return Ok(new { message = MessageKeys.PARKING_LOT_OWNER_PROFILE_UPDATED_SUCCESSFULLY });
             }
             catch (InvalidInformationException ex)
@@ -87,7 +96,7 @@ namespace SAPLSServer.Controllers
         /// <param name="ownerId">Parking lot owner ID</param>
         /// <returns>Parking lot owner profile details</returns>
         [HttpGet("{ownerId}")]
-        [Authorize(Policy = Accessibility.WEB_APP_ACCESS)]
+        [Authorize(Policy = Accessibility.ADMIN_PARKINGLOT_OWNER_ACCESS)]
         public async Task<ActionResult<ParkingLotOwnerProfileDetailsDto>> GetByOwnerId(string ownerId)
         {
             try
@@ -117,12 +126,19 @@ namespace SAPLSServer.Controllers
         /// <param name="userId">User ID</param>
         /// <returns>Parking lot owner profile details</returns>
         [HttpGet("user/{userId}")]
-        [Authorize(Policy = Accessibility.WEB_APP_ACCESS)]
+        [Authorize(Policy = Accessibility.ADMIN_PARKINGLOT_OWNER_ACCESS)]
         public async Task<ActionResult<ParkingLotOwnerProfileDetailsDto>> GetByUserId(string userId)
         {
             try
             {
                 var result = await _parkingLotOwnerService.GetByUserId(userId);
+                var currentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                var role = User.FindFirst(ClaimTypes.Role)?.Value;
+                // Check if the current user is an admin or the same user
+                if (role != UserRole.Admin.ToString() && currentUserId != userId)
+                {
+                    return Unauthorized(new { message = MessageKeys.UNAUTHORIZED_ACCESS });
+                }
                 if (result == null)
                 {
                     return NotFound(new { message = MessageKeys.PARKING_LOT_OWNER_PROFILE_NOT_FOUND });
@@ -148,7 +164,7 @@ namespace SAPLSServer.Controllers
         /// <param name="request">Filter criteria</param>
         /// <returns>Paginated parking lot owner profiles</returns>
         [HttpGet("page")]
-        [Authorize(Policy = Accessibility.WEB_APP_ACCESS)]
+        [Authorize(Policy = Accessibility.ADMIN_ACCESS)]
         public async Task<ActionResult<PageResult<ParkingLotOwnerProfileSummaryDto>>> GetParkingLotOwnerProfilesPage([FromQuery] PageRequest pageRequest, [FromQuery] GetParkingLotOwnerListRequest request)
         {
             try
@@ -169,7 +185,7 @@ namespace SAPLSServer.Controllers
         /// <param name="request">Filter criteria</param>
         /// <returns>List of parking lot owner profiles</returns>
         [HttpGet]
-        [Authorize(Policy = Accessibility.WEB_APP_ACCESS)]
+        [Authorize(Policy = Accessibility.ADMIN_ACCESS)]
         public async Task<ActionResult<List<ParkingLotOwnerProfileSummaryDto>>> GetParkingLotOwnerProfiles([FromQuery] GetParkingLotOwnerListRequest request)
         {
             try

@@ -13,8 +13,9 @@ namespace SAPLSServer.Services.Interfaces
         /// Creates a new vehicle in the system using the provided details.
         /// </summary>
         /// <param name="request">The request containing vehicle details and registration certificates.</param>
+        /// <param name="currentUserId"> The ID of the user making the request (must be a client).</param>
         /// <returns>A task representing the asynchronous operation.</returns>
-        Task Create(CreateVehicleRequest request);
+        Task Create(CreateVehicleRequest request, string currentUserId);
 
         /// <summary>
         /// Updates an existing vehicle's details.

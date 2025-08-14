@@ -37,9 +37,13 @@ public partial class GuestParkingSession
 
     public string PaymentStatus { get; set; } = null!;
 
+    public string ParkingFeeSchedule { get; set; } = null!;
+
     public virtual StaffProfile? CheckInStaff { get; set; }
 
     public virtual StaffProfile? CheckOutStaff { get; set; }
+
+    public virtual ParkingFeeSchedule ParkingFeeScheduleNavigation { get; set; } = null!;
 
     public virtual ParkingLot ParkingLot { get; set; } = null!;
 }

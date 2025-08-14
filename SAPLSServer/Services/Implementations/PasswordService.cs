@@ -52,7 +52,7 @@ namespace SAPLSServer.Services.Implementations
             var user = await _userRepository.Find(userId) ?? throw new InvalidInformationException(MessageKeys.USER_NOT_FOUND);
             
             // Use OtpService to generate the OTP
-            user.OneTimePassword = _otpService.GenerateOtp();
+            user.OneTimePassword = _otpService.GenerateOtp(OtpService.DEFAULT_OTP_LENGTH, OtpService.DEFAULT_OTP_DURATION);
             user.UpdatedAt = DateTime.UtcNow;
             _userRepository.Update(user);
             await _userRepository.SaveChangesAsync();

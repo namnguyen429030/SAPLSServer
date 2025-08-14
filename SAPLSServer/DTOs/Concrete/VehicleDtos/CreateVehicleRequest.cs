@@ -24,7 +24,5 @@ namespace SAPLSServer.DTOs.Concrete.VehicleDtos
         public string Color { get; set; } = null!;
         [Required(ErrorMessage = MessageKeys.OWNER_FULL_NAME_REQUIRED)]
         public string OwnerVehicleFullName { get; set; } = null!;
-        [Required(ErrorMessage = MessageKeys.OWNER_ID_REQUIRED)]
-        public string OwnerId { get; set; } = null!;
     }
 }

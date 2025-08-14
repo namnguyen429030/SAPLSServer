@@ -21,7 +21,7 @@ namespace SAPLSServer.Services.Implementations
 
             // Build connection string if not provided directly
             var connectionString = configuration[ConfigurationConstants.AzureBlobStorageConnectionString];
-            _connectionString = !string.IsNullOrEmpty(connectionString) 
+            _connectionString = !string.IsNullOrWhiteSpace(connectionString) 
                 ? connectionString 
                 : $"DefaultEndpointsProtocol=https;AccountName={_accountName};AccountKey={_accessKey};EndpointSuffix=core.windows.net";
 

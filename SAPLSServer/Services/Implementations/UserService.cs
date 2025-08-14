@@ -63,7 +63,8 @@ namespace SAPLSServer.Services.Implementations
             }
 
             // Generate confirmation OTP
-            var confirmationOtp = _otpService.GenerateOtp();
+            var confirmationOtp = _otpService.GenerateOtp(OtpService.DEFAULT_OTP_LENGTH, 
+                OtpService.DEFAULT_OTP_DURATION);
 
             var user = new User
             {
@@ -121,7 +122,7 @@ namespace SAPLSServer.Services.Implementations
             if (request.ProfileImage != null)
             {
                 // Delete old profile image if exists
-                if (!string.IsNullOrEmpty(user.ProfileImageUrl))
+                if (!string.IsNullOrWhiteSpace(user.ProfileImageUrl))
                 {
                     await _fileService.DeleteFileByUrlAsync(user.ProfileImageUrl);
                 }
@@ -279,6 +280,14 @@ namespace SAPLSServer.Services.Implementations
                    user.RefreshTokenExpiresAt.HasValue && 
                    user.RefreshTokenExpiresAt > DateTime.UtcNow &&
                    user.Status == UserStatus.Active.ToString();
+        }
+
+        public async Task<bool> IsUserValid(string userId)
+        {
+            var user = await _userRepository.Find(userId);
+            if (user == null)
+                return false;
+            return user.Status == UserStatus.Active.ToString();
         }
     }
 }

@@ -29,11 +29,13 @@ public partial class ParkingLot
 
     public DateTime ExpiredAt { get; set; }
 
-    public string? ClientKey { get; set; }
+    public string CreatedBy { get; set; } = null!;
 
-    public string? ApiKey { get; set; }
+    public string UpdatedBy { get; set; } = null!;
 
-    public string? CheckSumKey { get; set; }
+    public virtual AdminProfile CreatedByNavigation { get; set; } = null!;
+
+    public virtual AdminProfile IdNavigation { get; set; } = null!;
 
     public virtual ICollection<IncidenceReport> IncidenceReports { get; set; } = new List<IncidenceReport>();
 

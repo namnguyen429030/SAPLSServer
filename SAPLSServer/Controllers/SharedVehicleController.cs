@@ -66,7 +66,7 @@ namespace SAPLSServer.Controllers
                     return BadRequest(ModelState);
                 }
                 var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                if (string.IsNullOrEmpty(userId))
+                if (string.IsNullOrWhiteSpace(userId))
                 {
                     return Unauthorized(new { message = MessageKeys.UNAUTHORIZED_ACCESS });
                 }
@@ -98,7 +98,7 @@ namespace SAPLSServer.Controllers
                     return BadRequest(ModelState);
                 }
                 var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                if (string.IsNullOrEmpty(userId))
+                if (string.IsNullOrWhiteSpace(userId))
                 {
                     return Unauthorized(new { message = MessageKeys.UNAUTHORIZED_ACCESS });
                 }
@@ -126,7 +126,7 @@ namespace SAPLSServer.Controllers
             try
             {
                 var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                if (string.IsNullOrEmpty(userId))
+                if (string.IsNullOrWhiteSpace(userId))
                 {
                     return Unauthorized(new { message = MessageKeys.UNAUTHORIZED_ACCESS });
                 }

@@ -215,7 +215,7 @@ namespace SAPLSServer.Services.Implementations
             };
 
             // Add Google ID claim if available
-            if (!string.IsNullOrEmpty(user.GoogleId))
+            if (!string.IsNullOrWhiteSpace(user.GoogleId))
             {
                 claims.Add(new Claim("google_id", user.GoogleId));
             }
@@ -261,7 +261,7 @@ namespace SAPLSServer.Services.Implementations
                 // This assumes the client still sends the expired token in the Authorization header
                 // or you can add userId to the RefreshTokenRequest
                                 
-                if (string.IsNullOrEmpty(userId))
+                if (string.IsNullOrWhiteSpace(userId))
                     return null;
 
                 // Validate refresh token for this specific user

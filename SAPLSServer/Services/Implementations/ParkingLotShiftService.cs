@@ -1,0 +1,116 @@
+using SAPLSServer.DTOs.Concrete.ParkingLotShiftDtos;
+using SAPLSServer.Exceptions;
+using SAPLSServer.Models;
+using SAPLSServer.Repositories.Interfaces;
+using SAPLSServer.Services.Interfaces;
+
+
+namespace SAPLSServer.Services.Implementations
+{
+    public class ParkingLotShiftService : IParkingLotShiftService
+    {
+        private readonly IParkingLotShiftRepository _shiftRepository;
+        private readonly IParkingLotService _parkingLotService;
+
+        public ParkingLotShiftService(IParkingLotShiftRepository shiftRepository, IParkingLotService parkingLotService)
+        {
+            _shiftRepository = shiftRepository;
+            _parkingLotService = parkingLotService;
+        }
+
+        public async Task<List<ParkingLotShiftDto>> GetShiftsByParkingLotAsync(string parkingLotId)
+        {
+            var shifts = await _shiftRepository.GetByParkingLotIdAsync(parkingLotId);
+            return shifts.Select(MapToDto).ToList();
+        }
+
+        public async Task<ParkingLotShiftDto?> GetShiftByIdAsync(string id)
+        {
+            var shift = await _shiftRepository.FindWithStaffAsync(id);
+            return shift == null ? null : MapToDto(shift);
+        }
+
+        public async Task<ParkingLotShiftDto> CreateShiftAsync(CreateParkingLotShiftRequest request, string performerId)
+        {
+            if (!await _parkingLotService.IsParkingLotOwner(request.ParkingLotId, performerId))
+                throw new UnauthorizedAccessException("Only the parking lot owner can create shifts.");
+
+            var shift = new ParkingLotShift
+            {
+                // Assume Id is generated in the repository or here
+                ParkingLotId = request.ParkingLotId,
+                StartTime = request.StartTime,
+                EndTime = request.EndTime,
+                ShiftType = request.ShiftType,
+                DayOfWeeks = request.DayOfWeeks ?? string.Empty,
+                Status = request.Status ?? "Scheduled",
+                Note = request.Notes,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow,
+                // Staff assignment logic can be added here
+            };
+
+            await _shiftRepository.AddAsync(shift);
+            await _shiftRepository.SaveChangesAsync();
+
+            // Assign staff if needed (implement as needed)
+            // ...
+
+            return MapToDto(shift);
+        }
+
+        public async Task<bool> UpdateShiftAsync(UpdateParkingLotShiftRequest request, string performerId)
+        {
+            var shift = await _shiftRepository.Find(request.Id);
+            if (shift == null)
+                throw new InvalidInformationException("Shift not found.");
+
+            if (!await _parkingLotService.IsParkingLotOwner(shift.ParkingLotId, performerId))
+                throw new UnauthorizedAccessException("Only the parking lot owner can update shifts.");
+
+            if (request.StartTime.HasValue) shift.StartTime = request.StartTime.Value;
+            if (request.EndTime.HasValue) shift.EndTime = request.EndTime.Value;
+            if (request.ShiftType != null) shift.ShiftType = request.ShiftType;
+            if (request.DayOfWeeks != null) shift.DayOfWeeks = request.DayOfWeeks;
+            if (request.Status != null) shift.Status = request.Status;
+            if (request.Notes != null) shift.Note = request.Notes;
+            shift.UpdatedAt = DateTime.UtcNow;
+
+            _shiftRepository.Update(shift);
+            await _shiftRepository.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<bool> DeleteShiftAsync(string id, string performerId)
+        {
+            var shift = await _shiftRepository.Find(id);
+            if (shift == null)
+                throw new InvalidInformationException("Shift not found.");
+
+            if (!await _parkingLotService.IsParkingLotOwner(shift.ParkingLotId, performerId))
+                throw new UnauthorizedAccessException("Only the parking lot owner can delete shifts.");
+
+            _shiftRepository.Remove(shift);
+            await _shiftRepository.SaveChangesAsync();
+            return true;
+        }
+
+        private static ParkingLotShiftDto MapToDto(ParkingLotShift shift)
+        {
+            return new ParkingLotShiftDto
+            {
+                Id = shift.Id,
+                ParkingLotId = shift.ParkingLotId,
+                StartTime = shift.StartTime,
+                EndTime = shift.EndTime,
+                ShiftType = shift.ShiftType,
+                DayOfWeeks = shift.DayOfWeeks,
+                Status = shift.Status,
+                Notes = shift.Note,
+                CreatedAt = shift.CreatedAt,
+                UpdatedAt = shift.UpdatedAt,
+                // StaffIds = ... (map as needed)
+            };
+        }
+    }
+}

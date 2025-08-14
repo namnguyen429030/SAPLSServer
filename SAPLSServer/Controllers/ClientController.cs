@@ -60,7 +60,7 @@ namespace SAPLSServer.Controllers
         /// <param name="request">Client profile update request</param>
         /// <returns>Success response</returns>
         [HttpPut]
-        [Authorize(Policy = Accessibility.CLIENT_ACCESS)]
+        [Authorize(Policy = Accessibility.ADMIN_ACCESS)]
         public async Task<IActionResult> UpdateClient([FromForm] UpdateClientProfileRequest request)
         {
             try
@@ -69,39 +69,13 @@ namespace SAPLSServer.Controllers
                 {
                     return BadRequest(ModelState);
                 }
-
-                await _clientService.Update(request);
-                return Ok(new { message = MessageKeys.CLIENT_PROFILE_UPDATED_SUCCESSFULLY });
-            }
-            catch (InvalidInformationException ex)
-            {
-                return BadRequest(new { message = ex.Message });
-            }
-            catch (Exception)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, 
-                    new { message = MessageKeys.UNEXPECTED_ERROR });
-            }
-        }
-
-        /// <summary>
-        /// Gets client profile by citizen ID
-        /// </summary>
-        /// <param name="citizenId">Citizen ID</param>
-        /// <returns>Client profile details</returns>
-        [HttpGet("citizen/{citizenId}")]
-        [Authorize]
-        public async Task<ActionResult<ClientProfileDetailsDto>> GetByCitizenId(string citizenId)
-        {
-            try
-            {
-                var result = await _clientService.GetByCitizenIdNo(citizenId);
-                if (result == null)
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if(string.IsNullOrWhiteSpace(userId))
                 {
-                    return NotFound(new { message = MessageKeys.CLIENT_PROFILE_NOT_FOUND });
+                    return Unauthorized(new { message = MessageKeys.UNAUTHORIZED_ACCESS });
                 }
-
-                return Ok(result);
+                await _clientService.Update(request, userId);
+                return Ok(new { message = MessageKeys.CLIENT_PROFILE_UPDATED_SUCCESSFULLY });
             }
             catch (InvalidInformationException ex)
             {
@@ -120,11 +94,18 @@ namespace SAPLSServer.Controllers
         /// <param name="userId">User ID</param>
         /// <returns>Client profile details</returns>
         [HttpGet("user/{userId}")]
-        [Authorize]
+        [Authorize(Policy = Accessibility.ADMIN_CLIENT_ACCESS)]
         public async Task<ActionResult<ClientProfileDetailsDto>> GetByUserId(string userId)
         {
             try
             {
+                var currentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                var role = User.FindFirst(ClaimTypes.Role)?.Value;
+                //Check if the current user is an admin or the same user
+                if (role != UserRole.Admin.ToString() && currentUserId != userId)
+                {
+                    return Unauthorized(new { mssage = MessageKeys.UNAUTHORIZED_ACCESS});
+                }
                 var result = await _clientService.GetByUserId(userId);
                 if (result == null)
                 {
@@ -151,7 +132,7 @@ namespace SAPLSServer.Controllers
         /// <param name="request">Filter criteria</param>
         /// <returns>Paginated client profiles</returns>
         [HttpGet("page")]
-        [Authorize(Policy = Accessibility.WEB_APP_ACCESS)]
+        [Authorize(Policy = Accessibility.ADMIN_ACCESS)]
         public async Task<ActionResult<PageResult<ClientProfileSummaryDto>>> GetClientProfilesPage([FromQuery] PageRequest pageRequest, [FromQuery] GetClientListRequest request)
         {
             try
@@ -188,7 +169,7 @@ namespace SAPLSServer.Controllers
                 }
 
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                if (string.IsNullOrEmpty(userId))
+                if (string.IsNullOrWhiteSpace(userId))
                 {
                     return Unauthorized(new { message = "User ID not found in token" });
                 }
@@ -219,7 +200,7 @@ namespace SAPLSServer.Controllers
             try
             {
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                if (string.IsNullOrEmpty(userId))
+                if (string.IsNullOrWhiteSpace(userId))
                 {
                     return Unauthorized(new { message = "User ID not found in token" });
                 }

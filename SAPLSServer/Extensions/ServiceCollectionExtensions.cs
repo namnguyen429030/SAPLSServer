@@ -81,6 +81,7 @@ namespace SAPLSServer.Extensions
 
             //Add services
             services.AddScoped<IAuthService, AuthService>();
+            services.AddScoped<IFirebaseNotificationService, FirebaseNotificationService>();
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<IClientService, ClientService>();
             services.AddScoped<IAdminService, AdminService>();
@@ -296,14 +297,19 @@ namespace SAPLSServer.Extensions
                 options.AddPolicy(Accessibility.PARKING_LOT_OWNER_ACCESS, policy =>
                     policy.RequireRole(UserRole.ParkingLotOwner.ToString())
                     .RequireAuthenticatedUser());
-                options.AddPolicy(Accessibility.WEB_APP_ACCESS, policy =>
+                options.AddPolicy(Accessibility.ADMIN_PARKINGLOT_OWNER_ACCESS, policy =>
                     policy.RequireRole(UserRole.Admin.ToString(), UserRole.ParkingLotOwner.ToString())
                           .RequireAuthenticatedUser());
-
+                options.AddPolicy(Accessibility.ADMIN_CLIENT_ACCESS, policy =>
+                    policy.RequireRole(UserRole.Admin.ToString(), UserRole.Client.ToString())
+                          .RequireAuthenticatedUser());
                 options.AddPolicy(Accessibility.HEAD_ADMIN_ACCESS, policy =>
-                policy.RequireRole(UserRole.Admin.ToString())
-                      .RequireClaim(nameof(AdminRole), AdminRole.HeadAdmin.ToString())
-                      .RequireAuthenticatedUser());
+                    policy.RequireRole(UserRole.Admin.ToString())
+                    .RequireClaim(nameof(AdminRole), AdminRole.HeadAdmin.ToString())
+                    .RequireAuthenticatedUser());
+                options.AddPolicy(Accessibility.PARKING_LOT_OWNER_OR_STAFF_ACCESS, policy => 
+                   policy.RequireRole(UserRole.ParkingLotOwner.ToString(), UserRole.Staff.ToString())
+                          .RequireAuthenticatedUser());
             });
             return services;
         }

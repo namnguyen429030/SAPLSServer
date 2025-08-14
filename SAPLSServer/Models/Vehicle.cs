@@ -37,7 +37,11 @@ public partial class Vehicle
 
     public string? BackVehicleRegistrationCertificateUrl { get; set; }
 
+    public string UpdatedBy { get; set; } = null!;
+
     public virtual ClientProfile? CurrentHolder { get; set; }
+
+    public virtual AdminProfile IdNavigation { get; set; } = null!;
 
     public virtual ClientProfile Owner { get; set; } = null!;
 

@@ -38,7 +38,8 @@ namespace SAPLSServer.Controllers
                     return BadRequest(ModelState);
                 }
 
-                await _vehicleService.Create(request);
+                var currentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
+                await _vehicleService.Create(request, currentUserId);
                 return Ok(new { message = MessageKeys.VEHICLE_CREATED_SUCCESSFULLY });
             }
             catch (InvalidInformationException ex)
@@ -154,7 +155,7 @@ namespace SAPLSServer.Controllers
         /// <param name="licensePlate">Vehicle license plate</param>
         /// <returns>Vehicle details</returns>
         [HttpGet("license-plate/{licensePlate}")]
-        [Authorize(Policy = Accessibility.WEB_APP_ACCESS)]
+        [Authorize(Policy = Accessibility.ADMIN_PARKINGLOT_OWNER_ACCESS)]
         public async Task<ActionResult<VehicleDetailsDto>> GetVehicleByLicensePlate(string licensePlate)
         {
             try
@@ -263,7 +264,7 @@ namespace SAPLSServer.Controllers
             try
             {
                 var currentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                if (string.IsNullOrEmpty(currentUserId))
+                if (string.IsNullOrWhiteSpace(currentUserId))
                 {
                     return Unauthorized(new { message = MessageKeys.UNAUTHORIZED_ACCESS });
                 }

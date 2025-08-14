@@ -79,12 +79,15 @@ namespace SAPLSServer.Services.Implementations
                 FrontCitizenIdCardImageUrl = frontImageResult.CloudUrl,
                 BackCitizenIdCardImageUrl = backImageResult.CloudUrl,
             };
-            
+            while(await _clientProfileRepository.ExistsAsync(cp => cp.ShareCode == clientProfile.ShareCode))
+            {
+                clientProfile.ShareCode = _vehicleShareCodeService.GenerateShareCode(VehicleShareCodeService.VEHICLE_SHARE_CODE_LENGTH);
+            }
             await _clientProfileRepository.AddAsync(clientProfile);
             await _clientProfileRepository.SaveChangesAsync();
         }
 
-        public async Task Update(UpdateClientProfileRequest request)
+        public async Task Update(UpdateClientProfileRequest request, string updatePerformerId)
         {
             var clientProfile = await _clientProfileRepository.FindIncludingUser(request.Id);
             if (clientProfile == null)
@@ -93,7 +96,7 @@ namespace SAPLSServer.Services.Implementations
             if (citizenIdExists)
                 throw new InvalidInformationException(MessageKeys.CITIZEN_ID_ALREADY_EXISTS);
                 // Delete old front image if exists
-            if (!string.IsNullOrEmpty(clientProfile.FrontCitizenIdCardImageUrl))
+            if (!string.IsNullOrWhiteSpace(clientProfile.FrontCitizenIdCardImageUrl))
             {
                 await _fileService.DeleteFileByUrlAsync(clientProfile.FrontCitizenIdCardImageUrl);
             }
@@ -115,7 +118,7 @@ namespace SAPLSServer.Services.Implementations
             var frontImageResult = await _fileService.UploadFileAsync(frontImageUploadRequest);
 
             // Delete old back image if exists
-            if (!string.IsNullOrEmpty(clientProfile.BackCitizenIdCardImageUrl))
+            if (!string.IsNullOrWhiteSpace(clientProfile.BackCitizenIdCardImageUrl))
             {
                 await _fileService.DeleteFileByUrlAsync(clientProfile.BackCitizenIdCardImageUrl);
             }
@@ -145,6 +148,7 @@ namespace SAPLSServer.Services.Implementations
             clientProfile.FrontCitizenIdCardImageUrl = frontImageResult.CloudUrl;
             clientProfile.BackCitizenIdCardImageUrl = backImageResult.CloudUrl;
             clientProfile.User.UpdatedAt = DateTime.UtcNow;
+            clientProfile.UpdatedBy = updatePerformerId;
 
             _clientProfileRepository.Update(clientProfile);
             await _clientProfileRepository.SaveChangesAsync();
@@ -234,6 +238,14 @@ namespace SAPLSServer.Services.Implementations
                 return null;
             }
             return client.DeviceToken;
+        }
+        public async Task<bool> IsClientValid(string userId)
+        {
+            if(!await _userService.IsUserValid(userId))
+            {
+                return false;
+            }
+            return await _clientProfileRepository.ExistsAsync(cp => cp.UserId == userId);
         }
     }
 }

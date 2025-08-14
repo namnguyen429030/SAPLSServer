@@ -139,5 +139,14 @@ namespace SAPLSServer.Services.Implementations
                 ?? throw new InvalidInformationException(MessageKeys.STAFF_PROFILE_NOT_FOUND);
             return staffProfile.ParkingLotId;
         }
+
+        public async Task<bool> IsStaffValid(string userId)
+        {
+            if(!await _userService.IsUserValid(userId))
+            {
+                return false;
+            }
+            return await _staffProfileRepository.ExistsAsync(s => s.UserId == userId);
+        }
     }
 }

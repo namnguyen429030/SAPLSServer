@@ -82,7 +82,7 @@ namespace SAPLSServer.Services.Implementations
                 }
             };
 
-            if (!string.IsNullOrEmpty(backImageBase64))
+            if (!string.IsNullOrWhiteSpace(backImageBase64))
             {
                 imageParts.Add(new
                 {

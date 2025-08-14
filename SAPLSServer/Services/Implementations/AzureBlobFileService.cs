@@ -331,7 +331,7 @@ namespace SAPLSServer.Services.Implementations
         {
             if (!generateUnique)
             {
-                return string.IsNullOrEmpty(subFolder)
+                return string.IsNullOrWhiteSpace(subFolder)
                     ? originalFileName
                     : $"{subFolder}/{originalFileName}";
             }
@@ -340,7 +340,7 @@ namespace SAPLSServer.Services.Implementations
             var nameWithoutExtension = Path.GetFileNameWithoutExtension(originalFileName);
             var uniqueName = $"{nameWithoutExtension}_{Guid.NewGuid():N}{extension}";
 
-            return string.IsNullOrEmpty(subFolder)
+            return string.IsNullOrWhiteSpace(subFolder)
                 ? uniqueName
                 : $"{subFolder}/{uniqueName}";
         }

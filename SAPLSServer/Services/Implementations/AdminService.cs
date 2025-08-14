@@ -35,7 +35,8 @@ namespace SAPLSServer.Services.Implementations
                 UserId = userId,
                 AdminId = request.AdminId,
                 Role = AdminRole.Admin.ToString(),
-                CreatedBy = performedByAdminUserId
+                CreatedBy = performedByAdminUserId,
+                UpdatedBy = performedByAdminUserId,
             };
             await _adminProfileRepository.AddAsync(adminProfile);
             await _adminProfileRepository.SaveChangesAsync();
@@ -50,7 +51,7 @@ namespace SAPLSServer.Services.Implementations
             adminProfile.AdminId = request.AdminId;
             adminProfile.Role = request.AdminRole;
             adminProfile.User.UpdatedAt = DateTime.UtcNow;
-            adminProfile.CreatedBy = performedByAdminUserId;
+            adminProfile.UpdatedBy = performedByAdminUserId;
             _adminProfileRepository.Update(adminProfile);
 
             await _adminProfileRepository.SaveChangesAsync();
@@ -140,6 +141,22 @@ namespace SAPLSServer.Services.Implementations
             || a.AdminId == userIdOrAdminId]) ?? throw new InvalidInformationException(MessageKeys.ADMIN_PROFILE_NOT_FOUND);
             return Enum.TryParse<AdminRole>(adminProfile.Role, out var role) ? role 
                 : throw new InvalidDataException(MessageKeys.UNHANDLED_ADMIN_ROLE);    
+        }
+
+        public async Task<bool> IsAdminValid(string userIdOrAdminId)
+        {
+            var adminProfile = await _adminProfileRepository.Find([a => a.UserId == userIdOrAdminId
+                || a.AdminId == userIdOrAdminId]);
+            return adminProfile != null;
+        }
+
+        public async Task<bool> IsHeadAdminValid(string userId)
+        {
+            if(!await _userService.IsUserValid(userId))
+                return false;
+            var adminProfile = await _adminProfileRepository.Find([a => a.UserId == userId
+                || a.AdminId == userId]);
+            return adminProfile != null && adminProfile.Role == AdminRole.HeadAdmin.ToString();
         }
     }
 }

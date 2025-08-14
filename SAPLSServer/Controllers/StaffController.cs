@@ -148,7 +148,7 @@ namespace SAPLSServer.Controllers
         /// <param name="request">Filter criteria</param>
         /// <returns>Paginated staff profiles</returns>
         [HttpGet("page")]
-        [Authorize(Policy = Accessibility.WEB_APP_ACCESS)]
+        [Authorize(Policy = Accessibility.ADMIN_PARKINGLOT_OWNER_ACCESS)]
         public async Task<ActionResult<PageResult<StaffProfileSummaryDto>>> GetStaffProfilesPage([FromQuery] PageRequest pageRequest, [FromQuery] GetStaffListRequest request)
         {
             try
@@ -169,7 +169,7 @@ namespace SAPLSServer.Controllers
         /// <param name="request">Filter criteria</param>
         /// <returns>List of staff profiles</returns>
         [HttpGet]
-        [Authorize(Policy = Accessibility.WEB_APP_ACCESS)]
+        [Authorize(Policy = Accessibility.ADMIN_PARKINGLOT_OWNER_ACCESS)]
         public async Task<ActionResult<List<StaffProfileSummaryDto>>> GetStaffProfiles([FromQuery] GetStaffListRequest request)
         {
             try

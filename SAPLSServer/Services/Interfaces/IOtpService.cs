@@ -16,6 +16,6 @@ namespace SAPLSServer.Services.Interfaces
         /// <param name="length">The length of the OTP</param>
         /// <param name="expirationMinutes">Expiration time in minutes</param>
         /// <returns>The generated OTP</returns>
-        string GenerateOtp(int length = 16, int expirationMinutes = 15);
+        string GenerateOtp(int length, int expirationMinutes);
     }
 }

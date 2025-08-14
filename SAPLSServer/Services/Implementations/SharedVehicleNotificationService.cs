@@ -26,7 +26,7 @@ namespace SAPLSServer.Services.Implementations
             var notification = new NotificationRequest
             {
                 Title = "Vehicle Sharing Invitation",
-                Body = $"{ownerName} has invited you to use their vehicle {vehicle.LicensePlate}.{(!string.IsNullOrEmpty(note) ? $" Note: {note}" : "")}",
+                Body = $"{ownerName} has invited you to use their vehicle {vehicle.LicensePlate}.{(!string.IsNullOrWhiteSpace(note) ? $" Note: {note}" : "")}",
                 Data = new Dictionary<string, string>
                 {
                     { "type", "vehicle_sharing_invitation" },
@@ -126,7 +126,7 @@ namespace SAPLSServer.Services.Implementations
                 // Get user's device token from ClientProfile
                 var deviceToken = await _clientService.GetDeviceToken(userId);
                 
-                if (string.IsNullOrEmpty(deviceToken))
+                if (string.IsNullOrWhiteSpace(deviceToken))
                 {
                     return;
                 }

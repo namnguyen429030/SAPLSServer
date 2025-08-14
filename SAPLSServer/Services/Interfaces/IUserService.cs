@@ -87,5 +87,11 @@ namespace SAPLSServer.Services.Interfaces
         /// <param name="userId">The user ID.</param>
         /// <returns>A task representing the asynchronous operation.</returns>
         Task ClearRefreshToken(string userId);
+        /// <summary>
+        /// Checks if the specified user is valid and exists in the system.
+        /// </summary>
+        /// <param name="userId">The user ID to check.</param>
+        /// <returns>True if the user exists and is valid; otherwise, false.</returns>
+        Task<bool> IsUserValid(string userId);
     }
 }

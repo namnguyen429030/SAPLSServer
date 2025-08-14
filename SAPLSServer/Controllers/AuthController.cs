@@ -140,7 +140,7 @@ namespace SAPLSServer.Controllers
                 var googleId = claims?.FirstOrDefault(c => c.Type == "google_id")?.Value;
                 var email = claims?.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value;
 
-                if (string.IsNullOrEmpty(googleId) || string.IsNullOrEmpty(email))
+                if (string.IsNullOrWhiteSpace(googleId) || string.IsNullOrWhiteSpace(email))
                 {
                     return RedirectToFrontend($"/login?error={MessageKeys.MISSING_USER_INFO}");
                 }

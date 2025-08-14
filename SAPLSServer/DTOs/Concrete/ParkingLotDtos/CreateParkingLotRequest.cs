@@ -18,8 +18,5 @@ namespace SAPLSServer.DTOs.Concrete.ParkingLotDtos
         [Required(ErrorMessage = MessageKeys.NUMBER_OF_PARKING_SLOTS_REQUIRED)]
         [Range(1, int.MaxValue, ErrorMessage = MessageKeys.INVALID_NUMBER_OF_PARKING_SLOTS)]
         public int TotalParkingSlot { get; set; }
-        public string? ClientKey { get; set; }
-        public string? ApiKey { get; set; }
-        public string? CheckSumKey { get; set; }
     }
 }

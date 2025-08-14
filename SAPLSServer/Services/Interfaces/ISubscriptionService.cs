@@ -42,5 +42,11 @@ namespace SAPLSServer.Services.Interfaces
         /// <param name="request">The request containing the subscription ID and new status.</param>
         /// <param name="adminId">The ID of the admin performing the update.</param>
         Task UpdateStatusAsync(UpdateSubscriptionStatusRequest request, string adminId);
+        /// <summary>
+        /// Retrieves the duration (in days, months, or other unit as defined) of a specific subscription by its unique identifier.
+        /// </summary>
+        /// <param name="subscriptionId">The unique identifier of the subscription.</param>
+        /// <returns>The duration value of the subscription.</returns>
+        Task<int> GetDurationOfSubscription(string subscriptionId);
     }
 }

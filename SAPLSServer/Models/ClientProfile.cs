@@ -27,9 +27,13 @@ public partial class ClientProfile
 
     public string? BackCitizenIdCardImageUrl { get; set; }
 
+    public string? UpdatedBy { get; set; }
+
     public virtual ICollection<ParkingSession> ParkingSessions { get; set; } = new List<ParkingSession>();
 
     public virtual ICollection<SharedVehicle> SharedVehicles { get; set; } = new List<SharedVehicle>();
+
+    public virtual AdminProfile? UpdatedByNavigation { get; set; }
 
     public virtual User User { get; set; } = null!;
 

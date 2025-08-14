@@ -20,7 +20,7 @@ namespace SAPLSServer.Services.Interfaces
         /// </summary>
         /// <param name="request">The request containing updated client profile details.</param>
         /// <returns>A task representing the asynchronous operation.</returns>
-        Task Update(UpdateClientProfileRequest request);
+        Task Update(UpdateClientProfileRequest request, string updatePerformerId);
 
         /// <summary>
         /// Retrieves detailed information about a client by their citizen ID number.
@@ -65,5 +65,6 @@ namespace SAPLSServer.Services.Interfaces
         /// <param name="userId">The user ID of the client.</param>
         /// <returns>A task that returns the device token, or null if not found.</returns>
         Task<string?> GetDeviceToken(string userId);
+        Task<bool> IsClientValid(string userId);
     }
 }

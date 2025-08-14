@@ -43,11 +43,15 @@ public partial class ParkingSession
 
     public string ClientId { get; set; } = null!;
 
+    public string ParkingFeeSchedule { get; set; } = null!;
+
     public virtual StaffProfile? CheckInStaff { get; set; }
 
     public virtual StaffProfile? CheckOutStaff { get; set; }
 
     public virtual ClientProfile Client { get; set; } = null!;
+
+    public virtual ParkingFeeSchedule ParkingFeeScheduleNavigation { get; set; } = null!;
 
     public virtual ParkingLot ParkingLot { get; set; } = null!;
 

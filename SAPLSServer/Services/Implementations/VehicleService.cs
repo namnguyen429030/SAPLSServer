@@ -30,7 +30,7 @@ namespace SAPLSServer.Services.Implementations
             _fileService = fileService;
         }
 
-        public async Task Create(CreateVehicleRequest request)
+        public async Task Create(CreateVehicleRequest request, string currentUserId)
         {
             // Check for unique License Plate
             bool licensePlateExists = await _vehicleRepository.ExistsAsync(v => v.LicensePlate == request.LicensePlate);
@@ -74,8 +74,8 @@ namespace SAPLSServer.Services.Implementations
             {
                 Id = vehicleId,
                 LicensePlate = request.LicensePlate,
-                OwnerId = request.OwnerId,
-                CurrentHolderId = request.OwnerId,
+                OwnerId = currentUserId,
+                CurrentHolderId = currentUserId,
                 Brand = request.Brand,
                 Model = request.Model,
                 Color = request.Color,
@@ -214,17 +214,17 @@ namespace SAPLSServer.Services.Implementations
                 v => v.OwnerId == request.OwnerId
             };
 
-            if (!string.IsNullOrEmpty(request.SharingStatus))
+            if (!string.IsNullOrWhiteSpace(request.SharingStatus))
             {
                 criterias.Add(v => v.SharingStatus == request.SharingStatus);
             }
 
-            if (!string.IsNullOrEmpty(request.Status))
+            if (!string.IsNullOrWhiteSpace(request.Status))
             {
                 criterias.Add(v => v.Status == request.Status);
             }
 
-            if (!string.IsNullOrEmpty(request.SearchCriteria))
+            if (!string.IsNullOrWhiteSpace(request.SearchCriteria))
             {
                 criterias.Add(v => v.LicensePlate.Contains(request.SearchCriteria) ||
                                   v.Brand.Contains(request.SearchCriteria) ||

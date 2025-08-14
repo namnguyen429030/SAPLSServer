@@ -1,5 +1,4 @@
 using SAPLSServer.Constants;
-using SAPLSServer.DTOs.Base;
 using SAPLSServer.DTOs.Concrete.UserDtos;
 using SAPLSServer.DTOs.PaginationDto;
 
@@ -61,5 +60,19 @@ namespace SAPLSServer.Services.Interfaces
         /// <param name="userIdOrAdminId">The user ID or admin ID to identify the admin.</param>
         /// <returns>A task that returns the admin's role.</returns>
         Task<AdminRole> GetAdminRole(string userIdOrAdminId);
+
+        /// <summary>
+        /// Checks if the specified user is a valid admin.
+        /// </summary>
+        /// <param name="userIdOrAdminId">The user ID or admin ID to check.</param>
+        /// <returns>True if the user is an admin, otherwise false.</returns>
+        Task<bool> IsAdminValid(string userIdOrAdminId);
+
+        /// <summary>
+        /// Checks if the specified user is a valid head admin.
+        /// </summary>
+        /// <param name="userIdOrAdminId">The user ID or admin ID to check.</param>
+        /// <returns>True if the user is a head admin, otherwise false.</returns>
+        Task<bool> IsHeadAdminValid(string userIdOrAdminId);
     }
 }

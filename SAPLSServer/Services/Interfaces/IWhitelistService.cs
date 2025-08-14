@@ -22,18 +22,21 @@ namespace SAPLSServer.Services.Interfaces
         /// Adds a client to the whitelist of a parking lot.
         /// </summary>
         /// <param name="request">The request containing parking lot and client information.</param>
-        Task AddToWhiteListAsync(AddAttendantToWhiteListRequest request);
+        /// <param name="parkingLotOwnerId">The parking lot owner's ID.</param>
+        Task AddToWhiteListAsync(AddAttendantToWhiteListRequest request, string parkingLotOwnerId);
         /// <summary>
         /// Updates the expiration date of a whitelist entry.
         /// </summary>
         /// <param name="request">The request containing the update information.</param>
-        Task UpdateExpireAtAsync(UpdateWhiteListAttendantExpireDateRequest request);
+        /// <param name="parkingLotOwnerId">The parking lot owner's ID.</param>
+        Task UpdateExpireAtAsync(UpdateWhiteListAttendantExpireDateRequest request, string parkingLotOwnerId);
 
         /// <summary>
         /// Removes a client from the whitelist of a parking lot.
         /// </summary>
         /// <param name="request">The request containing parking lot and client information.</param>
-        Task RemoveFromWhiteListAsync(RemoveAttendantFromWhiteListRequest request);
+        /// <param name="parkingLotOwnerId">The parking lot owner's ID.</param>
+        Task RemoveFromWhiteListAsync(RemoveAttendantFromWhiteListRequest request, string parkingLotOwnerId);
 
         /// <summary>
         /// Gets a list of whitelisted attendants for a parking lot.

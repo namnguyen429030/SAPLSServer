@@ -52,7 +52,7 @@ namespace SAPLSServer.Controllers
         /// <param name="phoneOrEmail">Phone number or email address</param>
         /// <returns>User details</returns>
         [HttpGet("search/{phoneOrEmail}")]
-        [Authorize(Policy = Accessibility.WEB_APP_ACCESS)]
+        [Authorize(Policy = Accessibility.ADMIN_PARKINGLOT_OWNER_ACCESS)]
         public async Task<ActionResult<UserDetailsDto>> GetUserByPhoneOrEmail(string phoneOrEmail)
         {
             try
@@ -118,7 +118,7 @@ namespace SAPLSServer.Controllers
         /// <param name="request">Status update request</param>
         /// <returns>Success response</returns>
         [HttpPut("status")]
-        [Authorize(Policy = Accessibility.WEB_APP_ACCESS)]
+        [Authorize(Policy = Accessibility.ADMIN_PARKINGLOT_OWNER_ACCESS)]
         public async Task<IActionResult> UpdateUserStatus([FromBody] UpdateUserStatusRequest request)
         {
             try

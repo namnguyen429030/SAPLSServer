@@ -98,7 +98,7 @@ namespace SAPLSServer.Controllers
         /// <param name="adminId">Admin ID</param>
         /// <returns>Admin profile details</returns>
         [HttpGet("{adminId}")]
-        [Authorize(Policy = Accessibility.WEB_APP_ACCESS)]
+        [Authorize(Policy = Accessibility.ADMIN_ACCESS)]
         public async Task<ActionResult<AdminProfileDetailsDto>> GetByAdminId(string adminId)
         {
             try
@@ -128,7 +128,7 @@ namespace SAPLSServer.Controllers
         /// <param name="userId">User ID</param>
         /// <returns>Admin profile details</returns>
         [HttpGet("user/{userId}")]
-        [Authorize(Policy = Accessibility.WEB_APP_ACCESS)]
+        [Authorize(Policy = Accessibility.ADMIN_ACCESS)]
         public async Task<ActionResult<AdminProfileDetailsDto>> GetByUserId(string userId)
         {
             try
@@ -159,7 +159,7 @@ namespace SAPLSServer.Controllers
         /// <param name="request">Filter criteria</param>
         /// <returns>Paginated admin profiles</returns>
         [HttpGet("page")]
-        [Authorize(Policy = Accessibility.WEB_APP_ACCESS)]
+        [Authorize(Policy = Accessibility.ADMIN_ACCESS)]
         public async Task<ActionResult<PageResult<AdminProfileSummaryDto>>> GetAdminProfilesPage([FromQuery] PageRequest pageRequest, [FromQuery] GetAdminListRequest request)
         {
             try
@@ -180,7 +180,7 @@ namespace SAPLSServer.Controllers
         /// <param name="request">Filter criteria</param>
         /// <returns>List of admin profiles</returns>
         [HttpGet]
-        [Authorize(Policy = Accessibility.WEB_APP_ACCESS)]
+        [Authorize(Policy = Accessibility.ADMIN_ACCESS)]
         public async Task<ActionResult<List<AdminProfileSummaryDto>>> GetAdminProfiles([FromQuery] GetAdminListRequest request)
         {
             try

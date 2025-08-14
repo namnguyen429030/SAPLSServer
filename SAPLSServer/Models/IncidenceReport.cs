@@ -19,11 +19,11 @@ public partial class IncidenceReport
 
     public string ReporterId { get; set; } = null!;
 
-    public string? ParkingLotId { get; set; }
+    public string ParkingLotId { get; set; } = null!;
 
     public virtual ICollection<IncidenceEvidence> IncidenceEvidences { get; set; } = new List<IncidenceEvidence>();
 
-    public virtual ParkingLot? ParkingLot { get; set; }
+    public virtual ParkingLot ParkingLot { get; set; } = null!;
 
     public virtual StaffProfile Reporter { get; set; } = null!;
 }

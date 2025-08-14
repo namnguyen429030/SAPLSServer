@@ -11,7 +11,7 @@ namespace SAPLSServer.Regexs
         private static readonly Regex _structuredRegex = new Regex(Pattern, RegexOptions.Compiled);
         public static bool IsValidStructure(string input)
         {
-            return !string.IsNullOrEmpty(input) && _structuredRegex.IsMatch(input);
+            return !string.IsNullOrWhiteSpace(input) && _structuredRegex.IsMatch(input);
         }
     }
 }

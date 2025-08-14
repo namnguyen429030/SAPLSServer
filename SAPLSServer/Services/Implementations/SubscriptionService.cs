@@ -67,14 +67,14 @@ namespace SAPLSServer.Services.Implementations
 
         public async Task CreateAsync(CreateSubscriptionRequest request, string adminId)
         {
-            if(await _subscriptionRepository.ExistsAsync(c => c.Name == request.Name))
+            if (await _subscriptionRepository.ExistsAsync(c => c.Name == request.Name))
                 throw new InvalidInformationException(MessageKeys.SUBSCRIPTION_NAME_EXISTS);
             var subscription = new Subscription
             {
                 Id = Guid.NewGuid().ToString(),
                 Name = request.Name,
                 Description = request.Note,
-                Duration = request.Duration,
+                Duration = (int)TimeSpan.FromDays(request.Duration).TotalMilliseconds,
                 Price = request.Price,
                 Status = request.Status,
                 CreatedAt = DateTime.UtcNow,
@@ -99,6 +99,13 @@ namespace SAPLSServer.Services.Implementations
 
             _subscriptionRepository.Update(subscription);
             await _subscriptionRepository.SaveChangesAsync();
+        }
+        public async Task<int> GetDurationOfSubscription(string subscriptionId)
+        {
+            var subscription = await _subscriptionRepository.Find(subscriptionId);
+            if (subscription == null)
+                throw new InvalidInformationException(MessageKeys.SUBSCRIPTION_NOT_FOUND);
+            return subscription.Duration;
         }
     }
 }

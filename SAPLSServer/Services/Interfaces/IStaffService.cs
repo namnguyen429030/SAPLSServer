@@ -1,11 +1,13 @@
 using SAPLSServer.DTOs.Concrete;
 using SAPLSServer.DTOs.Concrete.UserDtos;
 using SAPLSServer.DTOs.PaginationDto;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace SAPLSServer.Services.Interfaces
 {
     /// <summary>
-    /// Provides operations for managing staff profiles.
+    /// Provides operations for managing staff profiles, including creation, updates, retrieval, and validation.
     /// </summary>
     public interface IStaffService
     {
@@ -27,14 +29,14 @@ namespace SAPLSServer.Services.Interfaces
         /// Retrieves detailed information about a staff member by their staff identifier.
         /// </summary>
         /// <param name="staffId">The unique identifier of the staff member.</param>
-        /// <returns>A task that returns the staff member's detailed information.</returns>
+        /// <returns>A task that returns the staff member's detailed information, or null if not found.</returns>
         Task<StaffProfileDetailsDto?> FindByStaffId(string staffId);
 
         /// <summary>
         /// Retrieves detailed information about a staff member by their user identifier.
         /// </summary>
         /// <param name="userId">The unique identifier of the user.</param>
-        /// <returns>A task that returns the staff member's detailed information.</returns>
+        /// <returns>A task that returns the staff member's detailed information, or null if not found.</returns>
         Task<StaffProfileDetailsDto?> FindByUserId(string userId);
 
         /// <summary>
@@ -42,7 +44,7 @@ namespace SAPLSServer.Services.Interfaces
         /// </summary>
         /// <param name="pageRequest">The pagination request containing page number and size.</param>
         /// <param name="request">The optional search criteria for filtering staff profiles.</param>
-        /// <returns>A task representing the asynchronous operation, with a paginated result of staff profile details.</returns>
+        /// <returns>A paginated result of staff profile summaries.</returns>
         Task<PageResult<StaffProfileSummaryDto>> GetStaffProfilesPage(PageRequest pageRequest, GetStaffListRequest request);
 
         /// <summary>
@@ -58,5 +60,12 @@ namespace SAPLSServer.Services.Interfaces
         /// <param name="userIdOrstaffId">The user ID or staff ID to identify the staff member.</param>
         /// <returns>A task that returns the parking lot ID associated with the staff member.</returns>
         Task<string> GetParkingLotId(string userIdOrstaffId);
+
+        /// <summary>
+        /// Checks if the specified user is a valid staff member.
+        /// </summary>
+        /// <param name="userId">The user ID to check.</param>
+        /// <returns>True if the user is a valid staff member; otherwise, false.</returns>
+        Task<bool> IsStaffValid(string userId);
     }
 }
