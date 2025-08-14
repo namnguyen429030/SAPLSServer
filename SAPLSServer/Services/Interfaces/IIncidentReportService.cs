@@ -1,5 +1,5 @@
 using SAPLSServer.DTOs.Base;
-using SAPLSServer.DTOs.Concrete.IncidentReportDto;
+using SAPLSServer.DTOs.Concrete.IncidenceReportDtos;
 using SAPLSServer.DTOs.PaginationDto;
 
 namespace SAPLSServer.Services.Interfaces
@@ -19,7 +19,7 @@ namespace SAPLSServer.Services.Interfaces
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
-        Task UpdateIncidentReportStatus(UpdateIncidentReportStatusRequest request);
+        Task UpdateIncidentReportStatus(UpdateIncidentReportStatusRequest request, string performerId);
 
         /// <summary>
         /// Retrieves the details of an incident report by its unique identifier (ID).

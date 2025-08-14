@@ -1,6 +1,6 @@
 ﻿using SAPLSServer.Constants;
 using SAPLSServer.DTOs.Base;
-using SAPLSServer.DTOs.Concrete.UserDto;
+using SAPLSServer.DTOs.Concrete.UserDtos;
 using SAPLSServer.DTOs.PaginationDto;
 using SAPLSServer.Exceptions;
 using SAPLSServer.Models;
@@ -21,25 +21,28 @@ namespace SAPLSServer.Services.Implementations
             _adminProfileRepository = adminProfileRepository;
         }
 
-        public async Task CreateAdmin(CreateAdminProfileRequest request)
+        public async Task Create(CreateAdminProfileRequest request, string performedByAdminUserId)
         {
             // Check for unique AdminId
             bool adminIdExists = await _adminProfileRepository.ExistsAsync(a => a.AdminId == request.AdminId);
             if (adminIdExists)
                 throw new InvalidInformationException(MessageKeys.ADMIN_ID_ALREADY_EXISTS);
 
-            var userId = await _userService.CreateUser(request);
+            var userId = await _userService.Create(request);
 
             var adminProfile = new AdminProfile
             {
                 UserId = userId,
                 AdminId = request.AdminId,
-                Role = AdminRole.Admin.ToString()
+                Role = AdminRole.Admin.ToString(),
+                CreatedBy = performedByAdminUserId,
+                UpdatedBy = performedByAdminUserId,
             };
             await _adminProfileRepository.AddAsync(adminProfile);
+            await _adminProfileRepository.SaveChangesAsync();
         }
 
-        public async Task UpdateAdmin(UpdateAdminProfileRequest request)
+        public async Task Update(UpdateAdminProfileRequest request, string performedByAdminUserId)
         {
             var adminProfile = await _adminProfileRepository.FindIncludingUser(request.Id);
             if (adminProfile == null)
@@ -47,19 +50,31 @@ namespace SAPLSServer.Services.Implementations
 
             adminProfile.AdminId = request.AdminId;
             adminProfile.Role = request.AdminRole;
-            _adminProfileRepository.Update(adminProfile);
             adminProfile.User.UpdatedAt = DateTime.UtcNow;
+            adminProfile.UpdatedBy = performedByAdminUserId;
+            _adminProfileRepository.Update(adminProfile);
 
             await _adminProfileRepository.SaveChangesAsync();
         }
 
-        public async Task<AdminProfileDetailsDto?> GetAdminProfileDetails(GetDetailsRequest request)
+        public async Task<PageResult<AdminProfileSummaryDto>> GetAdminProfilesPage(PageRequest pageRequest, GetAdminListRequest request)
         {
-            var adminProfile = await _adminProfileRepository.FindIncludingUserReadOnly(request.Id);
-            if (adminProfile == null || adminProfile.User == null)
-                return null;
-            return new AdminProfileDetailsDto(adminProfile);
-        }
+            var criterias = new List<Expression<Func<AdminProfile, bool>>>();
+            if (!string.IsNullOrWhiteSpace(request.Role))
+            {
+                criterias.Add(ap => ap.Role == request.Role);
+            }
+            if (!string.IsNullOrWhiteSpace(request.Status))
+            {
+                criterias.Add(ap => ap.User.Status == request.Status);
+            }
+            criterias.Add(ap => 
+                ap.AdminId.Contains(request.SearchCriteria?? string.Empty) ||
+                ap.User.FullName.Contains(request.SearchCriteria ?? string.Empty) ||
+                ap.User.Email.Contains(request.SearchCriteria ?? string.Empty) ||
+                ap.User.Phone.Contains(request.SearchCriteria ?? string.Empty)
+            );
+            var criteriasArray = criterias.ToArray();
 
         public async Task<PageResult<AdminProfileSummaryDto>> GetAdminProfilesPage(PageRequest pageRequest, GetAdminListRequest request)
         {
@@ -88,7 +103,7 @@ namespace SAPLSServer.Services.Implementations
             var items = new List<AdminProfileSummaryDto>();
             foreach (var admin in admins)
             {
-                var adminIncludingUser = await _adminProfileRepository.FindIncludingUser(admin.UserId);
+                var adminIncludingUser = await _adminProfileRepository.FindIncludingUserReadOnly(admin.UserId);
                 if(adminIncludingUser == null)
                     continue; // Skip if admin profile is not found
                 items.Add(new AdminProfileSummaryDto(admin));
@@ -133,6 +148,44 @@ namespace SAPLSServer.Services.Implementations
                 result.Add(new AdminProfileSummaryDto(adminIncludingUser));
             }
             return result;
+        }
+
+        public async Task<AdminProfileDetailsDto?> GetByAdminIdAsync(string adminId)
+        {
+            var adminProfile = await _adminProfileRepository.FindIncludingUserReadOnly(adminId) ?? 
+                throw new InvalidInformationException(MessageKeys.ADMIN_PROFILE_NOT_FOUND);
+            return new AdminProfileDetailsDto(adminProfile);
+        }
+
+        public async Task<AdminProfileDetailsDto?> GetByUserIdAsync(string userId)
+        {
+            var adminProfile = await _adminProfileRepository.FindIncludingUserReadOnly([a => a.UserId == userId]) ??
+                throw new InvalidInformationException(MessageKeys.ADMIN_PROFILE_NOT_FOUND);
+            return new AdminProfileDetailsDto(adminProfile);
+        }
+
+        public async Task<AdminRole> GetAdminRole(string userIdOrAdminId)
+        {
+            var adminProfile = await _adminProfileRepository.Find([a => a.UserId == userIdOrAdminId 
+            || a.AdminId == userIdOrAdminId]) ?? throw new InvalidInformationException(MessageKeys.ADMIN_PROFILE_NOT_FOUND);
+            return Enum.TryParse<AdminRole>(adminProfile.Role, out var role) ? role 
+                : throw new InvalidDataException(MessageKeys.UNHANDLED_ADMIN_ROLE);    
+        }
+
+        public async Task<bool> IsAdminValid(string userIdOrAdminId)
+        {
+            var adminProfile = await _adminProfileRepository.Find([a => a.UserId == userIdOrAdminId
+                || a.AdminId == userIdOrAdminId]);
+            return adminProfile != null;
+        }
+
+        public async Task<bool> IsHeadAdminValid(string userId)
+        {
+            if(!await _userService.IsUserValid(userId))
+                return false;
+            var adminProfile = await _adminProfileRepository.Find([a => a.UserId == userId
+                || a.AdminId == userId]);
+            return adminProfile != null && adminProfile.Role == AdminRole.HeadAdmin.ToString();
         }
     }
 }

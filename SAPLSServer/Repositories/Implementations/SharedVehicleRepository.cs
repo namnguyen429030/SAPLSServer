@@ -13,22 +13,23 @@ namespace SAPLSServer.Repositories.Implementations
 
         public async Task<SharedVehicle?> FindIncludingVehicleAndOwner(string id)
         {
-            return await _dbSet.Include(sv => sv.Vehicle.Owner).FirstOrDefaultAsync(CreateIdPredicate(id));
+            return await _dbSet.Include(sv => sv.Vehicle)
+                .ThenInclude(v => v.Owner)
+                .ThenInclude(o => o.User)
+                .FirstOrDefaultAsync(CreateIdPredicate(id));
         }
 
         public async Task<SharedVehicle?> FindIncludingVehicleAndOwnerReadOnly(string id)
         {
-            return await _dbSet
-                .Include(sv => sv.Vehicle)
-                .Include(sv => sv.Vehicle.Owner)
-                .Include(sv => sv.Vehicle.Owner.User)
+            return await _dbSet.Include(sv => sv.Vehicle.Owner)
                 .AsNoTracking()
                 .FirstOrDefaultAsync(CreateIdPredicate(id));
         }
 
         public async Task<SharedVehicle?> FindIncludingVehicle(string id)
         {
-            return await _dbSet.Include(sv => sv.Vehicle).FirstOrDefaultAsync(CreateIdPredicate(id));
+            return await _dbSet.Include(sv => sv.Vehicle)
+                .FirstOrDefaultAsync(CreateIdPredicate(id));
         }
 
         public async Task<SharedVehicle?> FindIncludingVehicleReadOnly(string id)
@@ -41,6 +42,16 @@ namespace SAPLSServer.Repositories.Implementations
         protected override Expression<Func<SharedVehicle, bool>> CreateIdPredicate(string id)
         {
             return sv => sv.VehicleId == id;
+        }
+
+        public Task<SharedVehicle?> FindIncludingVehicleAndOwnerAndSharedPerson(string id)
+        {
+            return _dbSet.Include(sv => sv.Vehicle)
+                .ThenInclude(v => v.Owner)
+                .ThenInclude(r => r.User)
+                .Include(sv => sv.SharedPerson)
+                .ThenInclude(sp => sp!.User)
+                .FirstOrDefaultAsync(CreateIdPredicate(id));
         }
     }
 }

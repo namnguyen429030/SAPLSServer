@@ -1,11 +1,14 @@
-﻿using SAPLSServer.DTOs.Concrete.PaymentDto;
+﻿using SAPLSServer.DTOs.Concrete.PaymentDtos;
 
 namespace SAPLSServer.Services.Interfaces
 {
     public interface IPaymentService
     {
-        Task<PaymentStatusResponseDto> SendPaymentRequest(PaymentRequestDto request);
-        Task<PaymentStatusResponseDto> SendCancelPaymentRequest(PaymentCancelRequestDto request);
-        Task<PaymentStatusResponseDto> GetPaymentStatus(int paymentId);
+        Task<PaymentStatusResponseDto?> SendPaymentRequest(PaymentRequestDto request, string clientKey, 
+            string apiKey, string checkSumKey);
+        Task<PaymentStatusResponseDto?> SendCancelPaymentRequest(int paymentId, string clientKey, 
+            string apiKey, PaymentCancelRequestDto request);
+        Task<PaymentStatusResponseDto?> GetPaymentStatus(int paymentId, string clientKey, string apiKey);
+        string GenerateSignature(string data, string checkSumKey);
     }
 }

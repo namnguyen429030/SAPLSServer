@@ -35,22 +35,20 @@ namespace SAPLSServer.Migrations
 
                     b.Property<string>("Role")
                         .IsRequired()
-                        .ValueGeneratedOnAdd()
                         .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)")
-                        .HasDefaultValue("Admin");
+                        .HasColumnType("nvarchar(20)");
 
                     b.HasKey("UserId")
-                        .HasName("PK__AdminPro__1788CC4C7DA9A2EB");
+                        .HasName("PK__AdminPro__1788CC4CE4751A99");
 
                     b.HasIndex(new[] { "AdminId" }, "IX_AdminProfile_AdminId");
 
                     b.HasIndex(new[] { "Role" }, "IX_AdminProfile_Role");
 
-                    b.HasIndex(new[] { "UserId" }, "UQ__AdminPro__1788CC4D9EF726F6")
+                    b.HasIndex(new[] { "UserId" }, "UQ__AdminPro__1788CC4DD8C91BA2")
                         .IsUnique();
 
-                    b.HasIndex(new[] { "AdminId" }, "UQ__AdminPro__719FE489908A1F22")
+                    b.HasIndex(new[] { "AdminId" }, "UQ__AdminPro__719FE4893278F34A")
                         .IsUnique();
 
                     b.ToTable("AdminProfile", (string)null);
@@ -62,10 +60,36 @@ namespace SAPLSServer.Migrations
                         .HasMaxLength(36)
                         .HasColumnType("nvarchar(36)");
 
-                    b.Property<string>("Name")
+                    b.Property<string>("CdnUrl")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("CloudUrl")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("FileExtension")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<string>("FileHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<long>("FileSize")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("OriginalFileName")
                         .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("StorageFileName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<DateTime>("UploadAt")
                         .ValueGeneratedOnAdd()
@@ -73,13 +97,13 @@ namespace SAPLSServer.Migrations
                         .HasDefaultValueSql("(getdate())");
 
                     b.HasKey("Id")
-                        .HasName("PK__Attached__3214EC073061CFA9");
+                        .HasName("PK__Attached__3214EC07E4AB6E4D");
 
-                    b.HasIndex(new[] { "Name" }, "IX_AttachedFile_Name");
+                    b.HasIndex(new[] { "OriginalFileName" }, "IX_AttachedFile_Name");
 
                     b.HasIndex(new[] { "UploadAt" }, "IX_AttachedFile_UploadAt");
 
-                    b.HasIndex(new[] { "Id" }, "UQ__Attached__3214EC064F8384D8")
+                    b.HasIndex(new[] { "Id" }, "UQ__Attached__3214EC069CF63EC4")
                         .IsUnique();
 
                     b.ToTable("AttachedFile", (string)null);
@@ -91,17 +115,25 @@ namespace SAPLSServer.Migrations
                         .HasMaxLength(36)
                         .HasColumnType("nvarchar(36)");
 
+                    b.Property<string>("BackCitizenIdCardImageUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
                     b.Property<string>("CitizenId")
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
-                    b.Property<string>("CitizenIdCardImageUrl")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
                     b.Property<DateOnly>("DateOfBirth")
                         .HasColumnType("date");
+
+                    b.Property<string>("DeviceToken")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("FrontCitizenIdCardImageUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<string>("Nationality")
                         .IsRequired()
@@ -129,49 +161,106 @@ namespace SAPLSServer.Migrations
                         .HasColumnType("nvarchar(20)");
 
                     b.HasKey("UserId")
-                        .HasName("PK__ClientPr__1788CC4C8C0013CF");
+                        .HasName("PK__ClientPr__1788CC4C088F8864");
 
                     b.HasIndex(new[] { "CitizenId" }, "IX_ClientProfile_CitizenId");
 
                     b.HasIndex(new[] { "ShareCode" }, "IX_ClientProfile_ShareCode");
 
-                    b.HasIndex(new[] { "UserId" }, "UQ__ClientPr__1788CC4D5BBDA1C7")
+                    b.HasIndex(new[] { "UserId" }, "UQ__ClientPr__1788CC4D922DF55A")
                         .IsUnique();
 
-                    b.HasIndex(new[] { "ShareCode" }, "UQ__ClientPr__20877041E79C6089")
+                    b.HasIndex(new[] { "ShareCode" }, "UQ__ClientPr__208770411C2E5E47")
                         .IsUnique();
 
-                    b.HasIndex(new[] { "CitizenId" }, "UQ__ClientPr__6E49FA0D1DEB3EB6")
+                    b.HasIndex(new[] { "CitizenId" }, "UQ__ClientPr__6E49FA0D3E44AD25")
                         .IsUnique();
 
                     b.ToTable("ClientProfile", (string)null);
                 });
 
-            modelBuilder.Entity("SAPLSServer.Models.ClientRequest", b =>
+            modelBuilder.Entity("SAPLSServer.Models.GuestParkingSession", b =>
                 {
+                    b.Property<string>("CheckInStaffId")
+                        .HasMaxLength(36)
+                        .HasColumnType("nvarchar(36)");
+
+                    b.Property<DateTime?>("CheckOutDateTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CheckOutStaffId")
+                        .HasMaxLength(36)
+                        .HasColumnType("nvarchar(36)");
+
+                    b.Property<decimal>("Cost")
+                        .HasColumnType("decimal(10, 2)");
+
+                    b.Property<string>("EntryBackCaptureUrl")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime>("EntryDateTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("EntryFrontCaptureUrl")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("ExitBackCaptureUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime?>("ExitDateTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ExitFrontCaptureUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
                     b.Property<string>("Id")
                         .HasMaxLength(36)
                         .HasColumnType("nvarchar(36)");
 
-                    b.Property<string>("SenderId")
+                    b.Property<string>("ParkingLotId")
                         .IsRequired()
                         .HasMaxLength(36)
                         .HasColumnType("nvarchar(36)");
 
-                    b.HasKey("Id")
-                        .HasName("PK__ClientRe__3214EC075E2A0DDC");
+                    b.Property<string>("PaymentMethod")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
 
-                    b.HasIndex(new[] { "SenderId" }, "IX_ClientRequest_SenderId");
+                    b.Property<string>("PaymentStatus")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(50)");
 
-                    b.HasIndex(new[] { "Id" }, "UQ__ClientRe__3214EC062F9856E5")
-                        .IsUnique();
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(50)");
 
-                    b.ToTable("ClientRequest", (string)null);
+                    b.Property<string>("TransactionId")
+                        .HasMaxLength(36)
+                        .HasColumnType("nvarchar(36)");
+
+                    b.HasIndex("CheckInStaffId");
+
+                    b.HasIndex("CheckOutStaffId");
+
+                    b.HasIndex("ParkingLotId");
+
+                    b.ToTable("GuestParkingSession", (string)null);
                 });
 
             modelBuilder.Entity("SAPLSServer.Models.IncidenceEvidence", b =>
                 {
-                    b.Property<string>("Id")
+                    b.Property<string>("AttachedFileId")
                         .HasMaxLength(36)
                         .HasColumnType("nvarchar(36)");
 
@@ -180,12 +269,12 @@ namespace SAPLSServer.Migrations
                         .HasMaxLength(36)
                         .HasColumnType("nvarchar(36)");
 
-                    b.HasKey("Id")
-                        .HasName("PK__Incidenc__3214EC07F31A5873");
+                    b.HasKey("AttachedFileId")
+                        .HasName("PK__Incidenc__3214EC07194AA9EF");
 
                     b.HasIndex("IncidenceReportId");
 
-                    b.HasIndex(new[] { "Id" }, "UQ__Incidenc__3214EC06E432993E")
+                    b.HasIndex(new[] { "AttachedFileId" }, "UQ__Incidenc__3214EC06222FE1FC")
                         .IsUnique();
 
                     b.ToTable("IncidenceEvidence", (string)null);
@@ -206,6 +295,10 @@ namespace SAPLSServer.Migrations
                         .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("ParkingLotId")
+                        .HasMaxLength(36)
+                        .HasColumnType("nvarchar(36)");
 
                     b.Property<string>("Priority")
                         .IsRequired()
@@ -232,7 +325,9 @@ namespace SAPLSServer.Migrations
                         .HasDefaultValue("Open");
 
                     b.HasKey("Id")
-                        .HasName("PK__Incidenc__3214EC073D4C10CA");
+                        .HasName("PK__Incidenc__3214EC07D412DE08");
+
+                    b.HasIndex("ParkingLotId");
 
                     b.HasIndex(new[] { "Priority" }, "IX_IncidenceReport_Priority");
 
@@ -242,7 +337,7 @@ namespace SAPLSServer.Migrations
 
                     b.HasIndex(new[] { "Status" }, "IX_IncidenceReport_Status");
 
-                    b.HasIndex(new[] { "Id" }, "UQ__Incidenc__3214EC06B7457B6E")
+                    b.HasIndex(new[] { "Id" }, "UQ__Incidenc__3214EC06DE213DDD")
                         .IsUnique();
 
                     b.ToTable("IncidenceReport", (string)null);
@@ -300,7 +395,7 @@ namespace SAPLSServer.Migrations
                         .HasDefaultValueSql("(getdate())");
 
                     b.HasKey("Id")
-                        .HasName("PK__ParkingF__3214EC07ECBF6ECE");
+                        .HasName("PK__ParkingF__3214EC074B624F3F");
 
                     b.HasIndex(new[] { "ForVehicleType" }, "IX_ParkingFeeSchedule_ForVehicleType");
 
@@ -308,7 +403,7 @@ namespace SAPLSServer.Migrations
 
                     b.HasIndex(new[] { "ParkingLotId" }, "IX_ParkingFeeSchedule_ParkingLotId");
 
-                    b.HasIndex(new[] { "Id" }, "UQ__ParkingF__3214EC06D4A43EC7")
+                    b.HasIndex(new[] { "Id" }, "UQ__ParkingF__3214EC0675353B44")
                         .IsUnique();
 
                     b.ToTable("ParkingFeeSchedule", (string)null);
@@ -325,6 +420,18 @@ namespace SAPLSServer.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
+                    b.Property<string>("ApiKey")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("CheckSumKey")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("ClientKey")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime2")
@@ -336,6 +443,9 @@ namespace SAPLSServer.Migrations
                         .HasColumnType("nvarchar(1000)")
                         .HasDefaultValueSql("(NULL)");
 
+                    b.Property<DateTime>("ExpiredAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(255)
@@ -346,12 +456,21 @@ namespace SAPLSServer.Migrations
                         .HasMaxLength(36)
                         .HasColumnType("nvarchar(36)");
 
+                    b.Property<string>("Settings")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .ValueGeneratedOnAdd()
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)")
                         .HasDefaultValue("Active");
+
+                    b.Property<string>("SubscriptionId")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("nvarchar(36)");
 
                     b.Property<int>("TotalParkingSlot")
                         .HasColumnType("int");
@@ -362,7 +481,9 @@ namespace SAPLSServer.Migrations
                         .HasDefaultValueSql("(getdate())");
 
                     b.HasKey("Id")
-                        .HasName("PK__ParkingL__3214EC07C891BE20");
+                        .HasName("PK__ParkingL__3214EC07D98A3F04");
+
+                    b.HasIndex("SubscriptionId");
 
                     b.HasIndex(new[] { "CreatedAt" }, "IX_ParkingLot_CreatedAt");
 
@@ -370,7 +491,7 @@ namespace SAPLSServer.Migrations
 
                     b.HasIndex(new[] { "Status" }, "IX_ParkingLot_Status");
 
-                    b.HasIndex(new[] { "Id" }, "UQ__ParkingL__3214EC0632D39888")
+                    b.HasIndex(new[] { "Id" }, "UQ__ParkingL__3214EC066134085F")
                         .IsUnique();
 
                     b.ToTable("ParkingLot", (string)null);
@@ -388,39 +509,66 @@ namespace SAPLSServer.Migrations
                         .HasColumnType("nvarchar(20)");
 
                     b.HasKey("UserId")
-                        .HasName("PK__ParkingL__1788CC4CF028C9F5");
+                        .HasName("PK__ParkingL__1788CC4C6E170A53");
 
                     b.HasIndex(new[] { "ParkingLotOwnerId" }, "IX_ParkingLotOwnerProfile_ParkingLotOwnerId");
 
-                    b.HasIndex(new[] { "UserId" }, "UQ__ParkingL__1788CC4D382048FE")
+                    b.HasIndex(new[] { "UserId" }, "UQ__ParkingL__1788CC4D0B965F24")
                         .IsUnique();
 
-                    b.HasIndex(new[] { "ParkingLotOwnerId" }, "UQ__ParkingL__F2333F3FC8F7E68C")
+                    b.HasIndex(new[] { "ParkingLotOwnerId" }, "UQ__ParkingL__F2333F3FF0F8151B")
                         .IsUnique();
 
                     b.ToTable("ParkingLotOwnerProfile", (string)null);
                 });
 
-            modelBuilder.Entity("SAPLSServer.Models.ParkingLotOwnerRequest", b =>
+            modelBuilder.Entity("SAPLSServer.Models.ParkingLotShift", b =>
                 {
                     b.Property<string>("Id")
                         .HasMaxLength(36)
                         .HasColumnType("nvarchar(36)");
 
-                    b.Property<string>("SenderId")
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("DayOfWeeks")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<int>("EndTime")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Note")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ParkingLotId")
                         .IsRequired()
                         .HasMaxLength(36)
                         .HasColumnType("nvarchar(36)");
 
-                    b.HasKey("Id")
-                        .HasName("PK__ParkingL__3214EC072A46A363");
+                    b.Property<string>("ShiftType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
-                    b.HasIndex(new[] { "SenderId" }, "IX_ParkingLotOwnerRequest_SenderId");
+                    b.Property<int>("StartTime")
+                        .HasColumnType("int");
 
-                    b.HasIndex(new[] { "Id" }, "UQ__ParkingL__3214EC06D26B24EA")
-                        .IsUnique();
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nchar(10)")
+                        .IsFixedLength();
 
-                    b.ToTable("ParkingLotOwnerRequest", (string)null);
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ParkingLotId");
+
+                    b.ToTable("ParkingLotShift", (string)null);
                 });
 
             modelBuilder.Entity("SAPLSServer.Models.ParkingSession", b =>
@@ -429,13 +577,32 @@ namespace SAPLSServer.Migrations
                         .HasMaxLength(36)
                         .HasColumnType("nvarchar(36)");
 
+                    b.Property<string>("CheckInStaffId")
+                        .HasMaxLength(36)
+                        .HasColumnType("nvarchar(36)");
+
                     b.Property<DateTime?>("CheckOutDateTime")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime2")
                         .HasDefaultValueSql("(NULL)");
 
+                    b.Property<string>("CheckOutStaffId")
+                        .HasMaxLength(36)
+                        .HasColumnType("nvarchar(36)");
+
+                    b.Property<string>("ClientId")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(36)
+                        .HasColumnType("nvarchar(36)")
+                        .HasDefaultValue("");
+
                     b.Property<decimal>("Cost")
                         .HasColumnType("decimal(10, 2)");
+
+                    b.Property<string>("DriverId")
+                        .HasMaxLength(36)
+                        .HasColumnType("nvarchar(36)");
 
                     b.Property<string>("EntryBackCaptureUrl")
                         .IsRequired()
@@ -481,6 +648,18 @@ namespace SAPLSServer.Migrations
                         .HasColumnType("nvarchar(20)")
                         .HasDefaultValue("Cash");
 
+                    b.Property<string>("PaymentStatus")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(50)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(50)");
+
                     b.Property<string>("TransactionId")
                         .ValueGeneratedOnAdd()
                         .HasMaxLength(36)
@@ -493,7 +672,13 @@ namespace SAPLSServer.Migrations
                         .HasColumnType("nvarchar(36)");
 
                     b.HasKey("Id")
-                        .HasName("PK__ParkingS__3214EC07AE20288E");
+                        .HasName("PK__ParkingS__3214EC076244C9DD");
+
+                    b.HasIndex("CheckInStaffId");
+
+                    b.HasIndex("CheckOutStaffId");
+
+                    b.HasIndex(new[] { "ClientId" }, "IX_ParkingSession_ClientId");
 
                     b.HasIndex(new[] { "EntryDateTime" }, "IX_ParkingSession_EntryDateTime");
 
@@ -505,10 +690,10 @@ namespace SAPLSServer.Migrations
 
                     b.HasIndex(new[] { "VehicleId" }, "IX_ParkingSession_VehicleId");
 
-                    b.HasIndex(new[] { "Id" }, "UQ__ParkingS__3214EC06FA15E15F")
+                    b.HasIndex(new[] { "Id" }, "UQ__ParkingS__3214EC06ED8B4805")
                         .IsUnique();
 
-                    b.HasIndex(new[] { "TransactionId" }, "UQ__ParkingS__55433A6AADDA8936")
+                    b.HasIndex(new[] { "TransactionId" }, "UQ__ParkingS__55433A6AF76245F4")
                         .IsUnique()
                         .HasFilter("[TransactionId] IS NOT NULL");
 
@@ -517,11 +702,9 @@ namespace SAPLSServer.Migrations
 
             modelBuilder.Entity("SAPLSServer.Models.PaymentSource", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    b.Property<string>("Id")
+                        .HasMaxLength(36)
+                        .HasColumnType("nvarchar(36)");
 
                     b.Property<string>("AccountName")
                         .IsRequired()
@@ -538,25 +721,56 @@ namespace SAPLSServer.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("(getdate())");
+
                     b.Property<string>("ParkingLotOwnerId")
                         .IsRequired()
                         .HasMaxLength(36)
                         .HasColumnType("nvarchar(36)");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime2")
-                        .HasDefaultValueSql("(getdate())");
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(25)
+                        .HasColumnType("nvarchar(25)");
 
                     b.HasKey("Id")
-                        .HasName("PK__PaymentS__3214EC071D18B705");
+                        .HasName("PK__PaymentS__3214EC074DD2D6E5");
 
                     b.HasIndex(new[] { "ParkingLotOwnerId" }, "IX_PaymentSource_ParkingLotOwnerId");
 
-                    b.HasIndex(new[] { "Id" }, "UQ__PaymentS__3214EC06523096D8")
+                    b.HasIndex(new[] { "Id" }, "UQ__PaymentS__3214EC064155607D")
                         .IsUnique();
 
                     b.ToTable("PaymentSource", (string)null);
+                });
+
+            modelBuilder.Entity("SAPLSServer.Models.Receipt", b =>
+                {
+                    b.Property<int>("Id")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Amount")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Note")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ParkingLotOwnerUserId")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("nvarchar(36)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ParkingLotOwnerUserId");
+
+                    b.ToTable("Receipt", (string)null);
                 });
 
             modelBuilder.Entity("SAPLSServer.Models.Request", b =>
@@ -564,6 +778,13 @@ namespace SAPLSServer.Migrations
                     b.Property<string>("Id")
                         .HasMaxLength(36)
                         .HasColumnType("nvarchar(36)");
+
+                    b.Property<string>("Data")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("DataType")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("Description")
                         .IsRequired()
@@ -582,7 +803,6 @@ namespace SAPLSServer.Migrations
                         .HasDefaultValueSql("(NULL)");
 
                     b.Property<string>("LastUpdatePersonId")
-                        .IsRequired()
                         .HasMaxLength(36)
                         .HasColumnType("nvarchar(36)");
 
@@ -591,6 +811,10 @@ namespace SAPLSServer.Migrations
                         .HasMaxLength(2000)
                         .HasColumnType("nvarchar(2000)")
                         .HasDefaultValueSql("(NULL)");
+
+                    b.Property<string>("SenderId")
+                        .HasMaxLength(36)
+                        .HasColumnType("nvarchar(36)");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -614,6 +838,8 @@ namespace SAPLSServer.Migrations
 
                     b.HasIndex(new[] { "LastUpdatePersonId" }, "IX_Request_LastUpdatePersonId");
 
+                    b.HasIndex(new[] { "SenderId" }, "IX_Request_SenderId");
+
                     b.HasIndex(new[] { "Status" }, "IX_Request_Status");
 
                     b.HasIndex(new[] { "SubmittedAt" }, "IX_Request_SubmittedAt");
@@ -626,7 +852,7 @@ namespace SAPLSServer.Migrations
 
             modelBuilder.Entity("SAPLSServer.Models.RequestAttachedFile", b =>
                 {
-                    b.Property<string>("Id")
+                    b.Property<string>("AttachedFileId")
                         .HasMaxLength(36)
                         .HasColumnType("nvarchar(36)");
 
@@ -635,12 +861,12 @@ namespace SAPLSServer.Migrations
                         .HasMaxLength(36)
                         .HasColumnType("nvarchar(36)");
 
-                    b.HasKey("Id")
-                        .HasName("PK__RequestA__3214EC0735467020");
+                    b.HasKey("AttachedFileId")
+                        .HasName("PK__RequestA__3214EC07B9EE57B9");
 
                     b.HasIndex("RequestId");
 
-                    b.HasIndex(new[] { "Id" }, "UQ__RequestA__3214EC06F7DE62C9")
+                    b.HasIndex(new[] { "AttachedFileId" }, "UQ__RequestA__3214EC06152DDA3B")
                         .IsUnique();
 
                     b.ToTable("RequestAttachedFile", (string)null);
@@ -652,38 +878,25 @@ namespace SAPLSServer.Migrations
                         .HasMaxLength(36)
                         .HasColumnType("nvarchar(36)");
 
+                    b.Property<DateTime?>("AcceptAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<int?>("AccessDuration")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasDefaultValueSql("(NULL)");
+                        .HasColumnType("int");
 
-                    b.Property<DateOnly?>("ExpirationDate")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("date")
-                        .HasDefaultValueSql("(NULL)");
+                    b.Property<DateTime?>("ExpireAt")
+                        .HasColumnType("datetime2");
 
-                    b.Property<DateOnly>("InvitationDate")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("date")
-                        .HasDefaultValueSql("(CONVERT([date],getdate()))");
+                    b.Property<DateTime>("InviteAt")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("Note")
-                        .ValueGeneratedOnAdd()
                         .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)")
-                        .HasDefaultValueSql("(NULL)");
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<string>("SharedPersonId")
-                        .IsRequired()
                         .HasMaxLength(36)
                         .HasColumnType("nvarchar(36)");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)")
-                        .HasDefaultValue("Available");
 
                     b.Property<string>("VehicleId")
                         .IsRequired()
@@ -693,13 +906,13 @@ namespace SAPLSServer.Migrations
                     b.HasKey("Id")
                         .HasName("PK__SharedVe__3214EC07EDA49C12");
 
-                    b.HasIndex(new[] { "ExpirationDate" }, "IX_SharedVehicle_ExpirationDate");
+                    b.HasIndex(new[] { "AcceptAt" }, "IX_SharedVehicle_AcceptAt");
 
-                    b.HasIndex(new[] { "InvitationDate" }, "IX_SharedVehicle_InvitationDate");
+                    b.HasIndex(new[] { "ExpireAt" }, "IX_SharedVehicle_ExpireAt");
+
+                    b.HasIndex(new[] { "InviteAt" }, "IX_SharedVehicle_InviteAt");
 
                     b.HasIndex(new[] { "SharedPersonId" }, "IX_SharedVehicle_SharedPersonId");
-
-                    b.HasIndex(new[] { "Status" }, "IX_SharedVehicle_Status");
 
                     b.HasIndex(new[] { "VehicleId" }, "IX_SharedVehicle_VehicleId");
 
@@ -736,12 +949,11 @@ namespace SAPLSServer.Migrations
                         .HasColumnType("nvarchar(36)");
 
                     b.Property<string>("SenderId")
-                        .IsRequired()
                         .HasMaxLength(36)
                         .HasColumnType("nvarchar(36)");
 
                     b.HasKey("Id")
-                        .HasName("PK__ShiftDia__3214EC07A005ABA7");
+                        .HasName("PK__ShiftDia__3214EC0708509E2F");
 
                     b.HasIndex(new[] { "CreatedAt" }, "IX_ShiftDiary_CreatedAt");
 
@@ -749,7 +961,7 @@ namespace SAPLSServer.Migrations
 
                     b.HasIndex(new[] { "SenderId" }, "IX_ShiftDiary_SenderId");
 
-                    b.HasIndex(new[] { "Id" }, "UQ__ShiftDia__3214EC0646F660F8")
+                    b.HasIndex(new[] { "Id" }, "UQ__ShiftDia__3214EC06C45A8081")
                         .IsUnique();
 
                     b.ToTable("ShiftDiary", (string)null);
@@ -772,19 +984,66 @@ namespace SAPLSServer.Migrations
                         .HasColumnType("nvarchar(20)");
 
                     b.HasKey("UserId")
-                        .HasName("PK__StaffPro__1788CC4C08D15458");
+                        .HasName("PK__StaffPro__1788CC4CACF4A0F8");
 
                     b.HasIndex(new[] { "ParkingLotId" }, "IX_StaffProfile_ParkingLotId");
 
                     b.HasIndex(new[] { "StaffId" }, "IX_StaffProfile_StaffId");
 
-                    b.HasIndex(new[] { "UserId" }, "UQ__StaffPro__1788CC4D9769DB66")
+                    b.HasIndex(new[] { "UserId" }, "UQ__StaffPro__1788CC4D3B12EFC1")
                         .IsUnique();
 
-                    b.HasIndex(new[] { "StaffId" }, "UQ__StaffPro__96D4AB16462CCED3")
+                    b.HasIndex(new[] { "StaffId" }, "UQ__StaffPro__96D4AB161AE0F057")
                         .IsUnique();
 
                     b.ToTable("StaffProfile", (string)null);
+                });
+
+            modelBuilder.Entity("SAPLSServer.Models.Subscription", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(36)
+                        .HasColumnType("nvarchar(36)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedById")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("nvarchar(36)");
+
+                    b.Property<int>("Duration")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<double>("Price")
+                        .HasColumnType("float");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("UpdateById")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("nvarchar(36)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedById");
+
+                    b.HasIndex("UpdateById");
+
+                    b.ToTable("Subscription", (string)null);
                 });
 
             modelBuilder.Entity("SAPLSServer.Models.User", b =>
@@ -808,6 +1067,14 @@ namespace SAPLSServer.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
+                    b.Property<string>("GoogleId")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("OneTimePassword")
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
                     b.Property<string>("Password")
                         .IsRequired()
                         .HasMaxLength(255)
@@ -824,6 +1091,19 @@ namespace SAPLSServer.Migrations
                         .HasColumnType("nvarchar(500)")
                         .HasDefaultValueSql("(NULL)");
 
+                    b.Property<string>("RefreshToken")
+                        .HasMaxLength(64)
+                        .HasColumnType("nchar(64)")
+                        .IsFixedLength();
+
+                    b.Property<DateTime?>("RefreshTokenExpiresAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .ValueGeneratedOnAdd()
@@ -837,7 +1117,7 @@ namespace SAPLSServer.Migrations
                         .HasDefaultValueSql("(getdate())");
 
                     b.HasKey("Id")
-                        .HasName("PK__User__3214EC07C4FE8F5D");
+                        .HasName("PK__User__3214EC0786524D8F");
 
                     b.HasIndex(new[] { "CreatedAt" }, "IX_User_CreatedAt");
 
@@ -845,13 +1125,13 @@ namespace SAPLSServer.Migrations
 
                     b.HasIndex(new[] { "Status" }, "IX_User_Status");
 
-                    b.HasIndex(new[] { "Id" }, "UQ__User__3214EC068BE2D2B3")
+                    b.HasIndex(new[] { "Id" }, "UQ__User__3214EC06366C8D89")
                         .IsUnique();
 
-                    b.HasIndex(new[] { "Phone" }, "UQ__User__5C7E359E767DDD65")
+                    b.HasIndex(new[] { "Phone" }, "UQ__User__5C7E359E4EC59181")
                         .IsUnique();
 
-                    b.HasIndex(new[] { "Email" }, "UQ__User__A9D1053406494FD4")
+                    b.HasIndex(new[] { "Email" }, "UQ__User__A9D1053456547DAC")
                         .IsUnique();
 
                     b.ToTable("User", (string)null);
@@ -862,6 +1142,10 @@ namespace SAPLSServer.Migrations
                     b.Property<string>("Id")
                         .HasMaxLength(36)
                         .HasColumnType("nvarchar(36)");
+
+                    b.Property<string>("BackVehicleRegistrationCertificateUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<string>("Brand")
                         .IsRequired()
@@ -883,10 +1167,18 @@ namespace SAPLSServer.Migrations
                         .HasColumnType("datetime2")
                         .HasDefaultValueSql("(getdate())");
 
+                    b.Property<string>("CurrentHolderId")
+                        .HasMaxLength(36)
+                        .HasColumnType("nvarchar(36)");
+
                     b.Property<string>("EngineNumber")
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("FrontVehicleRegistrationCertificateUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<string>("LicensePlate")
                         .IsRequired()
@@ -927,12 +1219,10 @@ namespace SAPLSServer.Migrations
                         .HasColumnType("datetime2")
                         .HasDefaultValueSql("(getdate())");
 
-                    b.Property<string>("VehicleRegistrationCertificateUrl")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
                     b.HasKey("Id")
-                        .HasName("PK__Vehicle__3214EC07EBABF790");
+                        .HasName("PK__Vehicle__3214EC073BBDFC5B");
+
+                    b.HasIndex("CurrentHolderId");
 
                     b.HasIndex(new[] { "CreatedAt" }, "IX_Vehicle_CreatedAt");
 
@@ -944,10 +1234,10 @@ namespace SAPLSServer.Migrations
 
                     b.HasIndex(new[] { "Status" }, "IX_Vehicle_Status");
 
-                    b.HasIndex(new[] { "LicensePlate" }, "UQ__Vehicle__026BC15C3384BD24")
+                    b.HasIndex(new[] { "LicensePlate" }, "UQ__Vehicle__026BC15CAE30AED6")
                         .IsUnique();
 
-                    b.HasIndex(new[] { "Id" }, "UQ__Vehicle__3214EC06A9DEC9F7")
+                    b.HasIndex(new[] { "Id" }, "UQ__Vehicle__3214EC0678F92770")
                         .IsUnique();
 
                     b.ToTable("Vehicle", (string)null);
@@ -963,26 +1253,45 @@ namespace SAPLSServer.Migrations
                         .HasMaxLength(36)
                         .HasColumnType("nvarchar(36)");
 
-                    b.Property<DateOnly>("AddedDate")
+                    b.Property<DateTime>("AddedAt")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("date")
+                        .HasColumnType("datetime2")
                         .HasDefaultValueSql("(CONVERT([date],getdate()))");
 
-                    b.Property<DateOnly?>("ExpiredDate")
+                    b.Property<DateTime?>("ExpireAt")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("date")
+                        .HasColumnType("datetime2")
                         .HasDefaultValueSql("(NULL)");
 
-                    b.HasKey("ParkingLotId", "ClientId")
-                        .HasName("PK__WhiteLis__3140FF2BC4A11819");
+                    b.HasKey("ParkingLotId", "ClientId");
 
-                    b.HasIndex(new[] { "AddedDate" }, "IX_WhiteList_AddedDate");
+                    b.HasIndex(new[] { "AddedAt" }, "IX_WhiteList_AddedDate");
 
                     b.HasIndex(new[] { "ClientId" }, "IX_WhiteList_ClientId");
 
-                    b.HasIndex(new[] { "ExpiredDate" }, "IX_WhiteList_ExpiredDate");
+                    b.HasIndex(new[] { "ExpireAt" }, "IX_WhiteList_ExpiredDate");
+
+                    b.HasIndex(new[] { "ParkingLotId", "ClientId" }, "UQ_WhiteList_ParkingLot_Client")
+                        .IsUnique();
 
                     b.ToTable("WhiteList", (string)null);
+                });
+
+            modelBuilder.Entity("StaffShift", b =>
+                {
+                    b.Property<string>("StaffUserId")
+                        .HasMaxLength(36)
+                        .HasColumnType("nvarchar(36)");
+
+                    b.Property<string>("ParkingLotShiftId")
+                        .HasMaxLength(36)
+                        .HasColumnType("nvarchar(36)");
+
+                    b.HasKey("StaffUserId", "ParkingLotShiftId");
+
+                    b.HasIndex("ParkingLotShiftId");
+
+                    b.ToTable("StaffShift", (string)null);
                 });
 
             modelBuilder.Entity("SAPLSServer.Models.AdminProfile", b =>
@@ -1009,31 +1318,36 @@ namespace SAPLSServer.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("SAPLSServer.Models.ClientRequest", b =>
+            modelBuilder.Entity("SAPLSServer.Models.GuestParkingSession", b =>
                 {
-                    b.HasOne("SAPLSServer.Models.Request", "IdNavigation")
-                        .WithOne("ClientRequest")
-                        .HasForeignKey("SAPLSServer.Models.ClientRequest", "Id")
-                        .OnDelete(DeleteBehavior.Cascade)
+                    b.HasOne("SAPLSServer.Models.StaffProfile", "CheckInStaff")
+                        .WithMany()
+                        .HasForeignKey("CheckInStaffId")
+                        .HasConstraintName("FK_GuestParkingSession_CheckInStaff");
+
+                    b.HasOne("SAPLSServer.Models.StaffProfile", "CheckOutStaff")
+                        .WithMany()
+                        .HasForeignKey("CheckOutStaffId")
+                        .HasConstraintName("FK_GuestParkingSession_CheckOutStaff");
+
+                    b.HasOne("SAPLSServer.Models.ParkingLot", "ParkingLot")
+                        .WithMany()
+                        .HasForeignKey("ParkingLotId")
                         .IsRequired()
-                        .HasConstraintName("ClientRequest_fk0");
+                        .HasConstraintName("FK_GuestParkingSession_ParkingLot");
 
-                    b.HasOne("SAPLSServer.Models.ClientProfile", "Sender")
-                        .WithMany("ClientRequests")
-                        .HasForeignKey("SenderId")
-                        .IsRequired()
-                        .HasConstraintName("ClientRequest_fk1");
+                    b.Navigation("CheckInStaff");
 
-                    b.Navigation("IdNavigation");
+                    b.Navigation("CheckOutStaff");
 
-                    b.Navigation("Sender");
+                    b.Navigation("ParkingLot");
                 });
 
             modelBuilder.Entity("SAPLSServer.Models.IncidenceEvidence", b =>
                 {
-                    b.HasOne("SAPLSServer.Models.AttachedFile", "IdNavigation")
+                    b.HasOne("SAPLSServer.Models.AttachedFile", "AttachedFile")
                         .WithOne("IncidenceEvidence")
-                        .HasForeignKey("SAPLSServer.Models.IncidenceEvidence", "Id")
+                        .HasForeignKey("SAPLSServer.Models.IncidenceEvidence", "AttachedFileId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("IncidenceEvidence_fk0");
@@ -1045,19 +1359,27 @@ namespace SAPLSServer.Migrations
                         .IsRequired()
                         .HasConstraintName("IncidenceEvidence_fk1");
 
-                    b.Navigation("IdNavigation");
+                    b.Navigation("AttachedFile");
 
                     b.Navigation("IncidenceReport");
                 });
 
             modelBuilder.Entity("SAPLSServer.Models.IncidenceReport", b =>
                 {
+                    b.HasOne("SAPLSServer.Models.ParkingLot", "ParkingLot")
+                        .WithMany("IncidenceReports")
+                        .HasForeignKey("ParkingLotId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("FK_IncidenceReport_ParkingLot");
+
                     b.HasOne("SAPLSServer.Models.StaffProfile", "Reporter")
                         .WithMany("IncidenceReports")
                         .HasForeignKey("ReporterId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("IncidenceReport_fk6");
+
+                    b.Navigation("ParkingLot");
 
                     b.Navigation("Reporter");
                 });
@@ -1082,7 +1404,15 @@ namespace SAPLSServer.Migrations
                         .IsRequired()
                         .HasConstraintName("ParkingLot_fk8");
 
+                    b.HasOne("SAPLSServer.Models.Subscription", "Subscription")
+                        .WithMany("ParkingLots")
+                        .HasForeignKey("SubscriptionId")
+                        .IsRequired()
+                        .HasConstraintName("FK_ParkingLot_Subscription_fk3");
+
                     b.Navigation("ParkingLotOwner");
+
+                    b.Navigation("Subscription");
                 });
 
             modelBuilder.Entity("SAPLSServer.Models.ParkingLotOwnerProfile", b =>
@@ -1097,28 +1427,35 @@ namespace SAPLSServer.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("SAPLSServer.Models.ParkingLotOwnerRequest", b =>
+            modelBuilder.Entity("SAPLSServer.Models.ParkingLotShift", b =>
                 {
-                    b.HasOne("SAPLSServer.Models.Request", "IdNavigation")
-                        .WithOne("ParkingLotOwnerRequest")
-                        .HasForeignKey("SAPLSServer.Models.ParkingLotOwnerRequest", "Id")
-                        .OnDelete(DeleteBehavior.Cascade)
+                    b.HasOne("SAPLSServer.Models.ParkingLot", "ParkingLot")
+                        .WithMany("ParkingLotShifts")
+                        .HasForeignKey("ParkingLotId")
                         .IsRequired()
-                        .HasConstraintName("ParkingLotOwnerRequest_fk0");
+                        .HasConstraintName("FK_ParkingLotShift_ParkingLot_fk1");
 
-                    b.HasOne("SAPLSServer.Models.ParkingLotOwnerProfile", "Sender")
-                        .WithMany("ParkingLotOwnerRequests")
-                        .HasForeignKey("SenderId")
-                        .IsRequired()
-                        .HasConstraintName("ParkingLotOwnerRequest_fk1");
-
-                    b.Navigation("IdNavigation");
-
-                    b.Navigation("Sender");
+                    b.Navigation("ParkingLot");
                 });
 
             modelBuilder.Entity("SAPLSServer.Models.ParkingSession", b =>
                 {
+                    b.HasOne("SAPLSServer.Models.StaffProfile", "CheckInStaff")
+                        .WithMany("ParkingSessionCheckInStaffs")
+                        .HasForeignKey("CheckInStaffId")
+                        .HasConstraintName("ParkingSession_fk3");
+
+                    b.HasOne("SAPLSServer.Models.StaffProfile", "CheckOutStaff")
+                        .WithMany("ParkingSessionCheckOutStaffs")
+                        .HasForeignKey("CheckOutStaffId")
+                        .HasConstraintName("ParkingSession_fk4");
+
+                    b.HasOne("SAPLSServer.Models.ClientProfile", "Client")
+                        .WithMany("ParkingSessions")
+                        .HasForeignKey("ClientId")
+                        .IsRequired()
+                        .HasConstraintName("ParkingSession_fk5");
+
                     b.HasOne("SAPLSServer.Models.ParkingLot", "ParkingLot")
                         .WithMany("ParkingSessions")
                         .HasForeignKey("ParkingLotId")
@@ -1132,6 +1469,12 @@ namespace SAPLSServer.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("ParkingSession_fk1");
+
+                    b.Navigation("CheckInStaff");
+
+                    b.Navigation("CheckOutStaff");
+
+                    b.Navigation("Client");
 
                     b.Navigation("ParkingLot");
 
@@ -1150,23 +1493,40 @@ namespace SAPLSServer.Migrations
                     b.Navigation("ParkingLotOwner");
                 });
 
+            modelBuilder.Entity("SAPLSServer.Models.Receipt", b =>
+                {
+                    b.HasOne("SAPLSServer.Models.ParkingLotOwnerProfile", "ParkingLotOwnerUser")
+                        .WithMany("Receipts")
+                        .HasForeignKey("ParkingLotOwnerUserId")
+                        .IsRequired()
+                        .HasConstraintName("FK_Receipt_ParkingLotOwner_fk1");
+
+                    b.Navigation("ParkingLotOwnerUser");
+                });
+
             modelBuilder.Entity("SAPLSServer.Models.Request", b =>
                 {
                     b.HasOne("SAPLSServer.Models.AdminProfile", "LastUpdatePerson")
                         .WithMany("Requests")
                         .HasForeignKey("LastUpdatePersonId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
                         .HasConstraintName("Request_fk8");
 
+                    b.HasOne("SAPLSServer.Models.User", "Sender")
+                        .WithMany("Requests")
+                        .HasForeignKey("SenderId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("Request_fk_Sender");
+
                     b.Navigation("LastUpdatePerson");
+
+                    b.Navigation("Sender");
                 });
 
             modelBuilder.Entity("SAPLSServer.Models.RequestAttachedFile", b =>
                 {
-                    b.HasOne("SAPLSServer.Models.AttachedFile", "IdNavigation")
+                    b.HasOne("SAPLSServer.Models.AttachedFile", "AttachedFile")
                         .WithOne("RequestAttachedFile")
-                        .HasForeignKey("SAPLSServer.Models.RequestAttachedFile", "Id")
+                        .HasForeignKey("SAPLSServer.Models.RequestAttachedFile", "AttachedFileId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("RequestAttachedFile_fk0");
@@ -1178,7 +1538,7 @@ namespace SAPLSServer.Migrations
                         .IsRequired()
                         .HasConstraintName("RequestAttachedFile_fk1");
 
-                    b.Navigation("IdNavigation");
+                    b.Navigation("AttachedFile");
 
                     b.Navigation("Request");
                 });
@@ -1188,7 +1548,7 @@ namespace SAPLSServer.Migrations
                     b.HasOne("SAPLSServer.Models.ClientProfile", "SharedPerson")
                         .WithMany("SharedVehicles")
                         .HasForeignKey("SharedPersonId")
-                        .IsRequired()
+                        .OnDelete(DeleteBehavior.SetNull)
                         .HasConstraintName("SharedVehicle_fk7");
 
                     b.HasOne("SAPLSServer.Models.Vehicle", "Vehicle")
@@ -1215,7 +1575,7 @@ namespace SAPLSServer.Migrations
                     b.HasOne("SAPLSServer.Models.StaffProfile", "Sender")
                         .WithMany("ShiftDiaries")
                         .HasForeignKey("SenderId")
-                        .IsRequired()
+                        .OnDelete(DeleteBehavior.SetNull)
                         .HasConstraintName("ShiftDiary_fk5");
 
                     b.Navigation("ParkingLot");
@@ -1228,7 +1588,6 @@ namespace SAPLSServer.Migrations
                     b.HasOne("SAPLSServer.Models.ParkingLot", "ParkingLot")
                         .WithMany("StaffProfiles")
                         .HasForeignKey("ParkingLotId")
-                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("StaffProfile_fk2");
 
@@ -1244,14 +1603,39 @@ namespace SAPLSServer.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("SAPLSServer.Models.Subscription", b =>
+                {
+                    b.HasOne("SAPLSServer.Models.AdminProfile", "CreateBy")
+                        .WithMany("SubscriptionCreator")
+                        .HasForeignKey("CreatedById")
+                        .IsRequired()
+                        .HasConstraintName("FK_Subscription_CreatedBy_fk1");
+
+                    b.HasOne("SAPLSServer.Models.AdminProfile", "UpdateBy")
+                        .WithMany("SubscriptionUpdater")
+                        .HasForeignKey("UpdateById")
+                        .IsRequired()
+                        .HasConstraintName("FK_Subscription_UpdatedBy_fk1");
+
+                    b.Navigation("CreateBy");
+
+                    b.Navigation("UpdateBy");
+                });
+
             modelBuilder.Entity("SAPLSServer.Models.Vehicle", b =>
                 {
+                    b.HasOne("SAPLSServer.Models.ClientProfile", "CurrentHolder")
+                        .WithMany("VehicleCurrentHolders")
+                        .HasForeignKey("CurrentHolderId")
+                        .HasConstraintName("Vehicle_fk13");
+
                     b.HasOne("SAPLSServer.Models.ClientProfile", "Owner")
-                        .WithMany("Vehicles")
+                        .WithMany("VehicleOwners")
                         .HasForeignKey("OwnerId")
-                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("Vehicle_fk12");
+
+                    b.Navigation("CurrentHolder");
 
                     b.Navigation("Owner");
                 });
@@ -1262,23 +1646,41 @@ namespace SAPLSServer.Migrations
                         .WithMany("WhiteLists")
                         .HasForeignKey("ClientId")
                         .IsRequired()
-                        .HasConstraintName("WhiteList_fk1");
+                        .HasConstraintName("FK_WhiteList_fk1");
 
                     b.HasOne("SAPLSServer.Models.ParkingLot", "ParkingLot")
                         .WithMany("WhiteLists")
                         .HasForeignKey("ParkingLotId")
-                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
-                        .HasConstraintName("WhiteList_fk0");
+                        .HasConstraintName("FK_WhiteList_fk0");
 
                     b.Navigation("Client");
 
                     b.Navigation("ParkingLot");
                 });
 
+            modelBuilder.Entity("StaffShift", b =>
+                {
+                    b.HasOne("SAPLSServer.Models.ParkingLotShift", null)
+                        .WithMany()
+                        .HasForeignKey("ParkingLotShiftId")
+                        .IsRequired()
+                        .HasConstraintName("FK_StaffShift_ParkingLotShiftId_fk2");
+
+                    b.HasOne("SAPLSServer.Models.StaffProfile", null)
+                        .WithMany()
+                        .HasForeignKey("StaffUserId")
+                        .IsRequired()
+                        .HasConstraintName("FK_StaffShift_Staff_fk1");
+                });
+
             modelBuilder.Entity("SAPLSServer.Models.AdminProfile", b =>
                 {
                     b.Navigation("Requests");
+
+                    b.Navigation("SubscriptionCreator");
+
+                    b.Navigation("SubscriptionUpdater");
                 });
 
             modelBuilder.Entity("SAPLSServer.Models.AttachedFile", b =>
@@ -1290,11 +1692,13 @@ namespace SAPLSServer.Migrations
 
             modelBuilder.Entity("SAPLSServer.Models.ClientProfile", b =>
                 {
-                    b.Navigation("ClientRequests");
+                    b.Navigation("ParkingSessions");
 
                     b.Navigation("SharedVehicles");
 
-                    b.Navigation("Vehicles");
+                    b.Navigation("VehicleCurrentHolders");
+
+                    b.Navigation("VehicleOwners");
 
                     b.Navigation("WhiteLists");
                 });
@@ -1306,7 +1710,11 @@ namespace SAPLSServer.Migrations
 
             modelBuilder.Entity("SAPLSServer.Models.ParkingLot", b =>
                 {
+                    b.Navigation("IncidenceReports");
+
                     b.Navigation("ParkingFeeSchedules");
+
+                    b.Navigation("ParkingLotShifts");
 
                     b.Navigation("ParkingSessions");
 
@@ -1319,19 +1727,15 @@ namespace SAPLSServer.Migrations
 
             modelBuilder.Entity("SAPLSServer.Models.ParkingLotOwnerProfile", b =>
                 {
-                    b.Navigation("ParkingLotOwnerRequests");
-
                     b.Navigation("ParkingLots");
 
                     b.Navigation("PaymentSources");
+
+                    b.Navigation("Receipts");
                 });
 
             modelBuilder.Entity("SAPLSServer.Models.Request", b =>
                 {
-                    b.Navigation("ClientRequest");
-
-                    b.Navigation("ParkingLotOwnerRequest");
-
                     b.Navigation("RequestAttachedFiles");
                 });
 
@@ -1339,7 +1743,16 @@ namespace SAPLSServer.Migrations
                 {
                     b.Navigation("IncidenceReports");
 
+                    b.Navigation("ParkingSessionCheckInStaffs");
+
+                    b.Navigation("ParkingSessionCheckOutStaffs");
+
                     b.Navigation("ShiftDiaries");
+                });
+
+            modelBuilder.Entity("SAPLSServer.Models.Subscription", b =>
+                {
+                    b.Navigation("ParkingLots");
                 });
 
             modelBuilder.Entity("SAPLSServer.Models.User", b =>
@@ -1349,6 +1762,8 @@ namespace SAPLSServer.Migrations
                     b.Navigation("ClientProfile");
 
                     b.Navigation("ParkingLotOwnerProfile");
+
+                    b.Navigation("Requests");
 
                     b.Navigation("StaffProfile");
                 });

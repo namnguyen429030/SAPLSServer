@@ -1,6 +1,6 @@
 using SAPLSServer.Constants;
 using SAPLSServer.DTOs.Base;
-using SAPLSServer.DTOs.Concrete.IncidentReportDto;
+using SAPLSServer.DTOs.Concrete.IncidenceReportDtos;
 using SAPLSServer.DTOs.PaginationDto;
 using SAPLSServer.Exceptions;
 using SAPLSServer.Models;
@@ -13,32 +13,41 @@ namespace SAPLSServer.Services.Implementations
     public class IncidentReportService : IIncidentReportService
     {
         private readonly IIncidenceReportRepository _incidentReportRepository;
-        private readonly IStaffProfileRepository _staffProfileRepository;
+        private readonly IStaffService _staffService;
+        private readonly IFileService _fileService;
+        private readonly IParkingLotOwnerService _parkingLotOwnerService;
+        private readonly IParkingLotService _parkingLotService;
 
         public IncidentReportService(
             IIncidenceReportRepository incidentReportRepository,
-            IStaffProfileRepository staffProfileRepository)
+            IStaffService staffService, 
+            IFileService fileService,
+            IParkingLotOwnerService parkingLotOwnerService,
+            IParkingLotService parkingLotService)
         {
             _incidentReportRepository = incidentReportRepository;
-            _staffProfileRepository = staffProfileRepository;
+            _staffService = staffService;
+            _fileService = fileService;
+            _parkingLotOwnerService = parkingLotOwnerService;
+            _parkingLotService = parkingLotService;
         }
 
         public async Task CreateIncidentReport(CreateIncidentReportRequest request, string reporterId)
         {
-            // Verify that the reporter exists and is a staff member
-            var staffProfile = await _staffProfileRepository.Find([sp => sp.UserId == reporterId]);
-            if (staffProfile == null)
+            var reporter = await _staffService.FindByStaffId(reporterId);
+            if (reporter == null)
+            {
                 throw new InvalidInformationException(MessageKeys.STAFF_PROFILE_NOT_FOUND);
-
+            }
             var incidentReport = new IncidenceReport
             {
                 Id = Guid.NewGuid().ToString(),
                 Header = request.Header,
                 Priority = request.Priority,
                 Description = request.Description,
-                Status = request.Status,
+                Status = IncidentReportStatus.Open.ToString(),
                 ReporterId = reporterId,
-                ParkingLotId = request.ParkingLotId,
+                ParkingLotId = reporter.ParkingLotId,
                 ReportedDate = DateTime.UtcNow
             };
 
@@ -46,11 +55,16 @@ namespace SAPLSServer.Services.Implementations
             await _incidentReportRepository.SaveChangesAsync();
         }
 
-        public async Task UpdateIncidentReportStatus(UpdateIncidentReportStatusRequest request)
+        public async Task UpdateIncidentReportStatus(UpdateIncidentReportStatusRequest request, string performerId)
         {
-            var incidentReport = await _incidentReportRepository.Find(request.Id);
-            if (incidentReport == null)
-                throw new InvalidInformationException(MessageKeys.INCIDENT_REPORT_NOT_FOUND);
+            var parkingLotOwner = await _parkingLotOwnerService.IsParkingLotOwnerValid(performerId);
+            if (!parkingLotOwner)
+                throw new InvalidInformationException(MessageKeys.PARKING_LOT_OWNER_PROFILE_NOT_FOUND);
+            var incidentReport = await _incidentReportRepository.Find(request.Id) 
+                ?? throw new InvalidInformationException(MessageKeys.INCIDENT_REPORT_NOT_FOUND);
+            // Only the owner of the parking lot can update the status
+            if (!await _parkingLotService.IsParkingLotOwner(incidentReport.ParkingLotId, performerId))
+                throw new UnauthorizedAccessException(MessageKeys.UNAUTHORIZED_ACCESS);
 
             incidentReport.Status = request.Status;
             _incidentReportRepository.Update(incidentReport);
@@ -71,38 +85,34 @@ namespace SAPLSServer.Services.Implementations
             var criterias = new List<Expression<Func<IncidenceReport, bool>>>();
 
             // Filter by parking lot (required field)
-            if (!string.IsNullOrEmpty(request.ParkingLotId))
+            if (!string.IsNullOrWhiteSpace(request.ParkingLotId))
             {
                 criterias.Add(ir => ir.ParkingLotId == request.ParkingLotId);
             }
 
             // Filter by priority
-            if (!string.IsNullOrEmpty(request.Priority))
+            if (!string.IsNullOrWhiteSpace(request.Priority))
             {
                 criterias.Add(ir => ir.Priority == request.Priority);
             }
 
             // Filter by status
-            if (!string.IsNullOrEmpty(request.Status))
+            if (!string.IsNullOrWhiteSpace(request.Status))
             {
                 criterias.Add(ir => ir.Status == request.Status);
             }
 
             // Filter by date range
-            if (request.StartDate.HasValue)
+            if (request.StartDate.HasValue && request.EndDate.HasValue)
             {
                 var startDateTime = request.StartDate.Value.ToDateTime(TimeOnly.MinValue);
                 criterias.Add(ir => ir.ReportedDate >= startDateTime);
-            }
-
-            if (request.EndDate.HasValue)
-            {
                 var endDateTime = request.EndDate.Value.ToDateTime(TimeOnly.MaxValue);
                 criterias.Add(ir => ir.ReportedDate <= endDateTime);
             }
 
             // Filter by search criteria (search in header and description)
-            if (!string.IsNullOrEmpty(request.SearchCriteria))
+            if (!string.IsNullOrWhiteSpace(request.SearchCriteria))
             {
                 criterias.Add(ir => ir.Header.Contains(request.SearchCriteria) ||
                                    ir.Description.Contains(request.SearchCriteria));

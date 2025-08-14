@@ -1,16 +1,19 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using SAPLSServer.Constants;
 using SAPLSServer.DTOs.Base;
-using SAPLSServer.DTOs.Concrete.IncidentReportDto;
+using SAPLSServer.DTOs.Concrete.IncidenceReportDtos;
 using SAPLSServer.DTOs.PaginationDto;
+using SAPLSServer.Exceptions;
 using SAPLSServer.Services.Interfaces;
+using System.Security.Claims;
+using System.Threading.Tasks;
 
 namespace SAPLSServer.Controllers
 {
-    /// <summary>
-    /// Controller for managing incident report operations including creation, updates, and retrieval.
-    /// </summary>
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize(Policy = Accessibility.PARKING_LOT_OWNER_OR_STAFF_ACCESS)]
     public class IncidentReportController : ControllerBase
     {
         private readonly IIncidentReportService _incidentReportService;
@@ -20,50 +23,54 @@ namespace SAPLSServer.Controllers
             _incidentReportService = incidentReportService;
         }
 
+        /// <summary>
+        /// Creates a new incident report (Staff only).
+        /// </summary>
         [HttpPost]
-        public async Task<IActionResult> CreateIncidentReport([FromBody] CreateIncidentReportRequest request, [FromQuery] string reporterId)
+        [Authorize(Policy = Accessibility.STAFF_ACCESS)]
+        public async Task<IActionResult> Create([FromBody] CreateIncidentReportRequest request)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            if (string.IsNullOrEmpty(reporterId))
-                return BadRequest("Reporter ID is required");
-
+            var reporterId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
             await _incidentReportService.CreateIncidentReport(request, reporterId);
-            return Ok(new { message = "Incident report created successfully" });
+            return Ok(new { message = MessageKeys.SHIFT_DIARY_CREATED_SUCCESSFULLY });
         }
 
+        /// <summary>
+        /// Updates the status of an incident report (Parking Lot Owner only).
+        /// </summary>
         [HttpPut("status")]
-        public async Task<IActionResult> UpdateIncidentReportStatus([FromBody] UpdateIncidentReportStatusRequest request)
+        [Authorize(Policy = Accessibility.PARKING_LOT_OWNER_ACCESS)]
+        public async Task<IActionResult> UpdateStatus([FromBody] UpdateIncidentReportStatusRequest request)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            await _incidentReportService.UpdateIncidentReportStatus(request);
-            return Ok(new { message = "Incident report status updated successfully" });
+            var performerId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
+            await _incidentReportService.UpdateIncidentReportStatus(request, performerId);
+            return Ok(new { message = MessageKeys.SHARING_STATUS_UPDATED_SUCCESSFULLY });
         }
 
-        [HttpGet("details")]
-        public async Task<IActionResult> GetIncidentReportDetails([FromQuery] GetDetailsRequest request)
+        /// <summary>
+        /// Gets the details of an incident report by ID.
+        /// </summary>
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetDetails(string id)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
-            var result = await _incidentReportService.GetIncidentReportDetails(request);
+            var result = await _incidentReportService.GetIncidentReportDetails(new GetDetailsRequest { Id = id });
             if (result == null)
-                return NotFound(new { message = "Incident report not found" });
-
+                return NotFound(new { message = MessageKeys.INCIDENT_REPORT_NOT_FOUND });
             return Ok(result);
         }
 
+        /// <summary>
+        /// Gets a paginated list of incident reports.
+        /// </summary>
         [HttpGet("page")]
-        public async Task<IActionResult> GetIncidentReportsPage(
-            [FromQuery] PageRequest pageRequest,
-            [FromQuery] GetIncidenReportListRequest request)
+        public async Task<IActionResult> GetPage([FromQuery] PageRequest pageRequest, [FromQuery] GetIncidenReportListRequest request)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
             var result = await _incidentReportService.GetIncidentReportsPage(pageRequest, request);
             return Ok(result);
         }

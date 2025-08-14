@@ -13,13 +13,16 @@ namespace SAPLSServer.Repositories.Implementations
 
         public async Task<IncidenceReport?> FindIncludeSenderInformation(string id)
         {
-            return await _dbSet.Include(ir => ir.Reporter.User).FirstOrDefaultAsync(ir => ir.Id == id);
+            return await _dbSet.Include(ir => ir.Reporter)
+                .ThenInclude(r => r.User)
+                .FirstOrDefaultAsync(ir => ir.Id == id);
         }
 
         public async Task<IncidenceReport?> FindIncludeSenderInformationReadOnly(string id)
         {
-            return await _dbSet.Include(ir => ir.Reporter.User)
-                    .AsNoTracking().FirstOrDefaultAsync(ir => ir.Id == id);
+            return await _dbSet.Include(ir => ir.Reporter)
+                .ThenInclude(r => r.User)
+                .AsNoTracking().FirstOrDefaultAsync(ir => ir.Id == id);
         }
 
         protected override Expression<Func<IncidenceReport, bool>> CreateIdPredicate(string id)

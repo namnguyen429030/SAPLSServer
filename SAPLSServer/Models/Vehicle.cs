@@ -31,9 +31,18 @@ public partial class Vehicle
 
     public string OwnerId { get; set; } = null!;
 
+    public string? VehicleRegistrationCertificateUrl { get; set; }
+    public string? CurrentHolderId { get; set; }
+
     public string? FrontVehicleRegistrationCertificateUrl { get; set; }
 
     public string? BackVehicleRegistrationCertificateUrl { get; set; }
+
+    public string UpdatedBy { get; set; } = null!;
+
+    public virtual ClientProfile? CurrentHolder { get; set; }
+
+    public virtual AdminProfile IdNavigation { get; set; } = null!;
 
     public virtual ClientProfile Owner { get; set; } = null!;
 

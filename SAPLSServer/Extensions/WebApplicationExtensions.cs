@@ -27,6 +27,7 @@ namespace SAPLSServer.Extensions
             app.UseAuthorization();
             app.MapControllers();
 
+
             return app;
         }
 
