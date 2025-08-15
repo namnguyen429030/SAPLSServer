@@ -59,6 +59,7 @@ namespace SAPLSServer.Extensions
             services.AddSingleton<IAuthenticationSettings, JwtAuthenticationSettings>();
             services.AddSingleton<IGoogleOAuthSettings, GoogleOAuthSettings>();
             services.AddSingleton<IAzureBlobStorageSettings, AzureBlobStorageSettings>();
+            services.AddSingleton<IFirebaseSettings, FirebaseSettings>();
 
             // Add Azure Blob Storage
             services.AddSingleton(provider =>

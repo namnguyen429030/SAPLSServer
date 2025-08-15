@@ -225,7 +225,6 @@ namespace SAPLSServer.Services.Implementations
             var client = await _clientProfileRepository.FindIncludingUser(userId) 
                 ?? throw new InvalidInformationException(MessageKeys.USER_NOT_FOUND);
             client.DeviceToken = deviceToken;
-            client.User.UpdatedAt = DateTime.UtcNow;
             _clientProfileRepository.Update(client);
             await _clientProfileRepository.SaveChangesAsync();
         }

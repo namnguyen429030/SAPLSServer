@@ -43,11 +43,11 @@ namespace SAPLSServer.Services.Implementations
 
             // Upload profile image if provided
             string? profileImageUrl = null;
-            if (request.ProfileImageUrl != null)
+            if (request.ProfileImage != null)
             {
                 var profileImageUploadRequest = new FileUploadRequest
                 {
-                    File = request.ProfileImageUrl,
+                    File = request.ProfileImage,
                     Container = "profile-images",
                     SubFolder = $"user-{userId}",
                     GenerateUniqueFileName = true,

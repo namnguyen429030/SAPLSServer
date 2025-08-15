@@ -14,11 +14,14 @@ namespace SAPLSServer.Services.Implementations
     {
         private readonly IParkingLotRepository _parkingLotRepository;
         private readonly ISubscriptionService _subscriptionService;
-        public ParkingLotService(IParkingLotRepository parkingLotRepository, 
-            ISubscriptionService subscriptionService)
+        private readonly IStaffService _staffService;
+        public ParkingLotService(IParkingLotRepository parkingLotRepository,
+            ISubscriptionService subscriptionService,
+            IStaffService staffService)
         {
             _parkingLotRepository = parkingLotRepository;
             _subscriptionService = subscriptionService;
+            _staffService = staffService;
         }
 
         public async Task CreateParkingLot(CreateParkingLotRequest request, string performerAdminId)
@@ -43,13 +46,13 @@ namespace SAPLSServer.Services.Implementations
             await _parkingLotRepository.SaveChangesAsync();
         }
 
-        public async Task UpdateParkingLotBasicInformation(UpdateParkingLotBasicInformationRequest request, 
+        public async Task UpdateParkingLotBasicInformation(UpdateParkingLotBasicInformationRequest request,
                                                 string performerId)
         {
             var entity = await _parkingLotRepository.Find(request.Id);
             if (entity == null)
                 throw new InvalidInformationException(MessageKeys.PARKING_LOT_NOT_FOUND);
-            if(performerId != entity.ParkingLotOwnerId)
+            if (performerId != entity.ParkingLotOwnerId)
                 throw new UnauthorizedAccessException(MessageKeys.UNAUTHORIZED_ACCESS);
 
             entity.Name = request.Name;
@@ -63,7 +66,7 @@ namespace SAPLSServer.Services.Implementations
             await _parkingLotRepository.SaveChangesAsync();
         }
 
-        public async Task UpdateParkingLotAddress(UpdateParkingLotAddressRequest request, 
+        public async Task UpdateParkingLotAddress(UpdateParkingLotAddressRequest request,
             string performerAdminId)
         {
             var entity = await _parkingLotRepository.Find(request.Id);
@@ -85,7 +88,7 @@ namespace SAPLSServer.Services.Implementations
             return new ParkingLotDetailsDto(parkingLot);
         }
 
-        public async Task<PageResult<ParkingLotSummaryDto>> GetParkingLotsPage(PageRequest pageRequest, 
+        public async Task<PageResult<ParkingLotSummaryDto>> GetParkingLotsPage(PageRequest pageRequest,
             GetParkingLotListRequest request)
         {
             var criterias = new List<Expression<Func<ParkingLot, bool>>>();
@@ -155,14 +158,14 @@ namespace SAPLSServer.Services.Implementations
             return parkingLot.ExpiredAt < DateTime.UtcNow;
         }
 
-        public async Task UpdateParkingLotSubscription(UpdateParkingLotSubscriptionRequest request, 
+        public async Task UpdateParkingLotSubscription(UpdateParkingLotSubscriptionRequest request,
                                                         string performerId)
         {
             var subscriptionDuration = await _subscriptionService.GetDurationOfSubscription(request.SubscriptionId);
             var parkingLot = await _parkingLotRepository.Find(request.Id);
             if (parkingLot == null)
                 throw new InvalidInformationException(MessageKeys.PARKING_LOT_NOT_FOUND);
-            if(parkingLot.ParkingLotOwnerId != performerId)
+            if (parkingLot.ParkingLotOwnerId != performerId)
                 throw new UnauthorizedAccessException(MessageKeys.UNAUTHORIZED_ACCESS);
 
             parkingLot.SubscriptionId = request.SubscriptionId;
@@ -172,6 +175,16 @@ namespace SAPLSServer.Services.Implementations
             _parkingLotRepository.Update(parkingLot);
             await _parkingLotRepository.SaveChangesAsync();
 
+        }
+
+        public Task<bool> IsParkingLotValid(string parkingLotId)
+        {
+            return _parkingLotRepository.ExistsAsync(pl => pl.Id == parkingLotId);
+        }
+
+        public async Task<bool> IsParkingLotStaff(string parkingLotId, string userId)
+        {
+            return await _staffService.GetParkingLotId(userId) == parkingLotId;
         }
     }
 }

@@ -77,6 +77,8 @@ namespace SAPLSServer.Services.Interfaces
         /// <param name="parkingLotId">The unique identifier of the parking lot.</param>
         /// <returns>True if the parking lot is expired, otherwise false.</returns>
         Task<bool> IsParkingLotExpired(string parkingLotId);
+        Task<bool> IsParkingLotValid(string parkingLotId);
+        Task<bool> IsParkingLotStaff(string parkingLotId, string userId);
         Task UpdateParkingLotSubscription(UpdateParkingLotSubscriptionRequest request, string performerId);
     }
 }

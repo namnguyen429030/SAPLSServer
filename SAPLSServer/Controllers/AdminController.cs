@@ -29,7 +29,7 @@ namespace SAPLSServer.Controllers
         /// <returns>Success response</returns>
         [HttpPost("register")]
         [Authorize(Policy = Accessibility.HEAD_ADMIN_ACCESS)]
-        public async Task<IActionResult> RegisterAdmin([FromBody] CreateAdminProfileRequest request)
+        public async Task<IActionResult> RegisterAdmin([FromForm] CreateAdminProfileRequest request)
         {
             try
             {

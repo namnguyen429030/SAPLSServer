@@ -227,5 +227,14 @@ namespace SAPLSServer.Constants
         public const string CLIENT_IN_WHITE_LIST_ALREADY = "CLIENT_IN_WHITE_LIST_ALREADY";
         public const string UNAUTHORIZED_PARKING_LOT_OWNER = "UNAUTHORIZED_PARKING_LOT_OWNER";
         public const string INCIDENT_REPORT_NOT_FOUND = "INCIDENT_REPORT_NOT_FOUND";
+        public const string SHIFT_START_TIME_REQUIRED = "SHIFT_START_TIME_REQUIRED";
+        public const string SHIFT_END_TIME_REQUIRED = "SHIFT_END_TIME_REQUIRED";
+        public const string SHIFT_TYPE_REQUIRED = "SHIFT_TYPE_REQUIRED";
+        public const string SHIFT_WORK_DAYS_REQUIRED = "SHIFT_WORK_DAYS_REQUIRED";
+        public const string SHIFT_STAFFS_REQUIRED = "SHIFT_STAFFS_REQUIRED";
+        public const string SHIFT_NOT_FOUND = "SHIFT_NOT_FOUND";
+        public const string SHIFT_UPDATED_SUCCESSFULLY = "SHIFT_UPDATED_SUCCESSFULLY";
+        public const string SHIFT_DELETED_SUCCESSFULLY = "SHIFT_DELETED_SUCCESSFULLY";
+        public const string SHIFT_DIARY_NOT_FOUND = "SHIFT_DIARY_NOT_FOUND";
     }
 }

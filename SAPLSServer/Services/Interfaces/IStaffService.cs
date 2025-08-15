@@ -7,7 +7,8 @@ using System.Threading.Tasks;
 namespace SAPLSServer.Services.Interfaces
 {
     /// <summary>
-    /// Provides operations for managing staff profiles, including creation, updates, retrieval, and validation.
+    /// Provides comprehensive operations for managing staff profiles and assignments, including creation, updates, 
+    /// retrieval, validation, parking lot associations, and shift management.
     /// </summary>
     public interface IStaffService
     {
@@ -67,5 +68,13 @@ namespace SAPLSServer.Services.Interfaces
         /// <param name="userId">The user ID to check.</param>
         /// <returns>True if the user is a valid staff member; otherwise, false.</returns>
         Task<bool> IsStaffValid(string userId);
+
+        /// <summary>
+        /// Assigns a staff member to a specific shift.
+        /// </summary>
+        /// <param name="staffId">The unique identifier of the staff member.</param>
+        /// <param name="shiftId">The unique identifier of the shift to assign.</param>
+        /// <returns>A task representing the asynchronous operation.</returns>
+        Task AssignToShift(string staffId, string shiftId);
     }
 }

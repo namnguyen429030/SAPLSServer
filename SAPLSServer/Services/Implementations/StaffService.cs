@@ -148,5 +148,10 @@ namespace SAPLSServer.Services.Implementations
             }
             return await _staffProfileRepository.ExistsAsync(s => s.UserId == userId);
         }
+
+        public Task AssignToShift(string staffId, string shiftId)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

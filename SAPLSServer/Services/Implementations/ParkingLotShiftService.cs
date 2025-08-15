@@ -1,3 +1,4 @@
+using SAPLSServer.Constants;
 using SAPLSServer.DTOs.Concrete.ParkingLotShiftDtos;
 using SAPLSServer.Exceptions;
 using SAPLSServer.Models;
@@ -11,11 +12,15 @@ namespace SAPLSServer.Services.Implementations
     {
         private readonly IParkingLotShiftRepository _shiftRepository;
         private readonly IParkingLotService _parkingLotService;
+        private readonly IStaffService _staffService;
 
-        public ParkingLotShiftService(IParkingLotShiftRepository shiftRepository, IParkingLotService parkingLotService)
+        public ParkingLotShiftService(IParkingLotShiftRepository shiftRepository, 
+            IParkingLotService parkingLotService,
+            IStaffService staffService)
         {
             _shiftRepository = shiftRepository;
             _parkingLotService = parkingLotService;
+            _staffService = staffService;
         }
 
         public async Task<List<ParkingLotShiftDto>> GetShiftsByParkingLotAsync(string parkingLotId)
@@ -33,11 +38,11 @@ namespace SAPLSServer.Services.Implementations
         public async Task<ParkingLotShiftDto> CreateShiftAsync(CreateParkingLotShiftRequest request, string performerId)
         {
             if (!await _parkingLotService.IsParkingLotOwner(request.ParkingLotId, performerId))
-                throw new UnauthorizedAccessException("Only the parking lot owner can create shifts.");
+                throw new UnauthorizedAccessException(MessageKeys.UNAUTHORIZED_ACCESS);
 
             var shift = new ParkingLotShift
             {
-                // Assume Id is generated in the repository or here
+                Id = Guid.NewGuid().ToString(),
                 ParkingLotId = request.ParkingLotId,
                 StartTime = request.StartTime,
                 EndTime = request.EndTime,
@@ -47,15 +52,18 @@ namespace SAPLSServer.Services.Implementations
                 Note = request.Notes,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow,
-                // Staff assignment logic can be added here
             };
-
             await _shiftRepository.AddAsync(shift);
             await _shiftRepository.SaveChangesAsync();
-
-            // Assign staff if needed (implement as needed)
-            // ...
-
+            if (request.StaffIds != null) {
+                foreach (var staffId in request.StaffIds)
+                {
+                    if (await _staffService.GetParkingLotId(staffId) == request.ParkingLotId)
+                    {
+                        await _staffService.AssignToShift(staffId, shift.Id);
+                    }
+                }
+            }
             return MapToDto(shift);
         }
 
@@ -109,7 +117,7 @@ namespace SAPLSServer.Services.Implementations
                 Notes = shift.Note,
                 CreatedAt = shift.CreatedAt,
                 UpdatedAt = shift.UpdatedAt,
-                // StaffIds = ... (map as needed)
+                StaffIds = shift.StaffUsers.Select(s => s.UserId).ToList(),
             };
         }
     }

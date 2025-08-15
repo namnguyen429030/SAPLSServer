@@ -47,6 +47,10 @@ namespace SAPLSServer.Controllers
             {
                 return BadRequest(new { message = ex.Message });
             }
+            catch(UnauthorizedAccessException ex)
+            {
+                return Unauthorized(new { message = ex.Message });
+            }
             catch (Exception)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError, 

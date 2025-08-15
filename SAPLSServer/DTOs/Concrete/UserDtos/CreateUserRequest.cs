@@ -23,6 +23,6 @@ namespace SAPLSServer.DTOs.Concrete.UserDtos
         [RegularExpression(@"^\d+$", ErrorMessage = MessageKeys.PHONE_NUMBER_DIGITS_ONLY)]
         public string Phone { get; set; } = null!;
         [DataType(DataType.Upload, ErrorMessage = MessageKeys.INVALID_PROFILE_IMAGE_UPLOADED)]
-        public IFormFile? ProfileImageUrl { get; set; }
+        public IFormFile? ProfileImage { get; set; }
     }
 }
