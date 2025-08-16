@@ -21,7 +21,10 @@ namespace SAPLSServer.Services.Interfaces
         /// </summary>
         /// <param name="id">The unique identifier of the shared vehicle.</param>
         /// <param name="currentUserId">The ID of the user requesting the details.</param>
-        /// <returns>A task that returns the shared vehicle details, or null if not found or inaccessible.</returns>
+        /// <returns>
+        /// A task that returns the shared vehicle details as <see cref="SharedVehicleDetailsDto"/>,
+        /// or <c>null</c> if not found or inaccessible to the user.
+        /// </returns>
         Task<SharedVehicleDetailsDto?> GetSharedVehicleDetails(string id, string currentUserId);
 
         /// <summary>
@@ -29,18 +32,22 @@ namespace SAPLSServer.Services.Interfaces
         /// </summary>
         /// <param name="pageRequest">Pagination parameters such as page number and size.</param>
         /// <param name="request">Filtering criteria for shared vehicles.</param>
-        /// <returns>A task that returns a paginated result containing shared vehicle summaries.</returns>
+        /// <returns>
+        /// A task that returns a <see cref="PageResult{SharedVehicleSummaryDto}"/> containing shared vehicle summaries.
+        /// </returns>
         Task<PageResult<SharedVehicleSummaryDto>> GetSharedVehiclesPage(PageRequest pageRequest, GetSharedVehicleList request);
 
         /// <summary>
         /// Retrieves a list of shared vehicles matching the specified filter criteria.
         /// </summary>
         /// <param name="request">Filtering criteria for shared vehicles.</param>
-        /// <returns>A task that returns a list of shared vehicle summaries.</returns>
+        /// <returns>
+        /// A task that returns a <see cref="List{SharedVehicleSummaryDto}"/> of shared vehicle summaries.
+        /// </returns>
         Task<List<SharedVehicleSummaryDto>> GetSharedVehiclesList(GetSharedVehicleList request);
 
         /// <summary>
-        /// Accepts a shared vehicle invitation for the specified user.
+        /// Accepts a shared vehicle invitation for the specified user, granting them access to the vehicle.
         /// </summary>
         /// <param name="id">The unique identifier of the shared vehicle.</param>
         /// <param name="sharedPersonId">The ID of the user accepting the shared vehicle.</param>
@@ -48,7 +55,7 @@ namespace SAPLSServer.Services.Interfaces
         Task AcceptSharedVehicle(string id, string sharedPersonId);
 
         /// <summary>
-        /// Rejects a shared vehicle invitation for the specified user.
+        /// Rejects a shared vehicle invitation for the specified user, declining access to the vehicle.
         /// </summary>
         /// <param name="id">The unique identifier of the shared vehicle.</param>
         /// <param name="sharedPersonId">The ID of the user rejecting the shared vehicle.</param>
@@ -56,7 +63,7 @@ namespace SAPLSServer.Services.Interfaces
         Task RejectSharedVehicle(string id, string sharedPersonId);
 
         /// <summary>
-        /// Recalls a shared vehicle, revoking access for the shared person.
+        /// Recalls a shared vehicle, revoking access for the shared person and ending the sharing relationship.
         /// </summary>
         /// <param name="id">The unique identifier of the shared vehicle.</param>
         /// <param name="ownerId">The ID of the owner recalling the shared vehicle.</param>

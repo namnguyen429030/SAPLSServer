@@ -14,19 +14,16 @@ namespace SAPLSServer.Services.Implementations
     public class VehicleService : IVehicleService
     {
         private readonly IVehicleRepository _vehicleRepository;
-        private readonly IClientProfileRepository _clientProfileRepository;
-        private readonly IUserRepository _userRepository;
+        private readonly IAdminService _adminService;
         private readonly IFileService _fileService;
 
         public VehicleService(
             IVehicleRepository vehicleRepository,
-            IClientProfileRepository clientProfileRepository,
-            IUserRepository userRepository,
+            IAdminService adminService,
             IFileService fileService)
         {
             _vehicleRepository = vehicleRepository;
-            _clientProfileRepository = clientProfileRepository;
-            _userRepository = userRepository;
+            _adminService = adminService;
             _fileService = fileService;
         }
 
@@ -69,7 +66,7 @@ namespace SAPLSServer.Services.Implementations
 
             var backCertResult = await _fileService.UploadFileAsync(backCertUploadRequest);
 
-            // Create the vehicle entity
+            // CheckIn the vehicle entity
             var vehicle = new Vehicle
             {
                 Id = vehicleId,
@@ -79,6 +76,7 @@ namespace SAPLSServer.Services.Implementations
                 Brand = request.Brand,
                 Model = request.Model,
                 Color = request.Color,
+                VehicleType = request.VehicleType,
                 FrontVehicleRegistrationCertificateUrl = frontCertResult.CloudUrl,
                 BackVehicleRegistrationCertificateUrl = backCertResult.CloudUrl,
                 ChassisNumber = request.ChassisNumber,
@@ -86,6 +84,7 @@ namespace SAPLSServer.Services.Implementations
                 OwnerVehicleFullName = request.OwnerVehicleFullName,
                 Status = VehicleStatus.Active.ToString(),
                 SharingStatus = VehicleSharingStatus.Available.ToString(),
+                
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             };
@@ -100,8 +99,8 @@ namespace SAPLSServer.Services.Implementations
             if (vehicle == null)
                 throw new InvalidInformationException(MessageKeys.VEHICLE_NOT_FOUND);
 
-            // Only owner can update vehicle
-            if (currentUserId != vehicle.OwnerId)
+            // Only admin can update vehicle details
+            if (await _adminService.IsAdminValid(currentUserId))
             {
                 throw new UnauthorizedAccessException(MessageKeys.UNAUTHORIZED_ACCESS);
             }
@@ -113,7 +112,11 @@ namespace SAPLSServer.Services.Implementations
             vehicle.ChassisNumber = request.ChassisNumber;
             vehicle.Color = request.Color;
             vehicle.OwnerVehicleFullName = request.OwnerVehicleFullName;
+            vehicle.VehicleType = request.VehicleType;
             vehicle.UpdatedAt = DateTime.UtcNow;
+            vehicle.UpdatedBy = currentUserId;
+            vehicle.FrontVehicleRegistrationCertificateUrl = request.FrontVehicleRegistrationCertImageUrl;
+            vehicle.BackVehicleRegistrationCertificateUrl = request.BackVehicleRegistrationCertImageUrl;
             _vehicleRepository.Update(vehicle);
             await _vehicleRepository.SaveChangesAsync();
         }
@@ -250,6 +253,14 @@ namespace SAPLSServer.Services.Implementations
             vehicle.UpdatedAt = DateTime.UtcNow;
             _vehicleRepository.Update(vehicle);
             await _vehicleRepository.SaveChangesAsync();
+        }
+
+        public async Task<string?> GetCurrentHolderId(string vehicleId)
+        {
+           var vehicle = await _vehicleRepository.Find(vehicleId);
+            if (vehicle == null)
+                return null;
+            return vehicle.CurrentHolderId;
         }
     }
 }

@@ -7,6 +7,8 @@ public partial class Vehicle
 {
     public string Id { get; set; } = null!;
 
+    public string VehicleType { get; set; } = null!;
+
     public string LicensePlate { get; set; } = null!;
 
     public string Brand { get; set; } = null!;

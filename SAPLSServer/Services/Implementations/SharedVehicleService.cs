@@ -141,7 +141,10 @@ namespace SAPLSServer.Services.Implementations
             var sharedVehicle = await _sharedVehicleRepository.FindIncludingVehicleAndOwner(id);
             if(sharedVehicle == null )
                 throw new InvalidInformationException(MessageKeys.SHARED_VEHICLE_NOT_FOUND);
-
+            if(sharedVehicle.SharedPersonId != sharedPersonId)
+            {
+                throw new UnauthorizedAccessException(MessageKeys.UNAUTHORIZED_ACCESS);
+            }
             sharedVehicle.AcceptAt = DateTime.UtcNow;
             _sharedVehicleRepository.Update(sharedVehicle);
             await _sharedVehicleRepository.SaveChangesAsync();
@@ -168,7 +171,10 @@ namespace SAPLSServer.Services.Implementations
 
             if (sharedVehicle == null)
                 throw new InvalidInformationException(MessageKeys.SHARED_VEHICLE_NOT_FOUND);
-
+            if(sharedVehicle.SharedPersonId != sharedPersonId)
+            {
+                throw new UnauthorizedAccessException(MessageKeys.UNAUTHORIZED_ACCESS);
+            }
             _sharedVehicleRepository.Remove(sharedVehicle);
             await _sharedVehicleRepository.SaveChangesAsync();
 
@@ -195,6 +201,10 @@ namespace SAPLSServer.Services.Implementations
             var sharedVehicle = await _sharedVehicleRepository.FindIncludingVehicle(id);
             if (sharedVehicle == null)
                 throw new InvalidInformationException(MessageKeys.SHARED_VEHICLE_NOT_FOUND);
+            if (sharedVehicle.Vehicle.OwnerId != ownerId)
+            {
+                throw new UnauthorizedAccessException(MessageKeys.UNAUTHORIZED_ACCESS);
+            }
             var sharedPersonId = sharedVehicle.SharedPersonId;
             if(sharedPersonId == null)
             {

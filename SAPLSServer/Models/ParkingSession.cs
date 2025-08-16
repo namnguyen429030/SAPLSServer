@@ -9,9 +9,9 @@ public partial class ParkingSession
 
     public string VehicleId { get; set; } = null!;
 
-    public string? DriverId { get; set; }
+    public string DriverId { get; set; } = null!;
 
-    public string? CheckInStaffId { get; set; }
+    public string CheckInStaffId { get; set; } = null!;
 
     public string? CheckOutStaffId { get; set; }
 
@@ -31,7 +31,7 @@ public partial class ParkingSession
 
     public string? ExitBackCaptureUrl { get; set; }
 
-    public string? TransactionId { get; set; }
+    public long? TransactionId { get; set; }
 
     public string PaymentMethod { get; set; } = null!;
 
@@ -41,15 +41,13 @@ public partial class ParkingSession
 
     public string PaymentStatus { get; set; } = null!;
 
-    public string ClientId { get; set; } = null!;
-
     public string ParkingFeeSchedule { get; set; } = null!;
 
-    public virtual StaffProfile? CheckInStaff { get; set; }
+    public virtual StaffProfile CheckInStaff { get; set; } = null!;
 
     public virtual StaffProfile? CheckOutStaff { get; set; }
 
-    public virtual ClientProfile Client { get; set; } = null!;
+    public virtual ClientProfile Driver { get; set; } = null!;
 
     public virtual ParkingFeeSchedule ParkingFeeScheduleNavigation { get; set; } = null!;
 

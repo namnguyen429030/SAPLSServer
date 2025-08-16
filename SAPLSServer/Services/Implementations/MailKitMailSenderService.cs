@@ -64,13 +64,13 @@ namespace SAPLSServer.Services.Implementations
 
                 message.Subject = subject;
 
-                // Create body builder
+                // CheckIn body builder
                 var bodyBuilder = new BodyBuilder();
 
                 if (isHtml)
                 {
                     bodyBuilder.HtmlBody = body;
-                    // Create plain text version from HTML for better compatibility
+                    // CheckIn plain text version from HTML for better compatibility
                     bodyBuilder.TextBody = ConvertHtmlToPlainText(body);
                 }
                 else

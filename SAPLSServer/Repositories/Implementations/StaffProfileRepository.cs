@@ -39,5 +39,11 @@ namespace SAPLSServer.Repositories.Implementations
         {
             return sp => sp.UserId == id;
         }
+
+        public async Task<StaffProfile?> FindIncludingShiftReadOnly(string userId)
+        {
+            return await _dbSet.Include(sp => sp.ParkingLotShifts).AsNoTracking()
+                .FirstOrDefaultAsync(sp => sp.UserId == userId);
+        }
     }
 }

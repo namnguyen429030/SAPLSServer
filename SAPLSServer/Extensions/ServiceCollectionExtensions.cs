@@ -43,6 +43,7 @@ namespace SAPLSServer.Extensions
             }
             return builder;
         }
+
         /// <summary>
         /// Register all application services
         /// </summary>
@@ -73,14 +74,27 @@ namespace SAPLSServer.Extensions
             {
                 opt.UseSqlServer(configuration.GetConnectionString(ConfigurationConstants.DefaultConnectionString));
             });
-            //Add repositories
+
+            // Add repositories
             services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<IClientProfileRepository, ClientProfileRepository>();
             services.AddScoped<IAdminProfileRepository, AdminProfileRepository>();
             services.AddScoped<IParkingLotOwnerProfileRepository, ParkingLotOwnerProfileRepository>();
             services.AddScoped<IStaffProfileRepository, StaffProfileRepository>();
+            services.AddScoped<IVehicleRepository, VehicleRepository>();
+            services.AddScoped<IParkingLotRepository, ParkingLotRepository>();
+            services.AddScoped<ISharedVehicleRepository, SharedVehicleRepository>();
+            services.AddScoped<IParkingSessionRepository, ParkingSessionRepository>();
+            services.AddScoped<IRequestRepository, RequestRepository>();
+            services.AddScoped<IParkingFeeScheduleRepository, ParkingFeeScheduleRepository>();
+            services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
+            services.AddScoped<IWhiteListRepository, WhiteListRepository>();
+            services.AddScoped<IParkingLotShiftRepository, ParkingLotShiftRepository>();
+            services.AddScoped<IShiftDiaryRepository, ShiftDiaryRepository>();
+            services.AddScoped<IIncidenceReportRepository, IncidenceReportRepository>();
+            services.AddScoped<IGuestParkingSessionRepository, GuestParkingSessionRepository>();
 
-            //Add services
+            // Add services
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IFirebaseNotificationService, FirebaseNotificationService>();
             services.AddScoped<IUserService, UserService>();
@@ -96,8 +110,21 @@ namespace SAPLSServer.Extensions
             services.AddScoped<IFileService, AzureBlobFileService>();
             services.AddScoped<IOtpService, OtpService>();
             services.AddScoped<IVehicleShareCodeService, VehicleShareCodeService>();
+            services.AddScoped<IVehicleService, VehicleService>();
+            services.AddScoped<IParkingLotService, ParkingLotService>();
+            services.AddScoped<ISharedVehicleService, SharedVehicleService>();
+            services.AddScoped<IParkingSessionService, ParkingSessionService>();
+            services.AddScoped<IRequestService, RequestService>();
+            services.AddScoped<IParkingFeeScheduleService, ParkingFeeScheduleService>();
+            services.AddScoped<ISubscriptionService, SubscriptionService>();
+            services.AddScoped<IWhiteListService, WhiteListService>();
+            services.AddScoped<IParkingLotShiftService, ParkingLotShiftService>();
+            services.AddScoped<IShiftDiaryService, ShiftDiaryService>();
+            services.AddScoped<IIncidentReportService, IncidentReportService>();
+            services.AddScoped<IGuestParkingSessionService, GuestParkingSessionService>();
+            services.AddScoped<ISharedVehicleNotificationService, SharedVehicleNotificationService>();
+            
             services.AddHttpContextAccessor();
-
 
             return services;
         }
@@ -134,6 +161,7 @@ namespace SAPLSServer.Extensions
 
             return services;
         }
+        
         /// <summary>
         /// Register Swagger for API documentation
         /// </summary>
@@ -284,6 +312,7 @@ namespace SAPLSServer.Extensions
             });
             return services;
         }
+
         public static IServiceCollection AddJwtAuthorization(this IServiceCollection services)
         {
             services.AddAuthorization(options =>
@@ -295,19 +324,28 @@ namespace SAPLSServer.Extensions
                 options.AddPolicy(Accessibility.CLIENT_ACCESS, policy =>
                     policy.RequireRole(UserRole.Client.ToString())
                           .RequireAuthenticatedUser());
+                
+                options.AddPolicy(Accessibility.ADMIN_ACCESS, policy =>
+                    policy.RequireRole(UserRole.Admin.ToString())
+                          .RequireAuthenticatedUser());
+                
                 options.AddPolicy(Accessibility.PARKING_LOT_OWNER_ACCESS, policy =>
                     policy.RequireRole(UserRole.ParkingLotOwner.ToString())
                     .RequireAuthenticatedUser());
+                
                 options.AddPolicy(Accessibility.ADMIN_PARKINGLOT_OWNER_ACCESS, policy =>
                     policy.RequireRole(UserRole.Admin.ToString(), UserRole.ParkingLotOwner.ToString())
                           .RequireAuthenticatedUser());
+                
                 options.AddPolicy(Accessibility.ADMIN_CLIENT_ACCESS, policy =>
                     policy.RequireRole(UserRole.Admin.ToString(), UserRole.Client.ToString())
                           .RequireAuthenticatedUser());
+                
                 options.AddPolicy(Accessibility.HEAD_ADMIN_ACCESS, policy =>
                     policy.RequireRole(UserRole.Admin.ToString())
                     .RequireClaim(nameof(AdminRole), AdminRole.HeadAdmin.ToString())
                     .RequireAuthenticatedUser());
+                
                 options.AddPolicy(Accessibility.PARKING_LOT_OWNER_OR_STAFF_ACCESS, policy => 
                    policy.RequireRole(UserRole.ParkingLotOwner.ToString(), UserRole.Staff.ToString())
                           .RequireAuthenticatedUser());
@@ -316,5 +354,3 @@ namespace SAPLSServer.Extensions
         }
     }
 }
-
-

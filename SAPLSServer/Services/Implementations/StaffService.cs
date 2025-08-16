@@ -134,7 +134,7 @@ namespace SAPLSServer.Services.Implementations
         public async Task<string> GetParkingLotId(string userIdOrstaffId)
         {
             // Check if the input is a user ID or staff ID
-            var staffProfile = await _staffProfileRepository.Find([u => u.StaffId == userIdOrstaffId 
+            var staffProfile = await _staffProfileRepository.Find([u => u.StaffId == userIdOrstaffId
                                                                      || u.UserId == userIdOrstaffId])
                 ?? throw new InvalidInformationException(MessageKeys.STAFF_PROFILE_NOT_FOUND);
             return staffProfile.ParkingLotId;
@@ -142,16 +142,43 @@ namespace SAPLSServer.Services.Implementations
 
         public async Task<bool> IsStaffValid(string userId)
         {
-            if(!await _userService.IsUserValid(userId))
+            if (!await _userService.IsUserValid(userId))
             {
                 return false;
             }
             return await _staffProfileRepository.ExistsAsync(s => s.UserId == userId);
         }
 
-        public Task AssignToShift(string staffId, string shiftId)
+        public async Task<bool> IsStaffInCurrentShift(string userId)
         {
-            throw new NotImplementedException();
+            // Get the staff profile with assigned shifts
+            var staffProfile = await _staffProfileRepository.FindIncludingShiftReadOnly(userId);
+            if (staffProfile == null || staffProfile.ParkingLotShifts == null || !staffProfile.ParkingLotShifts.Any())
+                return false;
+
+            var now = DateTime.UtcNow;
+            int currentMinutes = now.Hour * 60 + now.Minute;
+
+            int currentDay = ((int)now.DayOfWeek + 6) % 7;
+
+            foreach (var shift in staffProfile.ParkingLotShifts)
+            {
+                // Check status
+                if (shift.Status != ParkingLotShiftStatus.Active.ToString())
+                    continue;
+
+                // Check if today is in DayOfWeeks
+                if (string.IsNullOrWhiteSpace(shift.DayOfWeeks))
+                    continue;
+                var days = shift.DayOfWeeks.Split(',').Select(d => d.Trim());
+                if (!days.Contains(currentDay.ToString()))
+                    continue;
+
+                // Check time range
+                if (shift.StartTime <= currentMinutes && shift.EndTime >= currentMinutes)
+                    return true;
+            }
+            return false;
         }
     }
 }

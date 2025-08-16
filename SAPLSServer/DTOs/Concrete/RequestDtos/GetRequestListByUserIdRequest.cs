@@ -12,5 +12,7 @@ namespace SAPLSServer.DTOs.Concrete.RequestDtos
         public DateOnly? StartDate { get; set; }
         [DataType(DataType.Date, ErrorMessage = MessageKeys.INVALID_DATE_FORMAT)]
         public DateOnly? EndDate { get; set; }
+        [EnumDataType(typeof(RequestStatus), ErrorMessage = MessageKeys.INVALID_REQUEST_STATUS)]
+        public string? Status { get; set; }
     }
 }

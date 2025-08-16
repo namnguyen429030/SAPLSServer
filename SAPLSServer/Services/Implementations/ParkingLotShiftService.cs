@@ -2,6 +2,7 @@ using SAPLSServer.Constants;
 using SAPLSServer.DTOs.Concrete.ParkingLotShiftDtos;
 using SAPLSServer.Exceptions;
 using SAPLSServer.Models;
+using SAPLSServer.Repositories.Implementations;
 using SAPLSServer.Repositories.Interfaces;
 using SAPLSServer.Services.Interfaces;
 
@@ -11,16 +12,19 @@ namespace SAPLSServer.Services.Implementations
     public class ParkingLotShiftService : IParkingLotShiftService
     {
         private readonly IParkingLotShiftRepository _shiftRepository;
+        private readonly IStaffProfileRepository _staffProfileRepository;
         private readonly IParkingLotService _parkingLotService;
         private readonly IStaffService _staffService;
 
         public ParkingLotShiftService(IParkingLotShiftRepository shiftRepository, 
             IParkingLotService parkingLotService,
-            IStaffService staffService)
+            IStaffService staffService,
+            IStaffProfileRepository staffProfileRepository)
         {
             _shiftRepository = shiftRepository;
             _parkingLotService = parkingLotService;
             _staffService = staffService;
+            _staffProfileRepository = staffProfileRepository;
         }
 
         public async Task<List<ParkingLotShiftDto>> GetShiftsByParkingLotAsync(string parkingLotId)
@@ -48,22 +52,25 @@ namespace SAPLSServer.Services.Implementations
                 EndTime = request.EndTime,
                 ShiftType = request.ShiftType,
                 DayOfWeeks = request.DayOfWeeks ?? string.Empty,
-                Status = request.Status ?? "Scheduled",
+                Status = request.Status,
                 Note = request.Notes,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow,
             };
-            await _shiftRepository.AddAsync(shift);
-            await _shiftRepository.SaveChangesAsync();
-            if (request.StaffIds != null) {
+            if (request.StaffIds != null)
+            {
                 foreach (var staffId in request.StaffIds)
                 {
-                    if (await _staffService.GetParkingLotId(staffId) == request.ParkingLotId)
+                    var staffProfile = await _staffProfileRepository.Find(staffId);
+                    if (staffProfile != null)
                     {
-                        await _staffService.AssignToShift(staffId, shift.Id);
+                        shift.StaffUsers.Add(staffProfile);
                     }
                 }
             }
+            await _shiftRepository.AddAsync(shift);
+            await _shiftRepository.SaveChangesAsync();
+            
             return MapToDto(shift);
         }
 
@@ -74,7 +81,7 @@ namespace SAPLSServer.Services.Implementations
                 throw new InvalidInformationException("Shift not found.");
 
             if (!await _parkingLotService.IsParkingLotOwner(shift.ParkingLotId, performerId))
-                throw new UnauthorizedAccessException("Only the parking lot owner can update shifts.");
+                throw new UnauthorizedAccessException(MessageKeys.UNAUTHORIZED_ACCESS);
 
             if (request.StartTime.HasValue) shift.StartTime = request.StartTime.Value;
             if (request.EndTime.HasValue) shift.EndTime = request.EndTime.Value;
@@ -86,6 +93,18 @@ namespace SAPLSServer.Services.Implementations
 
             _shiftRepository.Update(shift);
             await _shiftRepository.SaveChangesAsync();
+            if (request.StaffIds != null)
+            {
+                shift.StaffUsers.Clear();
+                foreach (var staffId in request.StaffIds)
+                {
+                    var staffProfile = await _staffProfileRepository.Find([s => s.StaffId == staffId && s.ParkingLotId == shift.ParkingLotId]);
+                    if (staffProfile != null)
+                    {
+                        shift.StaffUsers.Add(staffProfile);
+                    }
+                }
+            }
             return true;
         }
 
@@ -93,10 +112,10 @@ namespace SAPLSServer.Services.Implementations
         {
             var shift = await _shiftRepository.Find(id);
             if (shift == null)
-                throw new InvalidInformationException("Shift not found.");
+                throw new InvalidInformationException(MessageKeys.SHIFT_NOT_FOUND);
 
             if (!await _parkingLotService.IsParkingLotOwner(shift.ParkingLotId, performerId))
-                throw new UnauthorizedAccessException("Only the parking lot owner can delete shifts.");
+                throw new UnauthorizedAccessException(MessageKeys.UNAUTHORIZED_ACCESS);
 
             _shiftRepository.Remove(shift);
             await _shiftRepository.SaveChangesAsync();

@@ -83,5 +83,19 @@ namespace SAPLSServer.Repositories.Interfaces
         /// <returns>A <see cref="ParkingSession"/> instance containing the session details and related vehicle and owner
         /// information if found; otherwise, <c>null</c>.</returns>
         Task<ParkingSession?> FindIncludingVehicleAndOwnerReadOnly(string id);
+        /// <summary>
+        /// Retrieves a parking session by its unique identifier, including the associated parking fee schedule, in a read-only context.
+        /// </summary>
+        /// <remarks>
+        /// This method operates in a read-only context, ensuring that no modifications are made to the underlying data.
+        /// The returned <see cref="ParkingSession"/> will include its related <see cref="ParkingFeeSchedule"/> navigation property if found.
+        /// </remarks>
+        /// <param name="id">The unique identifier of the parking session to retrieve. Cannot be <c>null</c> or empty.</param>
+        /// <returns>
+        /// A task that represents the asynchronous operation. The task result contains the <see cref="ParkingSession"/>
+        /// object with its associated <see cref="ParkingFeeSchedule"/> if found; otherwise, <see langword="null"/>.
+        /// </returns>
+        Task<ParkingSession?> FindInlcudingParkingFeeScheduleReadOnly(string id);
+        Task<ParkingSession?> FindLatest(string vehicleId, string parkingLotId);
     }
 }

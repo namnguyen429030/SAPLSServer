@@ -1,5 +1,6 @@
 using SAPLSServer.DTOs.Base;
 using SAPLSServer.DTOs.Concrete.ParkingLotDtos;
+using SAPLSServer.DTOs.Concrete.PaymentDtos;
 using SAPLSServer.DTOs.PaginationDto;
 
 namespace SAPLSServer.Services.Interfaces
@@ -10,7 +11,7 @@ namespace SAPLSServer.Services.Interfaces
     public interface IParkingLotService
     {
         /// <summary>
-        /// Creates a new parking lot with the provided details.
+        /// Creates a new parking lot with the specified details.
         /// </summary>
         /// <param name="dto">The request containing parking lot creation details.</param>
         /// <param name="performerAdminId">The unique identifier of the admin performing the creation.</param>
@@ -23,13 +24,13 @@ namespace SAPLSServer.Services.Interfaces
         /// <param name="request">The request containing updated parking lot information.</param>
         /// <param name="performerId">The unique identifier of the user performing the update.</param>
         /// <returns>A task representing the asynchronous operation.</returns>
-        Task UpdateParkingLotBasicInformation(UpdateParkingLotBasicInformationRequest request, 
-            string performerId);
+        Task UpdateParkingLotBasicInformation(UpdateParkingLotBasicInformationRequest request, string performerId);
 
         /// <summary>
         /// Updates the address of an existing parking lot.
         /// </summary>
         /// <param name="request">The request containing the new address.</param>
+        /// <param name="performerAdminId">The unique identifier of the admin performing the update.</param>
         /// <returns>A task representing the asynchronous operation.</returns>
         Task UpdateParkingLotAddress(UpdateParkingLotAddressRequest request, string performerAdminId);
 
@@ -46,8 +47,7 @@ namespace SAPLSServer.Services.Interfaces
         /// <param name="pageRequest">Pagination information (page number and size).</param>
         /// <param name="request">The filter and search criteria for parking lots.</param>
         /// <returns>A paginated result containing parking lot summaries.</returns>
-        Task<PageResult<ParkingLotSummaryDto>> GetParkingLotsPage(PageRequest pageRequest, 
-            GetParkingLotListRequest request);
+        Task<PageResult<ParkingLotSummaryDto>> GetParkingLotsPage(PageRequest pageRequest, GetParkingLotListRequest request);
 
         /// <summary>
         /// Retrieves a list of parking lots based on the provided filter criteria.
@@ -77,9 +77,50 @@ namespace SAPLSServer.Services.Interfaces
         /// <param name="parkingLotId">The unique identifier of the parking lot.</param>
         /// <returns>True if the parking lot is expired, otherwise false.</returns>
         Task<bool> IsParkingLotExpired(string parkingLotId);
+
+        /// <summary>
+        /// Checks if the specified parking lot is valid (not expired and meets all requirements).
+        /// </summary>
+        /// <param name="parkingLotId">The unique identifier of the parking lot.</param>
+        /// <returns>True if the parking lot is valid, otherwise false.</returns>
         Task<bool> IsParkingLotValid(string parkingLotId);
+
+        /// <summary>
+        /// Checks if the specified user is a staff member of the given parking lot.
+        /// </summary>
+        /// <param name="parkingLotId">The unique identifier of the parking lot.</param>
+        /// <param name="userId">The user ID to check for staff membership.</param>
+        /// <returns>True if the user is a staff member, otherwise false.</returns>
         Task<bool> IsParkingLotStaff(string parkingLotId, string userId);
+
+        /// <summary>
+        /// Updates the subscription information for a parking lot.
+        /// </summary>
+        /// <param name="request">The request containing the new subscription details.</param>
+        /// <param name="performerId">The unique identifier of the user performing the update.</param>
+        /// <returns>A task representing the asynchronous operation.</returns>
         Task UpdateParkingLotSubscription(UpdateParkingLotSubscriptionRequest request, string performerId);
+
+        /// <summary>
+        /// Retrieves the API key for the specified parking lot.
+        /// </summary>
+        /// <param name="parkingLotId">The unique identifier of the parking lot.</param>
+        /// <returns>The API key as a string.</returns>
+        Task<string> GetParkingLotApiKey(string parkingLotId);
+
+        /// <summary>
+        /// Retrieves the client key for the specified parking lot.
+        /// </summary>
+        /// <param name="parkingLotId">The unique identifier of the parking lot.</param>
+        /// <returns>The client key as a string.</returns>
+        Task<string> GetParkingLotClientKey(string parkingLotId);
+
+        /// <summary>
+        /// Retrieves the checksum key for the specified parking lot.
+        /// </summary>
+        /// <param name="parkingLotId">The unique identifier of the parking lot.</param>
+        /// <returns>The checksum key as a string.</returns>
+        Task<string> GetParkingLotCheckSumKey(string parkingLotId);
     }
 }
 

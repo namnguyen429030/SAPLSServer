@@ -39,8 +39,6 @@ public partial class SaplsContext : DbContext
 
     public virtual DbSet<PaymentSource> PaymentSources { get; set; }
 
-    public virtual DbSet<Receipt> Receipts { get; set; }
-
     public virtual DbSet<Request> Requests { get; set; }
 
     public virtual DbSet<RequestAttachedFile> RequestAttachedFiles { get; set; }
@@ -179,9 +177,11 @@ public partial class SaplsContext : DbContext
                 .HasMaxLength(50)
                 .IsUnicode(false);
             entity.Property(e => e.TransactionId).HasMaxLength(36);
+            entity.Property(e => e.VehicleLicensePlate).HasMaxLength(20);
 
             entity.HasOne(d => d.CheckInStaff).WithMany()
                 .HasForeignKey(d => d.CheckInStaffId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_GuestParkingSession_CheckInStaff");
 
             entity.HasOne(d => d.CheckOutStaff).WithMany()
@@ -275,7 +275,7 @@ public partial class SaplsContext : DbContext
             entity.Property(e => e.AdditionalFee).HasColumnType("decimal(8, 2)");
             entity.Property(e => e.AdditionalMinutes).HasDefaultValue(60);
             entity.Property(e => e.DayOfWeeks)
-                .HasMaxLength(20)
+                .HasMaxLength(50)
                 .HasDefaultValueSql("(NULL)");
             entity.Property(e => e.ForVehicleType)
                 .HasMaxLength(20)
@@ -400,8 +400,6 @@ public partial class SaplsContext : DbContext
 
             entity.ToTable("ParkingSession");
 
-            entity.HasIndex(e => e.ClientId, "IX_ParkingSession_ClientId");
-
             entity.HasIndex(e => e.EntryDateTime, "IX_ParkingSession_EntryDateTime");
 
             entity.HasIndex(e => e.ExitDateTime, "IX_ParkingSession_ExitDateTime");
@@ -420,9 +418,6 @@ public partial class SaplsContext : DbContext
             entity.Property(e => e.CheckInStaffId).HasMaxLength(36);
             entity.Property(e => e.CheckOutDateTime).HasDefaultValueSql("(NULL)");
             entity.Property(e => e.CheckOutStaffId).HasMaxLength(36);
-            entity.Property(e => e.ClientId)
-                .HasMaxLength(36)
-                .HasDefaultValue("");
             entity.Property(e => e.Cost).HasColumnType("decimal(10, 2)");
             entity.Property(e => e.DriverId).HasMaxLength(36);
             entity.Property(e => e.EntryBackCaptureUrl).HasMaxLength(500);
@@ -446,23 +441,22 @@ public partial class SaplsContext : DbContext
             entity.Property(e => e.Status)
                 .HasMaxLength(50)
                 .IsUnicode(false);
-            entity.Property(e => e.TransactionId)
-                .HasMaxLength(36)
-                .HasDefaultValueSql("(NULL)");
+            entity.Property(e => e.TransactionId).HasDefaultValueSql("(NULL)");
             entity.Property(e => e.VehicleId).HasMaxLength(36);
 
             entity.HasOne(d => d.CheckInStaff).WithMany(p => p.ParkingSessionCheckInStaffs)
                 .HasForeignKey(d => d.CheckInStaffId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("ParkingSession_fk3");
 
             entity.HasOne(d => d.CheckOutStaff).WithMany(p => p.ParkingSessionCheckOutStaffs)
                 .HasForeignKey(d => d.CheckOutStaffId)
                 .HasConstraintName("ParkingSession_fk4");
 
-            entity.HasOne(d => d.Client).WithMany(p => p.ParkingSessions)
-                .HasForeignKey(d => d.ClientId)
+            entity.HasOne(d => d.Driver).WithMany(p => p.ParkingSessions)
+                .HasForeignKey(d => d.DriverId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("ParkingSession_fk5");
+                .HasConstraintName("FK_ParkingSession_DriverId");
 
             entity.HasOne(d => d.ParkingFeeScheduleNavigation).WithMany(p => p.ParkingSessions)
                 .HasForeignKey(d => d.ParkingFeeSchedule)
@@ -499,19 +493,6 @@ public partial class SaplsContext : DbContext
             entity.HasOne(d => d.ParkingLotOwner).WithMany(p => p.PaymentSources)
                 .HasForeignKey(d => d.ParkingLotOwnerId)
                 .HasConstraintName("PaymentSource_fk5");
-        });
-
-        modelBuilder.Entity<Receipt>(entity =>
-        {
-            entity.ToTable("Receipt");
-
-            entity.Property(e => e.Id).ValueGeneratedNever();
-            entity.Property(e => e.ParkingLotOwnerUserId).HasMaxLength(36);
-
-            entity.HasOne(d => d.ParkingLotOwnerUser).WithMany(p => p.Receipts)
-                .HasForeignKey(d => d.ParkingLotOwnerUserId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_Receipt_ParkingLotOwner_fk1");
         });
 
         modelBuilder.Entity<Request>(entity =>
@@ -795,6 +776,7 @@ public partial class SaplsContext : DbContext
                 .HasDefaultValue("Inactive");
             entity.Property(e => e.UpdatedAt).HasDefaultValueSql("(getdate())");
             entity.Property(e => e.UpdatedBy).HasMaxLength(36);
+            entity.Property(e => e.VehicleType).HasMaxLength(50);
 
             entity.HasOne(d => d.CurrentHolder).WithMany(p => p.VehicleCurrentHolders)
                 .HasForeignKey(d => d.CurrentHolderId)

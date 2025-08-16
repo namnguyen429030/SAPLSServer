@@ -53,7 +53,7 @@ namespace SAPLSServer.Controllers
         }
 
         /// <summary>
-        /// Create a new subscription.
+        /// CheckIn a new subscription.
         /// </summary>
         [HttpPost]
         [Authorize(Roles = "Admin")]

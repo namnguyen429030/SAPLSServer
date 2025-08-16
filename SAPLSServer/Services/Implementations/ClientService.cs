@@ -16,15 +16,18 @@ namespace SAPLSServer.Services.Implementations
         private readonly IClientProfileRepository _clientProfileRepository;
         private readonly IUserService _userService;
         private readonly IVehicleShareCodeService _vehicleShareCodeService;
+        private readonly IStaffService _staffService;
         private readonly IFileService _fileService;
 
-        public ClientService(IUserService userService, IVehicleShareCodeService vehicleShareCodeService, IClientProfileRepository clientProfileRepository, IFileService fileService)
+        public ClientService(IUserService userService, IVehicleShareCodeService vehicleShareCodeService, 
+            IClientProfileRepository clientProfileRepository, IFileService fileService, IStaffService staffService)
         {
             _userService = userService;
             _vehicleShareCodeService = vehicleShareCodeService;
 
             _clientProfileRepository = clientProfileRepository;
             _fileService = fileService;
+            _staffService = staffService;
         }
 
         public async Task Create(CreateClientProfileRequest request)
@@ -92,52 +95,14 @@ namespace SAPLSServer.Services.Implementations
             var clientProfile = await _clientProfileRepository.FindIncludingUser(request.Id);
             if (clientProfile == null)
                 throw new InvalidInformationException(MessageKeys.CLIENT_PROFILE_NOT_FOUND);
-            bool citizenIdExists = await _clientProfileRepository.ExistsAsync(cp => cp.CitizenId == request.CitizenId);
+            bool citizenIdExists = await _clientProfileRepository.ExistsAsync(cp => cp.CitizenId == request.CitizenId
+                                                                                && cp.UserId != request.Id);
             if (citizenIdExists)
                 throw new InvalidInformationException(MessageKeys.CITIZEN_ID_ALREADY_EXISTS);
-                // Delete old front image if exists
-            if (!string.IsNullOrWhiteSpace(clientProfile.FrontCitizenIdCardImageUrl))
+            if(await _staffService.IsStaffValid(updatePerformerId))
             {
-                await _fileService.DeleteFileByUrlAsync(clientProfile.FrontCitizenIdCardImageUrl);
+                throw new UnauthorizedAccessException(MessageKeys.UNAUTHORIZED_ACCESS);
             }
-
-            // Upload new front image
-            var frontImageUploadRequest = new FileUploadRequest
-            {
-                File = request.FrontIdCardImage,
-                Container = "citizen-id-cards",
-                SubFolder = $"client-{clientProfile.UserId}",
-                GenerateUniqueFileName = true,
-                Metadata = new Dictionary<string, string>
-                {
-                    { "UserId", clientProfile.UserId },
-                    { "ImageType", "FrontCitizenIdCard" }
-                }
-            };
-
-            var frontImageResult = await _fileService.UploadFileAsync(frontImageUploadRequest);
-
-            // Delete old back image if exists
-            if (!string.IsNullOrWhiteSpace(clientProfile.BackCitizenIdCardImageUrl))
-            {
-                await _fileService.DeleteFileByUrlAsync(clientProfile.BackCitizenIdCardImageUrl);
-            }
-
-            // Upload new back image
-            var backImageUploadRequest = new FileUploadRequest
-            {
-                File = request.BackIdCardImage,
-                Container = "citizen-id-cards",
-                SubFolder = $"client-{clientProfile.UserId}",
-                GenerateUniqueFileName = true,
-                Metadata = new Dictionary<string, string>
-                {
-                    { "UserId", clientProfile.UserId },
-                    { "ImageType", "BackCitizenIdCard" }
-                }
-            };
-
-            var backImageResult = await _fileService.UploadFileAsync(backImageUploadRequest);
 
             clientProfile.CitizenId = request.CitizenId;
             clientProfile.DateOfBirth = request.DateOfBirth;
@@ -145,8 +110,8 @@ namespace SAPLSServer.Services.Implementations
             clientProfile.Nationality = request.Nationality;
             clientProfile.PlaceOfOrigin = request.PlaceOfOrigin;
             clientProfile.PlaceOfResidence = request.PlaceOfResidence;
-            clientProfile.FrontCitizenIdCardImageUrl = frontImageResult.CloudUrl;
-            clientProfile.BackCitizenIdCardImageUrl = backImageResult.CloudUrl;
+            clientProfile.FrontCitizenIdCardImageUrl = request.FrontIdCardImageUrl;
+            clientProfile.BackCitizenIdCardImageUrl = request.BackIdCardImageUrl;
             clientProfile.User.UpdatedAt = DateTime.UtcNow;
             clientProfile.UpdatedBy = updatePerformerId;
 

@@ -13,6 +13,7 @@ namespace SAPLSServer.DTOs.Concrete.RequestDtos
         public string? ResponseMessage { get; set; }
         public string? LastUpdateAdminId { get; set; }
         public string? LastUpdateAdminFullName { get; set; }
+        public string[]? FileAttachmentUrls { get; set; }
         public RequestDetailsDto(Request request) : base(request)
         {
             Email = request.Sender?.Email ?? string.Empty;

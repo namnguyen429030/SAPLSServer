@@ -41,7 +41,7 @@ namespace SAPLSServer.Controllers
             }
             catch (Exception)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, 
+                return StatusCode(StatusCodes.Status500InternalServerError,
                     new { message = MessageKeys.UNEXPECTED_ERROR });
             }
         }
@@ -67,7 +67,7 @@ namespace SAPLSServer.Controllers
             }
             catch (Exception)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, 
+                return StatusCode(StatusCodes.Status500InternalServerError,
                     new { message = MessageKeys.UNEXPECTED_ERROR });
             }
         }
@@ -91,11 +91,11 @@ namespace SAPLSServer.Controllers
                 // Ensure user can only update their own profile or admin can update any
                 var currentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
-                
-                if (currentUserId != request.Id && 
+
+                if (currentUserId != request.Id &&
                     userRole != UserRole.Admin.ToString())
                 {
-                    return Forbid();
+                    return StatusCode(403, new { message = MessageKeys.UNAUTHORIZED_ACCESS });
                 }
 
                 await _userService.UpdateProfileImage(request);
@@ -107,7 +107,7 @@ namespace SAPLSServer.Controllers
             }
             catch (Exception)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, 
+                return StatusCode(StatusCodes.Status500InternalServerError,
                     new { message = MessageKeys.UNEXPECTED_ERROR });
             }
         }
@@ -137,7 +137,7 @@ namespace SAPLSServer.Controllers
             }
             catch (Exception)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, 
+                return StatusCode(StatusCodes.Status500InternalServerError,
                     new { message = MessageKeys.UNEXPECTED_ERROR });
             }
         }

@@ -16,8 +16,8 @@ namespace SAPLSServer.DTOs.Concrete.ParkingLotShiftDtos
         public string ShiftType { get; set; } = null!;
         [Required(ErrorMessage = MessageKeys.SHIFT_WORK_DAYS_REQUIRED)]
         public string DayOfWeeks { get; set; } = null!;
-        public string? SpecificDate { get; set; }
-        public string? Status { get; set; }
+        [Required(ErrorMessage = MessageKeys.SHIFT_STATUS_REQUIRED)]
+        public string Status { get; set; } = null!;
         public string? Notes { get; set; }
         [Required(ErrorMessage = MessageKeys.SHIFT_STAFFS_REQUIRED)]
         public List<string> StaffIds { get; set; } = new();

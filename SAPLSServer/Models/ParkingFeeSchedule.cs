@@ -13,11 +13,13 @@ public partial class ParkingFeeSchedule
 
     public decimal InitialFee { get; set; }
 
+    public int InitialMinutes { get; set; }
+
     public decimal AdditionalFee { get; set; }
 
     public int AdditionalMinutes { get; set; }
 
-    public string? DayOfWeeks { get; set; }
+    public string DayOfWeeks { get; set; } = null!;
 
     public bool IsActive { get; set; }
 

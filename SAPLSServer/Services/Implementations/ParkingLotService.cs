@@ -7,6 +7,7 @@ using SAPLSServer.Constants;
 using System.Linq.Expressions;
 using SAPLSServer.DTOs.PaginationDto;
 using SAPLSServer.DTOs.Concrete.ParkingLotDtos;
+using SAPLSServer.DTOs.Concrete.PaymentDtos;
 
 namespace SAPLSServer.Services.Implementations
 {
@@ -15,13 +16,16 @@ namespace SAPLSServer.Services.Implementations
         private readonly IParkingLotRepository _parkingLotRepository;
         private readonly ISubscriptionService _subscriptionService;
         private readonly IStaffService _staffService;
+        private readonly IPaymentService _paymentService;
         public ParkingLotService(IParkingLotRepository parkingLotRepository,
             ISubscriptionService subscriptionService,
-            IStaffService staffService)
+            IStaffService staffService,
+            IPaymentService paymentService)
         {
             _parkingLotRepository = parkingLotRepository;
             _subscriptionService = subscriptionService;
             _staffService = staffService;
+            _paymentService = paymentService;
         }
 
         public async Task CreateParkingLot(CreateParkingLotRequest request, string performerAdminId)
@@ -185,6 +189,36 @@ namespace SAPLSServer.Services.Implementations
         public async Task<bool> IsParkingLotStaff(string parkingLotId, string userId)
         {
             return await _staffService.GetParkingLotId(userId) == parkingLotId;
+        }
+
+        public async Task<string> GetParkingLotApiKey(string parkingLotId)
+        {
+            var parkingLot = await _parkingLotRepository.FindIncludingParkingLotOwnerReadOnly(parkingLotId);
+            if (parkingLot == null)
+                throw new InvalidInformationException(MessageKeys.PARKING_LOT_NOT_FOUND);
+            if (parkingLot.ParkingLotOwner == null || string.IsNullOrEmpty(parkingLot.ParkingLotOwner.ApiKey))
+                throw new InvalidInformationException(MessageKeys.PARKING_LOT_API_KEY_NOT_FOUND);
+            return parkingLot.ParkingLotOwner.ApiKey;
+        }
+
+        public async Task<string> GetParkingLotClientKey(string parkingLotId)
+        {
+            var parkingLot = await _parkingLotRepository.FindIncludingParkingLotOwnerReadOnly(parkingLotId);
+            if (parkingLot == null)
+                throw new InvalidInformationException(MessageKeys.PARKING_LOT_NOT_FOUND);
+            if (parkingLot.ParkingLotOwner == null || string.IsNullOrEmpty(parkingLot.ParkingLotOwner.ClientKey))
+                throw new InvalidInformationException(MessageKeys.PARKING_LOT_CLIENT_KEY_NOT_FOUND);
+            return parkingLot.ParkingLotOwner.ClientKey;
+        }
+
+        public async Task<string> GetParkingLotCheckSumKey(string parkingLotId)
+        {
+            var parkingLot = await _parkingLotRepository.FindIncludingParkingLotOwnerReadOnly(parkingLotId);
+            if (parkingLot == null)
+                throw new InvalidInformationException(MessageKeys.PARKING_LOT_NOT_FOUND);
+            if (parkingLot.ParkingLotOwner == null || string.IsNullOrEmpty(parkingLot.ParkingLotOwner.CheckSumKey))
+                throw new InvalidInformationException(MessageKeys.PARKING_LOT_CHECKSUM_KEY_NOT_FOUND);
+            return parkingLot.ParkingLotOwner.CheckSumKey;
         }
     }
 }

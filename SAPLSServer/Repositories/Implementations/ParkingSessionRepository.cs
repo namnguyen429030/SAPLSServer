@@ -73,5 +73,19 @@ namespace SAPLSServer.Repositories.Implementations
                 .AsNoTracking()
                 .FirstOrDefaultAsync(CreateIdPredicate(id));
         }
+
+        public Task<ParkingSession?> FindInlcudingParkingFeeScheduleReadOnly(string id)
+        {
+            return _dbSet.Include(ps => ps.ParkingFeeSchedule)
+                .AsNoTracking()
+                .FirstOrDefaultAsync(CreateIdPredicate(id));
+        }
+
+        public Task<ParkingSession?> FindLatest(string vehicleId, string parkingLotId)
+        {
+            return _dbSet.Where(ps => ps.VehicleId == vehicleId && ps.ParkingLotId == parkingLotId)
+                .OrderByDescending(ps => ps.EntryDateTime)
+                .FirstOrDefaultAsync();
+        }
     }
 }

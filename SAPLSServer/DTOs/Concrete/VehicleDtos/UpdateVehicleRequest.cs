@@ -7,9 +7,11 @@ namespace SAPLSServer.DTOs.Concrete.VehicleDtos
     public class UpdateVehicleRequest : UpdateRequest
     {
         [Required(ErrorMessage = MessageKeys.FRONT_VEHICLE_REGISTRATION_CERT_IMAGE_REQUIRED)]
-        public IFormFile FrontVehicleRegistrationCertImage { get; set; } = null!;
+        [Url(ErrorMessage = MessageKeys.INVALID_FRONT_VEHICLE_REGISTRATION_CERT_IMAGE_UPLOADED)]
+        public string FrontVehicleRegistrationCertImageUrl { get; set; } = null!;
         [Required(ErrorMessage = MessageKeys.BACK_VEHICLE_REGISTRATION_CERT_IMAGE_REQUIRED)]
-        public IFormFile BackVehicleRegistrationCertImage { get; set; } = null!;
+        [Url(ErrorMessage = MessageKeys.INVALID_BACK_VEHICLE_REGISTRATION_CERT_IMAGE_UPLOADED)]
+        public string BackVehicleRegistrationCertImageUrl { get; set; } = null!;
         [Required(ErrorMessage = MessageKeys.LICENSE_PLATE_REQUIRED)]
         public string LicensePlate { get; set; } = null!;
         [Required(ErrorMessage = MessageKeys.BRAND_REQUIRED)]
@@ -24,5 +26,8 @@ namespace SAPLSServer.DTOs.Concrete.VehicleDtos
         public string Color { get; set; } = null!;
         [Required(ErrorMessage = MessageKeys.OWNER_FULL_NAME_REQUIRED)]
         public string OwnerVehicleFullName { get; set; } = null!;
+        [Required(ErrorMessage = MessageKeys.VEHICLE_TYPE_REQUIRED)]
+        [EnumDataType(typeof(VehicleType), ErrorMessage = MessageKeys.INVALID_VEHICLE_TYPE)]
+        public string VehicleType { get; set; } = null!;
     }
 }

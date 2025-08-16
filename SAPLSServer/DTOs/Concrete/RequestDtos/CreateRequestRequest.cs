@@ -13,5 +13,6 @@ namespace SAPLSServer.DTOs.Concrete.RequestDtos
         [EnumDataType(typeof(RequestDataType), ErrorMessage = MessageKeys.INVALID_REQUEST_DATA_TYPE)]
         public string? DataType { get; set; }
         public string? Data { get; set; }
+        public IFormFile[]? Attachments { get; set; }
     }
 }

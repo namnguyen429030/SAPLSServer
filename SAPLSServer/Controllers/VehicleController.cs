@@ -75,7 +75,7 @@ namespace SAPLSServer.Controllers
             }
             catch (UnauthorizedAccessException)
             {
-                return Forbid( MessageKeys.UNAUTHORIZED_ACCESS );
+                return StatusCode(403, new { message = MessageKeys.UNAUTHORIZED_ACCESS });
             }
             catch (InvalidInformationException ex)
             {
@@ -110,7 +110,7 @@ namespace SAPLSServer.Controllers
             }
             catch (UnauthorizedAccessException)
             {
-                return Forbid(MessageKeys.UNAUTHORIZED_ACCESS);
+                return StatusCode(403, new { message = MessageKeys.UNAUTHORIZED_ACCESS });
             }
             catch (InvalidInformationException ex)
             {
@@ -240,7 +240,7 @@ namespace SAPLSServer.Controllers
             }
             catch (UnauthorizedAccessException)
             {
-                return Forbid(MessageKeys.UNAUTHORIZED_ACCESS);
+                return StatusCode(403, new { message = MessageKeys.UNAUTHORIZED_ACCESS });
             }
             catch (InvalidInformationException ex)
             {

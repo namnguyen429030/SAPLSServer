@@ -145,7 +145,7 @@ namespace SAPLSServer.Controllers
                     return RedirectToFrontend($"/login?error={MessageKeys.MISSING_USER_INFO}");
                 }
 
-                // Create a Google auth request with the ID token approach
+                // CheckIn a Google auth request with the ID token approach
                 var googleAuthRequest = new GoogleAuthRequest
                 {
                     AccessToken = googleId // This will be validated in AuthService

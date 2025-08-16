@@ -7,7 +7,9 @@ public partial class GuestParkingSession
 {
     public string Id { get; set; } = null!;
 
-    public string? CheckInStaffId { get; set; }
+    public string VehicleLicensePlate { get; set; } = null!;
+
+    public string CheckInStaffId { get; set; } = null!;
 
     public string? CheckOutStaffId { get; set; }
 
@@ -39,7 +41,7 @@ public partial class GuestParkingSession
 
     public string ParkingFeeSchedule { get; set; } = null!;
 
-    public virtual StaffProfile? CheckInStaff { get; set; }
+    public virtual StaffProfile CheckInStaff { get; set; } = null!;
 
     public virtual StaffProfile? CheckOutStaff { get; set; }
 

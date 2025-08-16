@@ -8,11 +8,11 @@ namespace SAPLSServer.DTOs.Concrete.UserDtos
     public class UpdateClientProfileRequest : UpdateUserInformationRequest
     {
         [Required(ErrorMessage = MessageKeys.FRONT_ID_CARD_IMAGE_REQUIRED)]
-        [DataType(DataType.Upload, ErrorMessage = MessageKeys.INVALID_FRONT_ID_CARD_IMAGE_UPLOADED)]
-        public IFormFile FrontIdCardImage { get; set; } = null!;
+        [Url(ErrorMessage = MessageKeys.INVALID_FRONT_ID_CARD_IMAGE_UPLOADED)]
+        public string FrontIdCardImageUrl { get; set; } = null!;
         [Required(ErrorMessage = MessageKeys.BACK_ID_CARD_IMAGE_REQUIRED)]
-        [DataType(DataType.Upload, ErrorMessage = MessageKeys.INVALID_BACK_ID_CARD_IMAGE_UPLOADED)]
-        public IFormFile BackIdCardImage { get; set; } = null!;
+        [Url(ErrorMessage = MessageKeys.INVALID_BACK_ID_CARD_IMAGE_UPLOADED)]
+        public string BackIdCardImageUrl { get; set; } = null!;
         [Required(ErrorMessage = MessageKeys.CITIZEN_ID_REQUIRED)]
         [VietnameseCitizenId(ErrorMessage = MessageKeys.INVALID_CITIZEN_ID)]
         public string CitizenId { get; set; } = null!;

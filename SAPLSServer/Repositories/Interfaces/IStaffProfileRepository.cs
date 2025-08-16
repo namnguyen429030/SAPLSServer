@@ -36,5 +36,6 @@ namespace SAPLSServer.Repositories.Interfaces
         /// <returns>A task that represents the asynchronous operation. The task result contains the <see cref="StaffProfile"/>
         /// object if a matching profile is found; otherwise, <see langword="null"/>.</returns>
         Task<StaffProfile?> FindIncludingUserReadOnly(Expression<Func<StaffProfile, bool>>[] criterias);
+        Task<StaffProfile?> FindIncludingShiftReadOnly(string userId);
     }
 }

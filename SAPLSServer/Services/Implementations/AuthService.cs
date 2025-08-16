@@ -60,6 +60,14 @@ namespace SAPLSServer.Services.Implementations
             if (!_passwordService.VerifyPassword(request.Password, userPassword))
                 return null;
 
+            // Check if staff is in current shift
+            if (user.Role == UserRole.Staff.ToString())
+            {
+                var isInCurrentShift = await _staffService.IsStaffInCurrentShift(user.Id);
+                if (!isInCurrentShift)
+                    return null;
+            }
+
             var accessToken = await GenerateAccessToken(user);
             var refreshToken = GenerateRefreshToken();
             var refreshTokenExpires = DateTime.UtcNow.AddDays(7); // 7 days for refresh token

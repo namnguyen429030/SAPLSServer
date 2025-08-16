@@ -85,6 +85,14 @@ namespace SAPLSServer.Services.Interfaces
         /// <param name="request">The search and filter criteria for vehicles (OwnerId is required).</param>
         /// <returns>A task that returns a list of vehicle summaries.</returns>
         Task<List<VehicleSummaryDto>> GetAllVehicles(GetVehicleListRequest request);
+        /// <summary>
+        /// Gets the current holder (driver or owner) of the specified vehicle.
+        /// </summary>
+        /// <param name="vehicleId">The unique identifier of the vehicle.</param>
+        /// <returns>
+        /// A task that returns the user ID of the current holder of the vehicle, or <c>null</c> if not found.
+        /// </returns>
+        Task<string?> GetCurrentHolderId(string vehicleId);
     }
 }
 

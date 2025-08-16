@@ -42,7 +42,7 @@ namespace SAPLSServer.Controllers
             }
             catch (UnauthorizedAccessException)
             {
-                return Forbid(MessageKeys.UNAUTHORIZED_ACCESS);
+                return StatusCode(403, new { message = MessageKeys.UNAUTHORIZED_ACCESS });
             }
             catch (InvalidInformationException ex)
             {
@@ -54,6 +54,7 @@ namespace SAPLSServer.Controllers
                     new { message = MessageKeys.UNEXPECTED_ERROR });
             }
         }
+
         [HttpGet("page")]
         [Authorize]
         public async Task<IActionResult> GetSharedVehiclesPage([FromQuery] PageRequest pageRequest,
@@ -75,7 +76,7 @@ namespace SAPLSServer.Controllers
             }
             catch (UnauthorizedAccessException)
             {
-                return Forbid(MessageKeys.UNAUTHORIZED_ACCESS);
+                return StatusCode(403, new { message = MessageKeys.UNAUTHORIZED_ACCESS });
             }
             catch (InvalidInformationException ex)
             {
@@ -87,6 +88,7 @@ namespace SAPLSServer.Controllers
                     new { message = MessageKeys.UNEXPECTED_ERROR });
             }
         }
+
         [HttpGet]
         [Authorize]
         public async Task<IActionResult> GetSharedVehicles([FromQuery] GetSharedVehicleList request)
@@ -107,7 +109,7 @@ namespace SAPLSServer.Controllers
             }
             catch (UnauthorizedAccessException)
             {
-                return Forbid(MessageKeys.UNAUTHORIZED_ACCESS);
+                return StatusCode(403, new { message = MessageKeys.UNAUTHORIZED_ACCESS });
             }
             catch (InvalidInformationException ex)
             {
@@ -119,6 +121,7 @@ namespace SAPLSServer.Controllers
                     new { message = MessageKeys.UNEXPECTED_ERROR });
             }
         }
+
         [HttpGet("{vehicleId}")]
         [Authorize]
         public async Task<IActionResult> GetSharedVehicleById(string vehicleId)
@@ -139,7 +142,7 @@ namespace SAPLSServer.Controllers
             }
             catch (UnauthorizedAccessException)
             {
-                return Forbid(MessageKeys.UNAUTHORIZED_ACCESS);
+                return StatusCode(403, new { message = MessageKeys.UNAUTHORIZED_ACCESS });
             }
             catch (InvalidInformationException ex)
             {
@@ -150,6 +153,42 @@ namespace SAPLSServer.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError,
                     new { message = MessageKeys.UNEXPECTED_ERROR });
             }
+        }
+
+        [HttpPost("{id}/accept")]
+        [Authorize(Policy = Accessibility.CLIENT_ACCESS)]
+        public async Task<IActionResult> AcceptSharedVehicle(string id)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrWhiteSpace(userId))
+                return Unauthorized(new { message = MessageKeys.UNAUTHORIZED_ACCESS });
+
+            await _sharedVehicleService.AcceptSharedVehicle(id, userId);
+            return Ok(new { message = MessageKeys.VEHICLE_SHARE_ACCEPTED });
+        }
+
+        [HttpPost("{id}/reject")]
+        [Authorize(Policy = Accessibility.CLIENT_ACCESS)]
+        public async Task<IActionResult> RejectSharedVehicle(string id)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrWhiteSpace(userId))
+                return Unauthorized(new { message = MessageKeys.UNAUTHORIZED_ACCESS });
+
+            await _sharedVehicleService.RejectSharedVehicle(id, userId);
+            return Ok(new { message = MessageKeys.VEHICLE_SHARE_REJECTED });
+        }
+
+        [HttpPost("{id}/recall")]
+        [Authorize(Policy = Accessibility.CLIENT_ACCESS)]
+        public async Task<IActionResult> RecallSharedVehicle(string id)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrWhiteSpace(userId))
+                return Unauthorized(new { message = MessageKeys.UNAUTHORIZED_ACCESS });
+
+            await _sharedVehicleService.RecallSharedVehicle(id, userId);
+            return Ok(new { message = MessageKeys.VEHICLE_SHARE_RECALLED });
         }
     }
 }
