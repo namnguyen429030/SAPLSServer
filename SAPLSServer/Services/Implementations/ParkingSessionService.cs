@@ -1,6 +1,6 @@
 using SAPLSServer.Constants;
 using SAPLSServer.DTOs.Base;
-using SAPLSServer.DTOs.Concrete.ParkingSessionDto;
+using SAPLSServer.DTOs.Concrete.ParkingSessionDtos;
 using SAPLSServer.DTOs.PaginationDto;
 using SAPLSServer.Exceptions;
 using SAPLSServer.Models;

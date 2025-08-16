@@ -1,6 +1,6 @@
 ﻿using SAPLSServer.Constants;
 using SAPLSServer.DTOs.Base;
-using SAPLSServer.DTOs.Concrete.PaymentSourceDto;
+using SAPLSServer.DTOs.Concrete.PaymentSourceDtos;
 using SAPLSServer.DTOs.PaginationDto;
 using SAPLSServer.Exceptions;
 using SAPLSServer.Models;
@@ -41,7 +41,7 @@ namespace SAPLSServer.Services.Implementations
                 AccountNumber = request.AccountNumber,
                 ParkingLotOwnerId = request.ParkingLotOwnerId,
                 Status = PaymentSourceStatus.Active.ToString(),
-                UpdatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow
             };
 
             await _paymentSourceRepository.AddAsync(paymentSource);
@@ -59,7 +59,6 @@ namespace SAPLSServer.Services.Implementations
             paymentSource.AccountName = request.AccountName;
             paymentSource.AccountNumber = request.AccountNumber;
             paymentSource.ParkingLotOwnerId = request.ParkingLotOwnerId;
-            paymentSource.UpdatedAt = DateTime.UtcNow;
             
             // Kiểm tra trạng thái hợp lệ - chỉ chấp nhận Active hoặc Inactive
             if (request.Status == PaymentSourceStatus.Active.ToString() || request.Status == PaymentSourceStatus.Inactive.ToString())

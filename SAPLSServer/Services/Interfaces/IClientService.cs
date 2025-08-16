@@ -43,5 +43,8 @@ namespace SAPLSServer.Services.Interfaces
         /// <param name="request">The search/filter criteria for client profiles.</param>
         /// <returns>A paginated result of client profile details.</returns>
         Task<PageResult<ClientProfileSummaryDto>> GetClientProfilesPage(PageRequest pageRequest, GetClientListRequest request);
+        Task UpdateDeviceToken(string userId, string? deviceToken);
+        Task<List<ClientProfileSummaryDto>> GetAllClients(GetClientListRequest request);
+        Task<string?> GetDeviceToken(string userId);
     }
 }

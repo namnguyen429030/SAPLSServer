@@ -147,5 +147,21 @@ namespace SAPLSServer.Services.Implementations
             
             return items;
         }
+
+        public Task<ParkingLotOwnerProfileDetailsDto?> GetByParkingLotOwnerId(string ownerId) {
+            throw new NotImplementedException();
+        }
+
+        public Task<ParkingLotOwnerProfileDetailsDto?> GetByUserId(string userId) {
+            throw new NotImplementedException();
+        }
+
+        public Task<List<ParkingLotOwnerProfileSummaryDto>> GetParkingLotOwnerProfiles(GetParkingLotOwnerListRequest request) {
+            throw new NotImplementedException();
+        }
+
+        public Task<bool> IsParkingLotOwnerValid(string userId) {
+            throw new NotImplementedException();
+        }
     }
 }

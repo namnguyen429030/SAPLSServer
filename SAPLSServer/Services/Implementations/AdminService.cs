@@ -59,25 +59,6 @@ namespace SAPLSServer.Services.Implementations
 
         public async Task<PageResult<AdminProfileSummaryDto>> GetAdminProfilesPage(PageRequest pageRequest, GetAdminListRequest request)
         {
-            var criterias = new List<Expression<Func<AdminProfile, bool>>>();
-            if (!string.IsNullOrWhiteSpace(request.Role))
-            {
-                criterias.Add(ap => ap.Role == request.Role);
-            }
-            if (!string.IsNullOrWhiteSpace(request.Status))
-            {
-                criterias.Add(ap => ap.User.Status == request.Status);
-            }
-            criterias.Add(ap => 
-                ap.AdminId.Contains(request.SearchCriteria?? string.Empty) ||
-                ap.User.FullName.Contains(request.SearchCriteria ?? string.Empty) ||
-                ap.User.Email.Contains(request.SearchCriteria ?? string.Empty) ||
-                ap.User.Phone.Contains(request.SearchCriteria ?? string.Empty)
-            );
-            var criteriasArray = criterias.ToArray();
-
-        public async Task<PageResult<AdminProfileSummaryDto>> GetAdminProfilesPage(PageRequest pageRequest, GetAdminListRequest request)
-        {
             var criteriaList = new List<Expression<Func<AdminProfile, bool>>>();
             
             // Chỉ thêm điều kiện khi giá trị tồn tại

@@ -1,6 +1,5 @@
 using SAPLSServer.DTOs.Base;
 using SAPLSServer.DTOs.Concrete;
-using SAPLSServer.DTOs.Concrete.UserDto;
 using SAPLSServer.DTOs.Concrete.UserDtos;
 using SAPLSServer.DTOs.PaginationDto;
 using System.Collections.Generic;

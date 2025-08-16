@@ -26,7 +26,7 @@ namespace SAPLSServer.Repositories.Implementations
                         AccountName, 
                         AccountNumber, 
                         Status, 
-                        UpdatedAt, 
+                        CreatedAt, 
                         ParkingLotOwnerId 
                     FROM PaymentSource 
                     WHERE ParkingLotOwnerId = @ownerId";
@@ -61,7 +61,7 @@ namespace SAPLSServer.Repositories.Implementations
                         AccountName, 
                         AccountNumber, 
                         Status, 
-                        UpdatedAt, 
+                        CreatedAt, 
                         ParkingLotOwnerId 
                     FROM PaymentSource 
                     WHERE Id = @id";

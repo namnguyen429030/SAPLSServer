@@ -17,28 +17,23 @@ using SAPLSServer.Services.Interfaces;
 using System.Security.Claims;
 using System.Text;
 
-namespace SAPLSServer.Extensions
-{
-    public static class ServiceCollectionExtensions
-    {
+namespace SAPLSServer.Extensions {
+    public static class ServiceCollectionExtensions {
         /// <summary>
         /// Configure Azure Key Vault integration
         /// </summary>
         /// <param name="builder">Web application builder</param>
         /// <returns>Web application builder for chaining</returns>
-        public static WebApplicationBuilder AddAzureKeyVault(this WebApplicationBuilder builder)
-        {
+        public static WebApplicationBuilder AddAzureKeyVault(this WebApplicationBuilder builder) {
             // Get Key Vault configuration from appsettings
             var keyVaultUrl = builder.Configuration[ConfigurationConstants.AzureKeyVaultVaultUrl];
-            if(!string.IsNullOrWhiteSpace(keyVaultUrl))
-            {
+            if (!string.IsNullOrWhiteSpace(keyVaultUrl)) {
                 // Add Azure Key Vault configuration
                 builder.Configuration.AddAzureKeyVault(
                     new Uri(keyVaultUrl),
                     new DefaultAzureCredential());
             }
-            else
-            {
+            else {
                 throw new EmptyConfigurationValueException(ConfigurationConstants.AzureKeyVaultVaultUrl);
             }
             return builder;
@@ -48,8 +43,7 @@ namespace SAPLSServer.Extensions
         /// </summary>
         /// <param name="services">Service collection</param>
         /// <returns>Service collection for chaining</returns>
-        public static IServiceCollection AddApplicationServices(this IServiceCollection services, IConfiguration configuration)
-        {
+        public static IServiceCollection AddApplicationServices(this IServiceCollection services, IConfiguration configuration) {
             //Add singletons
             services.AddSingleton<IPromptProviderService, GeminiModelPromptProviderService>();
             services.AddSingleton<IMailSettings, MailKitSettings>();
@@ -58,18 +52,21 @@ namespace SAPLSServer.Extensions
             services.AddSingleton<IPaymentSettings, PaymentPayOsSettings>();
             services.AddSingleton<IAuthenticationSettings, JwtAuthenticationSettings>();
             services.AddSingleton<IGoogleOAuthSettings, GoogleOAuthSettings>();
-            services.AddSingleton<IAzureBlobStorageSettings, AzureBlobStorageSettings>();
-
             // Add Azure Blob Storage
+            services.AddSingleton<IAzureBlobStorageSettings, AzureBlobStorageSettings>();
             services.AddSingleton(provider =>
             {
-                var settings = provider.GetRequiredService<IAzureBlobStorageSettings>();
-                return new BlobServiceClient(settings.ConnectionString);
+                var s = provider.GetRequiredService<IAzureBlobStorageSettings>();
+                // Use connection string if it’s real; fall back to MSI/SP auth
+                if (!string.IsNullOrWhiteSpace(s.ConnectionString) && !s.ConnectionString.Contains("@Microsoft.KeyVault("))
+                    return new BlobServiceClient(s.ConnectionString);
+
+                var endpoint = new Uri($"https://{s.AccountName}.blob.core.windows.net");
+                return new BlobServiceClient(endpoint, new DefaultAzureCredential());
             });
 
             // Add DbContext for Entity Framework Core
-            services.AddDbContext<SaplsContext>(opt =>
-            {
+            services.AddDbContext<SaplsContext>(opt => {
                 opt.UseSqlServer(configuration.GetConnectionString(ConfigurationConstants.DefaultConnectionString));
             });
             //Add repositories
@@ -78,13 +75,8 @@ namespace SAPLSServer.Extensions
             services.AddScoped<IAdminProfileRepository, AdminProfileRepository>();
             services.AddScoped<IParkingLotOwnerProfileRepository, ParkingLotOwnerProfileRepository>();
             services.AddScoped<IStaffProfileRepository, StaffProfileRepository>();
-            services.AddScoped<IParkingSessionRepository, ParkingSessionRepository>();
-            services.AddScoped<IVehicleRepository, VehicleRepository>();
-            services.AddScoped<ISharedVehicleRepository, SharedVehicleRepository>();
-            services.AddScoped<IPaymentSourceRepository, PaymentSourceRepository>();
-            services.AddScoped<IParkingLotRepository, ParkingLotRepository>();
 
-            //Services
+            //Add services
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IFirebaseNotificationService, FirebaseNotificationService>();
             services.AddScoped<IUserService, UserService>();
@@ -100,14 +92,11 @@ namespace SAPLSServer.Extensions
             services.AddScoped<IFileService, AzureBlobFileService>();
             services.AddScoped<IOtpService, OtpService>();
             services.AddScoped<IVehicleShareCodeService, VehicleShareCodeService>();
+            services.AddScoped<IFirebaseNotificationService, FirebaseNotificationService>();
+            services.AddScoped<IFirebaseSettings, FirebaseSettings>();
             services.AddHttpContextAccessor();
 
 
-            services.AddScoped<IParkingSessionService, ParkingSessionService>();
-            services.AddScoped<IVehicleService, VehicleService>();
-            services.AddScoped<ISharedVehicleService, SharedVehicleService>();
-            services.AddScoped<IPaymentSourceService, PaymentSourceService>();
-            services.AddScoped<IParkingLotService, ParkingLotService>();
             return services;
         }
 
@@ -116,8 +105,7 @@ namespace SAPLSServer.Extensions
         /// </summary>
         /// <param name="services">Service collection</param>
         /// <returns>Service collection for chaining</returns>
-        public static IServiceCollection AddExternalServices(this IServiceCollection services)
-        {
+        public static IServiceCollection AddExternalServices(this IServiceCollection services) {
             // HTTP Client for external API calls
             services.AddHttpClient<IHttpClientService, HttpClientService>();
             // AI/OCR Services
@@ -129,15 +117,12 @@ namespace SAPLSServer.Extensions
         /// </summary>
         /// <param name="services">Service collection</param>
         /// <returns>Service collection for chaining</returns>
-        public static IServiceCollection AddApiDocumentation(this IServiceCollection services)
-        {
+        public static IServiceCollection AddApiDocumentation(this IServiceCollection services) {
             services.AddEndpointsApiExplorer();
-            services.AddControllers().AddJsonOptions(opts =>
-            {
+            services.AddControllers().AddJsonOptions(opts => {
                 opts.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
             });
-            services.AddRouting(opts =>
-            {
+            services.AddRouting(opts => {
                 opts.LowercaseUrls = true;
             });
 
@@ -148,20 +133,16 @@ namespace SAPLSServer.Extensions
         /// </summary>
         /// <param name="services"></param>
         /// <returns></returns>
-        public static IServiceCollection AddSwagger(this IServiceCollection services)
-        {
-            services.AddSwaggerGen(options =>
-            {
-                options.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
-                {
+        public static IServiceCollection AddSwagger(this IServiceCollection services) {
+            services.AddSwaggerGen(options => {
+                options.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo {
                     Title = "SAPLS Server API",
                     Version = "v1",
                     Description = "Smart Automated Parking Lot System API"
                 });
 
                 // ADD JWT SUPPORT TO SWAGGER
-                options.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
-                {
+                options.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme {
                     Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
                     Name = "Authorization",
                     In = Microsoft.OpenApi.Models.ParameterLocation.Header,
@@ -187,8 +168,7 @@ namespace SAPLSServer.Extensions
                 // Include XML documentation if available
                 var xmlFile = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
                 var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
-                if (File.Exists(xmlPath))
-                {
+                if (File.Exists(xmlPath)) {
                     options.IncludeXmlComments(xmlPath);
                 }
             });
@@ -200,19 +180,15 @@ namespace SAPLSServer.Extensions
         /// </summary>
         /// <param name="services">Service collection</param>
         /// <returns>Service collection for chaining</returns>
-        public static IServiceCollection AddCorsConfiguration(this IServiceCollection services)
-        {
-            services.AddCors(options =>
-            {
-                options.AddPolicy("DefaultPolicy", policy =>
-                {
+        public static IServiceCollection AddCorsConfiguration(this IServiceCollection services) {
+            services.AddCors(options => {
+                options.AddPolicy("DefaultPolicy", policy => {
                     policy.AllowAnyOrigin()
                           .AllowAnyMethod()
                           .AllowAnyHeader();
                 });
 
-                options.AddPolicy("ProductionPolicy", policy =>
-                {
+                options.AddPolicy("ProductionPolicy", policy => {
                     policy.WithOrigins("https://yourdomain.com", "https://www.yourdomain.com")
                           .AllowAnyMethod()
                           .AllowAnyHeader()
@@ -229,19 +205,15 @@ namespace SAPLSServer.Extensions
         /// <param name="services">Service collection</param>
         /// <param name="configuration">Application configuration</param>
         /// <returns>Service collection for chaining</returns>
-        public static IServiceCollection AddJwtAuthentication(this IServiceCollection services, IConfiguration configuration)
-        {
-            services.AddAuthentication(options =>
-            {
+        public static IServiceCollection AddJwtAuthentication(this IServiceCollection services, IConfiguration configuration) {
+            services.AddAuthentication(options => {
                 options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
                 options.DefaultSignInScheme = JwtBearerDefaults.AuthenticationScheme;
                 options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
             })
-            .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
-            {
+            .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options => {
                 options.SaveToken = true;
-                options.TokenValidationParameters = new TokenValidationParameters
-                {
+                options.TokenValidationParameters = new TokenValidationParameters {
                     ValidateIssuer = true,
                     ValidIssuer = configuration[ConfigurationConstants.JwtIssuer],
                     ValidateAudience = true,
@@ -258,45 +230,41 @@ namespace SAPLSServer.Extensions
                     RequireSignedTokens = true,
                     RequireExpirationTime = true,
                 };
-            })
-            .AddGoogle(GoogleDefaults.AuthenticationScheme, options =>
-            {
-                options.ClientId = configuration[ConfigurationConstants.GoogleAuthClientId] ?? throw new EmptyConfigurationValueException("Authentication:Google:ClientId");
-                options.ClientSecret = configuration[ConfigurationConstants.GoogleAuthClientSecret] ?? throw new EmptyConfigurationValueException("Authentication:Google:ClientSecret");
-                // Configure callback URLs properly
-                options.CallbackPath = "/api/auth/google-callback";
-
-                // Configure OAuth endpoints (these are the correct Google URLs)
-                options.AuthorizationEndpoint = "https://accounts.google.com/o/oauth2/v2/auth";
-                options.TokenEndpoint = "https://oauth2.googleapis.com/token";
-                options.UserInformationEndpoint = "https://www.googleapis.com/oauth2/v2/userinfo";
-
-                // Request necessary scopes
-                options.Scope.Clear(); // Clear default scopes first
-                options.Scope.Add("openid");
-                options.Scope.Add("profile");
-                options.Scope.Add("email");
-
-                options.ClaimActions.MapJsonKey(ClaimTypes.NameIdentifier, "id");
-                options.ClaimActions.MapJsonKey(ClaimTypes.Name, "name");
-                options.ClaimActions.MapJsonKey(ClaimTypes.Email, "email");
-
-                options.AccessDeniedPath = "/auth/access-denied";
-                options.RemoteAuthenticationTimeout = TimeSpan.FromMinutes(5);
-
-                options.Events.OnRemoteFailure = context =>
-                {
-                    context.Response.Redirect("/auth/login?error=google_auth_failed");
-                    context.HandleResponse();
-                    return Task.CompletedTask;
-                };
             });
+            //.AddGoogle(GoogleDefaults.AuthenticationScheme, options => {
+            //    //options.ClientId = configuration[ConfigurationConstants.GoogleAuthClientId] ?? throw new EmptyConfigurationValueException("Authentication:Google:ClientId");
+            //    //options.ClientSecret = configuration[ConfigurationConstants.GoogleAuthClientSecret] ?? throw new EmptyConfigurationValueException("Authentication:Google:ClientSecret");
+            //    //// Configure callback URLs properly
+            //    //options.CallbackPath = "/api/auth/google-callback";
+
+            //    //// Configure OAuth endpoints (these are the correct Google URLs)
+            //    //options.AuthorizationEndpoint = "https://accounts.google.com/o/oauth2/v2/auth";
+            //    //options.TokenEndpoint = "https://oauth2.googleapis.com/token";
+            //    //options.UserInformationEndpoint = "https://www.googleapis.com/oauth2/v2/userinfo";
+
+            //    //// Request necessary scopes
+            //    //options.Scope.Clear(); // Clear default scopes first
+            //    //options.Scope.Add("openid");
+            //    //options.Scope.Add("profile");
+            //    //options.Scope.Add("email");
+
+            //    //options.ClaimActions.MapJsonKey(ClaimTypes.NameIdentifier, "id");
+            //    //options.ClaimActions.MapJsonKey(ClaimTypes.Name, "name");
+            //    //options.ClaimActions.MapJsonKey(ClaimTypes.Email, "email");
+
+            //    //options.AccessDeniedPath = "/auth/access-denied";
+            //    //options.RemoteAuthenticationTimeout = TimeSpan.FromMinutes(5);
+
+            //    //options.Events.OnRemoteFailure = context => {
+            //    //    context.Response.Redirect("/auth/login?error=google_auth_failed");
+            //    //    context.HandleResponse();
+            //    //    return Task.CompletedTask;
+            //    //};
+            //});
             return services;
         }
-        public static IServiceCollection AddJwtAuthorization(this IServiceCollection services)
-        {
-            services.AddAuthorization(options =>
-            {
+        public static IServiceCollection AddJwtAuthorization(this IServiceCollection services) {
+            services.AddAuthorization(options => {
                 options.AddPolicy(Accessibility.STAFF_ACCESS, policy =>
                     policy.RequireRole(UserRole.Staff.ToString())
                           .RequireAuthenticatedUser());
@@ -317,7 +285,7 @@ namespace SAPLSServer.Extensions
                     policy.RequireRole(UserRole.Admin.ToString())
                     .RequireClaim(nameof(AdminRole), AdminRole.HeadAdmin.ToString())
                     .RequireAuthenticatedUser());
-                options.AddPolicy(Accessibility.PARKING_LOT_OWNER_OR_STAFF_ACCESS, policy => 
+                options.AddPolicy(Accessibility.PARKING_LOT_OWNER_OR_STAFF_ACCESS, policy =>
                    policy.RequireRole(UserRole.ParkingLotOwner.ToString(), UserRole.Staff.ToString())
                           .RequireAuthenticatedUser());
             });
@@ -325,5 +293,4 @@ namespace SAPLSServer.Extensions
         }
     }
 }
-
 

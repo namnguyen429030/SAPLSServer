@@ -25,8 +25,6 @@ public partial class ParkingLot
 
     public string? ParkingLotOwnerId { get; set; }
 
-    public string? SubscriptionId { get; set; }
-
     public string SubscriptionId { get; set; } = null!;
 
     public DateTime ExpiredAt { get; set; }

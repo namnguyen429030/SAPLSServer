@@ -25,7 +25,9 @@ public partial class User
 
     public string? OneTimePassword { get; set; }
 
-    public string? GoogleId { get; set; }
+    public string? GoogleId {
+        get; set;
+    }
 
     public string? RefreshToken { get; set; }
 

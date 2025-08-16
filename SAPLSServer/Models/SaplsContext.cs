@@ -77,10 +77,6 @@ public partial class SaplsContext : DbContext {
 
     public virtual DbSet<User> Users { get; set; }
 
-    public virtual DbSet<User> Users {
-        get; set;
-    }
-
     public virtual DbSet<Vehicle> Vehicles {
         get; set;
     }
@@ -90,7 +86,7 @@ public partial class SaplsContext : DbContext {
     }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        => optionsBuilder.UseSqlServer("Name=ConnectionStrings:Default");
+        => optionsBuilder.UseSqlServer("Name=ConnectionStrings:DB");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder) {
         modelBuilder.Entity<AdminProfile>(entity => {
