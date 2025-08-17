@@ -37,8 +37,6 @@ public partial class SaplsContext : DbContext
 
     public virtual DbSet<ParkingSession> ParkingSessions { get; set; }
 
-    public virtual DbSet<PaymentSource> PaymentSources { get; set; }
-
     public virtual DbSet<Request> Requests { get; set; }
 
     public virtual DbSet<RequestAttachedFile> RequestAttachedFiles { get; set; }
@@ -470,29 +468,6 @@ public partial class SaplsContext : DbContext
             entity.HasOne(d => d.Vehicle).WithMany(p => p.ParkingSessions)
                 .HasForeignKey(d => d.VehicleId)
                 .HasConstraintName("ParkingSession_fk1");
-        });
-
-        modelBuilder.Entity<PaymentSource>(entity =>
-        {
-            entity.HasKey(e => e.Id).HasName("PK__PaymentS__3214EC074DD2D6E5");
-
-            entity.ToTable("PaymentSource");
-
-            entity.HasIndex(e => e.ParkingLotOwnerId, "IX_PaymentSource_ParkingLotOwnerId");
-
-            entity.HasIndex(e => e.Id, "UQ__PaymentS__3214EC064155607D").IsUnique();
-
-            entity.Property(e => e.Id).HasMaxLength(36);
-            entity.Property(e => e.AccountName).HasMaxLength(255);
-            entity.Property(e => e.AccountNumber).HasMaxLength(50);
-            entity.Property(e => e.BankName).HasMaxLength(100);
-            entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getdate())");
-            entity.Property(e => e.ParkingLotOwnerId).HasMaxLength(36);
-            entity.Property(e => e.Status).HasMaxLength(25);
-
-            entity.HasOne(d => d.ParkingLotOwner).WithMany(p => p.PaymentSources)
-                .HasForeignKey(d => d.ParkingLotOwnerId)
-                .HasConstraintName("PaymentSource_fk5");
         });
 
         modelBuilder.Entity<Request>(entity =>

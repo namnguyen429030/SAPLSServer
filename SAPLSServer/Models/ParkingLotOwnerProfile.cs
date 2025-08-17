@@ -23,8 +23,6 @@ public partial class ParkingLotOwnerProfile
 
     public virtual ICollection<ParkingLot> ParkingLots { get; set; } = new List<ParkingLot>();
 
-    public virtual ICollection<PaymentSource> PaymentSources { get; set; } = new List<PaymentSource>();
-
     public virtual AdminProfile UpdatedByNavigation { get; set; } = null!;
 
     public virtual User User { get; set; } = null!;
