@@ -33,6 +33,8 @@ public partial class ParkingSession
 
     public int? TransactionId { get; set; }
 
+    public string? PaymentInformation { get; set; }
+
     public string PaymentMethod { get; set; } = null!;
 
     public decimal Cost { get; set; }

@@ -97,7 +97,6 @@ namespace SAPLSServer.Controllers
                     new { message = MessageKeys.UNEXPECTED_ERROR });
             }
         }
-
         /// <summary>
         /// Cancels a payment request
         /// </summary>

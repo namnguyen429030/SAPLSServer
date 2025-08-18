@@ -307,7 +307,34 @@ namespace SAPLSServer.Controllers
                 return StatusCode(500, new { error = MessageKeys.UNEXPECTED_ERROR });
             }
         }
-
+        [HttpGet("{sessionId}/payment-info")]
+        public async Task<IActionResult> GetSessionPaymentInfo(string sessionId)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(sessionId))
+                    return BadRequest(new { error = MessageKeys.PARKING_SESSION_ID_REQUIRED });
+                var result = await _parkingSessionService.GetSessionPaymentInfo(sessionId);
+                if (result == null)
+                    return NotFound(new { error = MessageKeys.PARKING_SESSION_NOT_FOUND });
+                return Ok(new
+                {
+                    data = result
+                });
+            }
+            catch (InvalidInformationException ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return StatusCode(403, new { error = ex.Message });
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, new { error = MessageKeys.UNEXPECTED_ERROR });
+            }
+        }
         /// <summary>
         /// Checks out a vehicle and updates the parking session.
         /// </summary>

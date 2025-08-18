@@ -9,6 +9,7 @@ using SAPLSServer.Models;
 using SAPLSServer.Repositories.Interfaces;
 using SAPLSServer.Services.Interfaces;
 using System.Linq.Expressions;
+using System.Text.Json;
 
 namespace SAPLSServer.Services.Implementations
 {
@@ -219,13 +220,15 @@ namespace SAPLSServer.Services.Implementations
                             Price = (int)session.Cost
                         }
                     },
-                    // Signature can be set here if required by your payment gateway
-                    Signature = string.Empty
                 };
 
                 // Send payment request
-                await _paymentService.SendPaymentRequest(paymentRequest, clientKey, apiKey, checkSumKey);
+                var response = await _paymentService.SendPaymentRequest(paymentRequest, clientKey, apiKey, checkSumKey);
+                if(response == null)
+                    throw new InvalidOperationException(MessageKeys.PAYOS_SERVICE_UNAVAILABLE);
+                var responseData = JsonSerializer.Serialize(response);
                 session.PaymentStatus = ParkingSessionPayStatus.Pending.ToString();
+                session.PaymentInformation = responseData;
 
             }
             _parkingSessionRepository.Update(session);
@@ -471,6 +474,20 @@ namespace SAPLSServer.Services.Implementations
                 return null;
             }
             return session.TransactionId;
+        }
+
+        public async Task<PaymentResponseDto?> GetSessionPaymentInfo(string sessionId)
+        {
+            var session = await _parkingSessionRepository.Find(sessionId);
+            if (session == null)
+            {
+                throw new InvalidInformationException(MessageKeys.PARKING_SESSION_NOT_FOUND);
+            }
+            if(string.IsNullOrWhiteSpace(session.PaymentInformation))
+            {
+                return null;
+            }
+            return JsonSerializer.Deserialize<PaymentResponseDto>(session.PaymentInformation);
         }
     }
 }

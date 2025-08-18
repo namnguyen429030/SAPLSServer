@@ -1,4 +1,5 @@
 ﻿using SAPLSServer.DTOs.Concrete.ParkingSessionDtos;
+using SAPLSServer.DTOs.Concrete.PaymentDtos;
 using SAPLSServer.DTOs.PaginationDto;
 
 namespace SAPLSServer.Services.Interfaces
@@ -102,5 +103,6 @@ namespace SAPLSServer.Services.Interfaces
 
         Task<long?> GetSessionTransactionId(string sessionId);
 
+        Task<PaymentResponseDto?> GetSessionPaymentInfo(string sessionId);
     }
 }
