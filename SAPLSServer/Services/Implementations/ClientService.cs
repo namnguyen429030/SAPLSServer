@@ -16,18 +16,18 @@ namespace SAPLSServer.Services.Implementations
         private readonly IClientProfileRepository _clientProfileRepository;
         private readonly IUserService _userService;
         private readonly IVehicleShareCodeService _vehicleShareCodeService;
-        private readonly IStaffService _staffService;
+        private readonly IAdminService _adminService;
         private readonly IFileService _fileService;
 
         public ClientService(IUserService userService, IVehicleShareCodeService vehicleShareCodeService, 
-            IClientProfileRepository clientProfileRepository, IFileService fileService, IStaffService staffService)
+            IClientProfileRepository clientProfileRepository, IFileService fileService, IAdminService adminService)
         {
             _userService = userService;
             _vehicleShareCodeService = vehicleShareCodeService;
 
             _clientProfileRepository = clientProfileRepository;
             _fileService = fileService;
-            _staffService = staffService;
+            _adminService = adminService;
         }
 
         public async Task Create(CreateClientProfileRequest request)
@@ -99,7 +99,7 @@ namespace SAPLSServer.Services.Implementations
                                                                                 && cp.UserId != request.Id);
             if (citizenIdExists)
                 throw new InvalidInformationException(MessageKeys.CITIZEN_ID_ALREADY_EXISTS);
-            if(await _staffService.IsStaffValid(updatePerformerId))
+            if(await _adminService.IsAdminValid(updatePerformerId))
             {
                 throw new UnauthorizedAccessException(MessageKeys.UNAUTHORIZED_ACCESS);
             }

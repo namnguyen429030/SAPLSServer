@@ -31,8 +31,8 @@
         public const string EmailFromName = "MailKitMailSettings:FromName";
         public const string EmailUseSsl = "MailKitMailSettings:UseSsl";
 
-        public const string GoogleAuthClientId = "GoogleAuth:ClientId";
-        public const string GoogleAuthClientSecret = "GoogleAuth:ClientSecret";
+        public const string GoogleAuthClientId = "GoogleOAuth:ClientId";
+        public const string GoogleAuthClientSecret = "GoogleOAuth:ClientSecret";
 
         public const string AzureBlobStorageAccountName = "AzureBlobStorage:AccountName";
         public const string AzureBlobStorageAccessKey = "AzureBlobStorage:AccessKey";

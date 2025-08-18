@@ -6,10 +6,11 @@ namespace SAPLSServer.DTOs.Concrete.IncidenceReportDtos
     public class OwnedIncidentReportDetailsDto : IncidentReportSummaryDto
     {
         public string Description { get; set; }
-        public GetAttachedFileDto[]? AttacheFiles { get; set; }
-        public OwnedIncidentReportDetailsDto(IncidenceReport incidentReport) : base(incidentReport)
+        public GetAttachedFileDto[]? Attachments { get; set; }
+        public OwnedIncidentReportDetailsDto(IncidenceReport incidentReport, GetAttachedFileDto[]? attachments = null) : base(incidentReport)
         {
             Description = incidentReport.Description;
+            Attachments = attachments;
         }
     }
 }

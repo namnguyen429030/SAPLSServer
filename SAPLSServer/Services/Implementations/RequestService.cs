@@ -17,21 +17,21 @@ namespace SAPLSServer.Services.Implementations
         private readonly IRequestRepository _requestRepository;
         private readonly IClientService _clientService;
         private readonly IVehicleService _vehicleService;
-        private readonly IUserService _userService;
         private readonly IFileService _fileService;
+        private readonly IRequestAttachedFileService _requestAttachedFileService;
 
         public RequestService(
             IRequestRepository requestRepository,
             IClientService clientService,
             IVehicleService vehicleService,
-            IUserService userService,
-            IFileService fileService)
+            IFileService fileService,
+            IRequestAttachedFileService requestAttachedFileService)
         {
             _requestRepository = requestRepository;
             _clientService = clientService;
             _vehicleService = vehicleService;
-            _userService = userService;
             _fileService = fileService;
+            _requestAttachedFileService = requestAttachedFileService;
         }
 
         public async Task Create(CreateRequestRequest request, string senderId)
@@ -134,8 +134,9 @@ namespace SAPLSServer.Services.Implementations
             var request = await _requestRepository.FindIncludingSenderAndLastUpdaterReadOnly(requestId);
             if (request == null)
                 return null;
-            
-            return new RequestDetailsDto(request);
+
+            var attachments = await _requestAttachedFileService.GetAttachedFilesByRequestId(requestId);
+            return new RequestDetailsDto(request, attachments?.ToArray());
         }
 
         private async Task ProcessResolvedRequestData(Request request, string adminId)
@@ -199,9 +200,9 @@ namespace SAPLSServer.Services.Implementations
                 };
 
                 var uploadResult = await _fileService.UploadFileAsync(uploadRequest);
-                
-                // You'll need to create RequestAttachedFile entity and save it
-                // This depends on your RequestAttachedFile model structure
+
+                // Use the service to create and link the attached file
+                await _requestAttachedFileService.AddAsync(requestId, uploadResult);
             }
         }
 

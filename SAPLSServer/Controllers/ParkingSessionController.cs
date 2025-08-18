@@ -94,8 +94,8 @@ namespace SAPLSServer.Controllers
         /// </summary>
         /// <param name="request">The request containing client and filter information.</param>
         /// <returns>List of parking session summaries for the client.</returns>
-        [HttpPost("by-client")]
-        public async Task<IActionResult> GetSessionsByClient([FromBody] GetParkingSessionListByClientIdRequest request)
+        [HttpGet("by-client")]
+        public async Task<IActionResult> GetSessionsByClient([FromQuery] GetParkingSessionListByClientIdRequest request)
         {
             try
             {

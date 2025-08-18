@@ -17,19 +17,22 @@ namespace SAPLSServer.Services.Implementations
         private readonly IFileService _fileService;
         private readonly IParkingLotOwnerService _parkingLotOwnerService;
         private readonly IParkingLotService _parkingLotService;
+        private readonly IIncidenceEvidenceService _incidenceEvidenceService;
 
         public IncidentReportService(
             IIncidenceReportRepository incidentReportRepository,
             IStaffService staffService, 
             IFileService fileService,
             IParkingLotOwnerService parkingLotOwnerService,
-            IParkingLotService parkingLotService)
+            IParkingLotService parkingLotService,
+            IIncidenceEvidenceService incidenceEvidenceService)
         {
             _incidentReportRepository = incidentReportRepository;
             _staffService = staffService;
             _fileService = fileService;
             _parkingLotOwnerService = parkingLotOwnerService;
             _parkingLotService = parkingLotService;
+            _incidenceEvidenceService = incidenceEvidenceService;
         }
 
         public async Task CreateIncidentReport(CreateIncidentReportRequest request, string reporterId)
@@ -53,6 +56,12 @@ namespace SAPLSServer.Services.Implementations
 
             await _incidentReportRepository.AddAsync(incidentReport);
             await _incidentReportRepository.SaveChangesAsync();
+
+            // Handle file evidences if any
+            if (request.Evidences != null && request.Evidences.Length > 0)
+            {
+                await ProcessEvidences(incidentReport.Id, request.Evidences);
+            }
         }
 
         public async Task UpdateIncidentReportStatus(UpdateIncidentReportStatusRequest request, string performerId)
@@ -76,7 +85,12 @@ namespace SAPLSServer.Services.Implementations
             var incidentReport = await _incidentReportRepository.FindIncludeSenderInformationReadOnly(request.Id);
             if (incidentReport == null)
                 return null;
-            return new IncidentReportDetailsDto(incidentReport);
+
+            // Get the attached files for this incident report
+            var attachments = await _incidenceEvidenceService.GetAttachedFilesByIncidentReportId(incidentReport.Id);
+
+            // Pass the attachments to the DTO
+            return new IncidentReportDetailsDto(incidentReport, attachments?.ToArray());
         }
 
         public async Task<PageResult<IncidentReportSummaryDto>> GetIncidentReportsPage(PageRequest pageRequest, GetIncidenReportListRequest request)
@@ -143,6 +157,30 @@ namespace SAPLSServer.Services.Implementations
                 PageNumber = pageRequest.PageNumber,
                 PageSize = pageRequest.PageSize
             };
+        }
+
+        private async Task ProcessEvidences(string incidentReportId, IFormFile[] evidences)
+        {
+            foreach (var evidence in evidences)
+            {
+                var uploadRequest = new DTOs.Concrete.FileUploadDtos.FileUploadRequest
+                {
+                    File = evidence,
+                    Container = "incident-evidences",
+                    SubFolder = $"incident-{incidentReportId}",
+                    GenerateUniqueFileName = true,
+                    Metadata = new Dictionary<string, string>
+                    {
+                        { "IncidentReportId", incidentReportId },
+                        { "AttachmentType", "IncidentEvidence" }
+                    }
+                };
+
+                var uploadResult = await _fileService.UploadFileAsync(uploadRequest);
+
+                // Use the service to create and link the attached file
+                await _incidenceEvidenceService.AddAsync(incidentReportId, uploadResult);
+            }
         }
     }
 }
