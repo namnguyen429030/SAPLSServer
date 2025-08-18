@@ -388,7 +388,7 @@ namespace SAPLSServer.Controllers
         /// </summary>
         /// <param name="sessionId"></param>
         /// <returns></returns>
-        [HttpGet("transaction-id/{id}")]
+        [HttpGet("transaction-id/{sessionId}")]
         public async Task<IActionResult> GetSessionByTransactionId(string sessionId)
         {
             try
