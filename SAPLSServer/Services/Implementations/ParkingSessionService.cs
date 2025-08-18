@@ -190,8 +190,8 @@ namespace SAPLSServer.Services.Implementations
 
             if (request.PaymentMethod == PaymentMethod.Bank.ToString())
             {
-                uint sessionHash = (uint) session.Id.GetHashCode();
-                session.TransactionId = sessionHash;
+                int transactionId = await _parkingSessionRepository.CountAsync() + 1;
+                session.TransactionId = transactionId;
                 var apiKey = await _parkingLotService.GetParkingLotApiKey(session.ParkingLotId);
                 var clientKey = await _parkingLotService.GetParkingLotClientKey(session.ParkingLotId);
                 var checkSumKey = await _parkingLotService.GetParkingLotCheckSumKey(session.ParkingLotId);
@@ -199,24 +199,26 @@ namespace SAPLSServer.Services.Implementations
                 // Prepare payment request
                 var paymentRequest = new PaymentRequestDto
                 {
-                    OrderCode = (int)session.TransactionId,
+                    OrderCode = transactionId,
                     Amount = (int)session.Cost,
                     Description = $"Parking session payment for session {session.Id}",
                     CancelUrl = "https://yourapp.com/payment/cancel", // Replace with your actual URL
                     ReturnUrl = "https://yourapp.com/payment/return", // Replace with your actual URL
+
                     BuyerName = session.Driver?.User?.FullName,
                     BuyerEmail = session.Driver?.User?.Email,
                     BuyerPhone = session.Driver?.User?.Phone,
                     BuyerAddress = string.Empty,
+                    ExpiredAt = (int)DateTime.UtcNow.ToUniversalTime().Subtract(DateTime.UnixEpoch).TotalSeconds,
                     Items = new List<DTOs.Concrete.PaymentDtos.PaymentItemDto>
-            {
-                new DTOs.Concrete.PaymentDtos.PaymentItemDto
-                {
-                    Name = "Parking Fee",
-                    Quantity = 1,
-                    Price = (int)session.Cost
-                }
-            },
+                    {
+                        new DTOs.Concrete.PaymentDtos.PaymentItemDto
+                        {
+                            Name = "Parking Fee",
+                            Quantity = 1,
+                            Price = (int)session.Cost
+                        }
+                    },
                     // Signature can be set here if required by your payment gateway
                     Signature = string.Empty
                 };

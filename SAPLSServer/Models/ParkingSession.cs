@@ -31,7 +31,7 @@ public partial class ParkingSession
 
     public string? ExitBackCaptureUrl { get; set; }
 
-    public long? TransactionId { get; set; }
+    public int? TransactionId { get; set; }
 
     public string PaymentMethod { get; set; } = null!;
 
