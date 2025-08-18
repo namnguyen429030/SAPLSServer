@@ -462,5 +462,14 @@ namespace SAPLSServer.Services.Implementations
             );
         }
 
+        public async Task<long?> GetSessionTransactionId(string sessionId)
+        {
+            var session = await _parkingSessionRepository.Find(sessionId);
+            if(session == null)
+            {
+                return null;
+            }
+            return session.TransactionId;
+        }
     }
 }

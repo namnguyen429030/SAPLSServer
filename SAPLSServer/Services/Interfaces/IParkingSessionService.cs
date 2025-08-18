@@ -100,5 +100,7 @@ namespace SAPLSServer.Services.Interfaces
         Task<PageResult<ParkingSessionSummaryForClientDto>> GetPageByOwnedSessions(PageRequest request,
             GetOwnedParkingSessionListRequest listRequest, string clientId);
 
+        Task<long?> GetSessionTransactionId(string sessionId);
+
     }
 }

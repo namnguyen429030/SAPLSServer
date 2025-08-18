@@ -383,5 +383,31 @@ namespace SAPLSServer.Controllers
                 return StatusCode(500, new { error = MessageKeys.UNEXPECTED_ERROR });
             }
         }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="sessionId"></param>
+        /// <returns></returns>
+        [HttpGet("transaction-id/{id}")]
+        public async Task<IActionResult> GetSessionByTransactionId(string sessionId)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(sessionId))
+                    return BadRequest(new { error = MessageKeys.PARKING_SESSION_ID_REQUIRED });
+                var result = await _parkingSessionService.GetSessionTransactionId(sessionId);
+                if (result == null)
+                    return NotFound(new { error = MessageKeys.TRANSACTION_ID_NOT_FOUND });
+                return Ok(new
+                {
+                    message = MessageKeys.GET_PARKING_SESSION_DETAILS_SUCCESSFULLY,
+                    data = result
+                });
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, new { error = MessageKeys.UNEXPECTED_ERROR });
+            }
+        }
     }
 }
