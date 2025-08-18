@@ -93,6 +93,9 @@ namespace SAPLSServer.Extensions
             services.AddScoped<IShiftDiaryRepository, ShiftDiaryRepository>();
             services.AddScoped<IIncidenceReportRepository, IncidenceReportRepository>();
             services.AddScoped<IGuestParkingSessionRepository, GuestParkingSessionRepository>();
+            services.AddScoped<IRequestAttachedFileRepository, RequestAttachedFileRepository>();
+            services.AddScoped<IIncidenceEvidenceRepository, IncidenceEvidenceRepository>();
+            services.AddScoped<IAttachedFileRepository, AttachedFileRepository>();
 
             // Add services
             services.AddScoped<IAuthService, AuthService>();
@@ -123,7 +126,9 @@ namespace SAPLSServer.Extensions
             services.AddScoped<IIncidentReportService, IncidentReportService>();
             services.AddScoped<IGuestParkingSessionService, GuestParkingSessionService>();
             services.AddScoped<ISharedVehicleNotificationService, SharedVehicleNotificationService>();
-            
+            services.AddScoped<IRequestAttachedFileService, RequestAttachedFileService>();
+            services.AddScoped<IIncidenceEvidenceService, IncidenceEvidenceService>();
+
             services.AddHttpContextAccessor();
 
             return services;

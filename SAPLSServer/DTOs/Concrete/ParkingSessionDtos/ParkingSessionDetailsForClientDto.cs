@@ -4,7 +4,7 @@ using SAPLSServer.Models;
 
 namespace SAPLSServer.DTOs.Concrete.ParkingSessionDtos
 {
-    public class ParkingSessionDetailsForClientDto : ParkingSessionDetailsForParkingLotDto
+    public class ParkingSessionDetailsForClientDto : ParkingSessionSummaryForClientDto
     {
         public ParkingLotSummaryDto ParkingLot { get; set; }
         public ParkingSessionDetailsForClientDto(ParkingSession session) 

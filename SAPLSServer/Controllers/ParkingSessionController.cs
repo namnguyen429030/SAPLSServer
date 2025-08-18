@@ -155,8 +155,8 @@ namespace SAPLSServer.Controllers
         /// <param name="request">The request containing ownership and filter information.</param>
         /// <param name="clientId">The ID of the client who owns the sessions.</param>
         /// <returns>List of owned parking session summaries.</returns>
-        [HttpPost("owned/{clientId}")]
-        public async Task<IActionResult> GetOwnedSessions([FromBody] GetOwnedParkingSessionListRequest request, string clientId)
+        [HttpGet("owned/{clientId}")]
+        public async Task<IActionResult> GetOwnedSessions([FromQuery] GetOwnedParkingSessionListRequest request, string clientId)
         {
             try
             {

@@ -44,7 +44,7 @@ namespace SAPLSServer.Services.Implementations
 
         public async Task<ParkingSessionDetailsForClientDto?> GetSessionDetailsForClient(string sessionId)
         {
-            var session = await _parkingSessionRepository.Find(sessionId);
+            var session = await _parkingSessionRepository.FindIncludingVehicleAndParkingLotReadOnly(sessionId);
             if (session == null)
                 return null;
             if (session.Status != ParkingSessionStatus.CheckedOut.ToString())
@@ -55,7 +55,7 @@ namespace SAPLSServer.Services.Implementations
 
         public async Task<ParkingSessionDetailsForParkingLotDto?> GetSessionDetailsForParkingLot(string sessionId)
         {
-            var session = await _parkingSessionRepository.Find(sessionId);
+            var session = await _parkingSessionRepository.FindIncludingVehicleAndOwnerReadOnly(sessionId);
             if (session == null)
                 return null;
             if (session.Status != ParkingSessionStatus.CheckedOut.ToString())
@@ -71,9 +71,15 @@ namespace SAPLSServer.Services.Implementations
             var result = new List<ParkingSessionSummaryForParkingLotDto>();
             foreach (var session in sessions)
             {
-                if (session.Status != ParkingSessionStatus.CheckedOut.ToString())
-                    session.Cost = await CalculateSessionFee(session);
-                result.Add(new ParkingSessionSummaryForParkingLotDto(session));
+                var sessionIncludingVehicle = await _parkingSessionRepository
+                    .FindIncludingVehicleReadOnly(session.Id);
+                if(sessionIncludingVehicle == null)
+                {
+                    continue;
+                }
+                if (sessionIncludingVehicle.Status != ParkingSessionStatus.CheckedOut.ToString())
+                    sessionIncludingVehicle.Cost = await CalculateSessionFee(sessionIncludingVehicle);
+                result.Add(new ParkingSessionSummaryForParkingLotDto(sessionIncludingVehicle));
             }
             return result;
         }
@@ -86,9 +92,15 @@ namespace SAPLSServer.Services.Implementations
             var result = new List<ParkingSessionSummaryForParkingLotDto>();
             foreach (var session in sessions)
             {
-                if (session.Status != ParkingSessionStatus.CheckedOut.ToString())
-                    session.Cost = await CalculateSessionFee(session);
-                result.Add(new ParkingSessionSummaryForParkingLotDto(session));
+                var sessionIncludingVehicle = await _parkingSessionRepository
+                    .FindIncludingVehicleReadOnly(session.Id);
+                if (sessionIncludingVehicle == null)
+                {
+                    continue;
+                }
+                if (sessionIncludingVehicle.Status != ParkingSessionStatus.CheckedOut.ToString())
+                    sessionIncludingVehicle.Cost = await CalculateSessionFee(session);
+                result.Add(new ParkingSessionSummaryForParkingLotDto(sessionIncludingVehicle));
             }
             return result;
         }
@@ -284,9 +296,16 @@ namespace SAPLSServer.Services.Implementations
             var result = new List<ParkingSessionSummaryForClientDto>();
             foreach (var session in sessions)
             {
-                if (session.Status != ParkingSessionStatus.CheckedOut.ToString())
-                    session.Cost = await CalculateSessionFee(session);
-                result.Add(new ParkingSessionSummaryForClientDto(session));
+                var sessionIncludingVehicleAndParkingLot = await _parkingSessionRepository
+                    .FindIncludingVehicleAndParkingLot(session.Id);
+                if (sessionIncludingVehicleAndParkingLot == null)
+                {
+                    continue;
+                }
+                if (sessionIncludingVehicleAndParkingLot.Status != ParkingSessionStatus.CheckedOut.ToString())
+                    sessionIncludingVehicleAndParkingLot.Cost = await 
+                        CalculateSessionFee(sessionIncludingVehicleAndParkingLot);
+                result.Add(new ParkingSessionSummaryForClientDto(sessionIncludingVehicleAndParkingLot));
             }
             return result;
         }
@@ -303,9 +322,15 @@ namespace SAPLSServer.Services.Implementations
             var items = new List<ParkingSessionSummaryForParkingLotDto>();
             foreach (var session in page)
             {
-                if (session.Status != ParkingSessionStatus.CheckedOut.ToString())
-                    session.Cost = await CalculateSessionFee(session);
-                items.Add(new ParkingSessionSummaryForParkingLotDto(session));
+                var sessionIncludingVehicle = await _parkingSessionRepository
+                    .FindIncludingVehicleReadOnly(session.Id);
+                if (sessionIncludingVehicle == null)
+                {
+                    continue;
+                }
+                if (sessionIncludingVehicle.Status != ParkingSessionStatus.CheckedOut.ToString())
+                    sessionIncludingVehicle.Cost = await CalculateSessionFee(sessionIncludingVehicle);
+                items.Add(new ParkingSessionSummaryForParkingLotDto(sessionIncludingVehicle));
             }
             return new PageResult<ParkingSessionSummaryForParkingLotDto>
             {
@@ -328,9 +353,15 @@ namespace SAPLSServer.Services.Implementations
             var items = new List<ParkingSessionSummaryForParkingLotDto>();
             foreach (var session in page)
             {
-                if (session.Status != ParkingSessionStatus.CheckedOut.ToString())
-                    session.Cost = await CalculateSessionFee(session);
-                items.Add(new ParkingSessionSummaryForParkingLotDto(session));
+                var sessionIncludingAll = await _parkingSessionRepository
+                    .FindIncludingVehicleReadOnly(session.Id);
+                if (sessionIncludingAll == null)
+                {
+                    continue;
+                }
+                if (sessionIncludingAll.Status != ParkingSessionStatus.CheckedOut.ToString())
+                    sessionIncludingAll.Cost = await CalculateSessionFee(sessionIncludingAll);
+                items.Add(new ParkingSessionSummaryForParkingLotDto(sessionIncludingAll));
             }
             return new PageResult<ParkingSessionSummaryForParkingLotDto>
             {
@@ -353,6 +384,7 @@ namespace SAPLSServer.Services.Implementations
             var items = new List<ParkingSessionSummaryForClientDto>();
             foreach (var session in page)
             {
+
                 if (session.Status != ParkingSessionStatus.CheckedOut.ToString())
                     session.Cost = await CalculateSessionFee(session);
                 items.Add(new ParkingSessionSummaryForClientDto(session));
@@ -423,7 +455,7 @@ namespace SAPLSServer.Services.Implementations
         {
             Enum.TryParse<VehicleType>(session.Vehicle.VehicleType, out var parsedVehicleType);
             return await _parkingFeeScheduleService.CalculateParkingSessionFee(
-                session.Id,
+                session.ParkingFeeSchedule,
                 session.EntryDateTime,
                 DateTime.UtcNow,
                 parsedVehicleType
