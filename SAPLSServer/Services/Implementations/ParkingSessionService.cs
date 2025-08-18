@@ -190,9 +190,8 @@ namespace SAPLSServer.Services.Implementations
 
             if (request.PaymentMethod == PaymentMethod.Bank.ToString())
             {
-                long ticks = DateTime.UtcNow.Ticks;
-                uint sessionHash = (uint)session.Id.GetHashCode();
-                session.TransactionId = (ticks << 32) | sessionHash;
+                uint sessionHash = (uint) session.Id.GetHashCode();
+                session.TransactionId = sessionHash;
                 var apiKey = await _parkingLotService.GetParkingLotApiKey(session.ParkingLotId);
                 var clientKey = await _parkingLotService.GetParkingLotClientKey(session.ParkingLotId);
                 var checkSumKey = await _parkingLotService.GetParkingLotCheckSumKey(session.ParkingLotId);
@@ -200,7 +199,7 @@ namespace SAPLSServer.Services.Implementations
                 // Prepare payment request
                 var paymentRequest = new PaymentRequestDto
                 {
-                    OrderCode = (int)(session.TransactionId % int.MaxValue),
+                    OrderCode = (int)session.TransactionId,
                     Amount = (int)session.Cost,
                     Description = $"Parking session payment for session {session.Id}",
                     CancelUrl = "https://yourapp.com/payment/cancel", // Replace with your actual URL
