@@ -64,7 +64,7 @@ namespace SAPLSServer.Services.Implementations
             return paymentStatusResponse;
         }
 
-        public async Task<PaymentStatusResponseDto?> SendPaymentRequest(PaymentRequestDto request,
+        public async Task<PaymentResponseDto?> SendPaymentRequest(PaymentRequestDto request,
             string clientKey, string apiKey, string checkSumKey)
         {
             string postPaymentStatusUrl = $"{_baseUrl}{UrlPaths.PAYMENT_REQUEST_PATH}";
@@ -86,7 +86,7 @@ namespace SAPLSServer.Services.Implementations
             {
                 throw new InvalidOperationException(MessageKeys.PAYOS_SERVICE_UNAVAILABLE);
             }
-            var paymentStatusResponse = JsonSerializer.Deserialize<PaymentStatusResponseDto>(response);
+            var paymentStatusResponse = JsonSerializer.Deserialize<PaymentResponseDto>(response);
             return paymentStatusResponse;
 
         }

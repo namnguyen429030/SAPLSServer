@@ -4,7 +4,7 @@ namespace SAPLSServer.Services.Interfaces
 {
     public interface IPaymentService
     {
-        Task<PaymentStatusResponseDto?> SendPaymentRequest(PaymentRequestDto request, string clientKey, 
+        Task<PaymentResponseDto?> SendPaymentRequest(PaymentRequestDto request, string clientKey, 
             string apiKey, string checkSumKey);
         Task<PaymentStatusResponseDto?> SendCancelPaymentRequest(int paymentId, string clientKey, 
             string apiKey, PaymentCancelRequestDto request);
