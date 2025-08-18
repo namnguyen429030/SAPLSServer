@@ -202,8 +202,8 @@ namespace SAPLSServer.Services.Implementations
                     OrderCode = transactionId,
                     Amount = (int)session.Cost,
                     Description = $"Parking session payment for session {session.Id}",
-                    CancelUrl = "https://yourapp.com/payment/cancel", // Replace with your actual URL
-                    ReturnUrl = "https://yourapp.com/payment/return", // Replace with your actual URL
+                    CancelUrl = UrlPaths.CANCEL_URL,
+                    ReturnUrl = UrlPaths.RETURN_URL,
 
                     BuyerName = session.Driver?.User?.FullName,
                     BuyerEmail = session.Driver?.User?.Email,
