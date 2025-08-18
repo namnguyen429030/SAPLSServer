@@ -175,7 +175,7 @@ namespace SAPLSServer.Services.Implementations
 
         public async Task CheckOut(CheckOutParkingSessionRequest request, string userId)
         {
-            var session = await _parkingSessionRepository.Find(request.SessionId);
+            var session = await _parkingSessionRepository.FindIncludingVehicle(request.SessionId);
             if (session == null)
                 throw new InvalidInformationException(MessageKeys.PARKING_SESSION_NOT_FOUND);
             if (userId != session.DriverId)
