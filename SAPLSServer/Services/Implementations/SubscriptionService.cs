@@ -25,7 +25,13 @@ namespace SAPLSServer.Services.Implementations
             {
                 criterias.Add(s => s.Status == request.Status);
             }
-            var subscriptions = await _subscriptionRepository.GetAllAsync(criterias.ToArray());
+            if (!string.IsNullOrWhiteSpace(request.SearchCriteria))
+            {
+                var keyword = request.SearchCriteria.Trim();
+                criterias.Add(s => (s.Name != null && s.Name.Contains(keyword))
+                                   || (s.Description != null && s.Description.Contains(keyword)));
+            }
+            var subscriptions = await _subscriptionRepository.GetAllAsync(criterias.Count > 0 ? criterias.ToArray() : null);
             return subscriptions.Select(s => new SubscriptionSummaryDto(s)).ToList();
         }
 
@@ -36,7 +42,13 @@ namespace SAPLSServer.Services.Implementations
             {
                 criterias.Add(s => s.Status == request.Status);
             }
-            var criteriasArray = criterias.ToArray();
+            if (!string.IsNullOrWhiteSpace(request.SearchCriteria))
+            {
+                var keyword = request.SearchCriteria.Trim();
+                criterias.Add(s => (s.Name != null && s.Name.Contains(keyword))
+                                   || (s.Description != null && s.Description.Contains(keyword)));
+            }
+            var criteriasArray = criterias.Count > 0 ? criterias.ToArray() : null;
 
             var totalCount = await _subscriptionRepository.CountAsync(criteriasArray);
             var subscriptions = await _subscriptionRepository.GetPageAsync(
@@ -69,6 +81,10 @@ namespace SAPLSServer.Services.Implementations
         {
             if (await _subscriptionRepository.ExistsAsync(c => c.Name == request.Name))
                 throw new InvalidInformationException(MessageKeys.SUBSCRIPTION_NAME_EXISTS);
+
+            if (await _subscriptionRepository.ExistsAsync(c => c.Duration == (int)TimeSpan.FromDays(request.Duration).TotalMilliseconds))
+                throw new InvalidInformationException(MessageKeys.SUBSCRIPTION_DURATION_EXISTS);
+
             var subscription = new Subscription
             {
                 Id = Guid.NewGuid().ToString(),
@@ -84,6 +100,31 @@ namespace SAPLSServer.Services.Implementations
             };
 
             await _subscriptionRepository.AddAsync(subscription);
+            await _subscriptionRepository.SaveChangesAsync();
+        }
+
+        public async Task UpdateAsync(UpdateSubscriptionRequest request, string adminId)
+        {
+            var subscription = await _subscriptionRepository.Find(request.Id);
+            if (subscription == null)
+                throw new InvalidInformationException(MessageKeys.SUBSCRIPTION_NOT_FOUND);
+
+            // Duplicate checks (exclude current entity)
+            if (await _subscriptionRepository.ExistsAsync(c => c.Name == request.Name && c.Id != request.Id))
+                throw new InvalidInformationException(MessageKeys.SUBSCRIPTION_NAME_EXISTS);
+
+            if (await _subscriptionRepository.ExistsAsync(c => c.Duration == (int)TimeSpan.FromDays(request.Duration).TotalMilliseconds && c.Id != request.Id))
+                throw new InvalidInformationException(MessageKeys.SUBSCRIPTION_DURATION_EXISTS);
+
+            subscription.Name = request.Name;
+            subscription.Description = request.Note;
+            subscription.Duration = (int)TimeSpan.FromDays(request.Duration).TotalMilliseconds;
+            subscription.Price = request.Price;
+            subscription.Status = request.Status;
+            subscription.UpdatedAt = DateTime.UtcNow;
+            subscription.UpdateById = adminId;
+
+            _subscriptionRepository.Update(subscription);
             await _subscriptionRepository.SaveChangesAsync();
         }
 

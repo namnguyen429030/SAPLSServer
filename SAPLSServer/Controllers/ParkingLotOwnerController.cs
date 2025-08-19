@@ -64,5 +64,15 @@ namespace SAPLSServer.Controllers
             var result = await _parkingLotOwnerService.GetParkingLotOwnerProfilesPage(pageRequest, request);
             return Ok(result);
         }
+
+        [HttpGet("all")]
+        public async Task<IActionResult> GetAllParkingLotOwners([FromQuery] GetParkingLotOwnerListRequest request)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var result = await _parkingLotOwnerService.GetAllParkingLotOwners(request);
+            return Ok(result);
+        }
     }
 }

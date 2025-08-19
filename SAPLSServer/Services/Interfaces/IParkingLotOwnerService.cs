@@ -1,4 +1,5 @@
 using SAPLSServer.DTOs.Base;
+using SAPLSServer.DTOs.Concrete;
 using SAPLSServer.DTOs.Concrete.UserDto;
 using SAPLSServer.DTOs.PaginationDto;
 
@@ -37,5 +38,12 @@ namespace SAPLSServer.Services.Interfaces
         /// <param name="request">The search/filter criteria.</param>
         /// <returns>A paginated result of parking lot owner profile details.</returns>
         Task<PageResult<ParkingLotOwnerProfileSummaryDto>> GetParkingLotOwnerProfilesPage(PageRequest pageRequest, GetParkingLotOwnerListRequest request);
+
+        /// <summary>
+        /// Retrieves all parking lot owner profiles with optional search criteria.
+        /// </summary>
+        /// <param name="request">The search/filter criteria.</param>
+        /// <returns>A list of parking lot owner profile summaries.</returns>
+        Task<List<ParkingLotOwnerProfileSummaryDto>> GetAllParkingLotOwners(GetParkingLotOwnerListRequest request);
     }
 }

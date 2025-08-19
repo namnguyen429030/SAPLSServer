@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using SAPLSServer.Constants;
 using SAPLSServer.DTOs.Concrete.SubscriptionDtos;
 using SAPLSServer.DTOs.PaginationDto;
+using SAPLSServer.Exceptions;
 using SAPLSServer.Services.Interfaces;
 using System.Security.Claims;
 using System.Threading.Tasks;
@@ -47,17 +48,53 @@ namespace SAPLSServer.Controllers {
         }
 
         /// <summary>
-        /// CheckIn a new subscription.
+        /// Create a new subscription.
         /// </summary>
         [HttpPost]
-        [Authorize(Roles = "Admin")]
+        //[Authorize(Roles = "Admin")]
         public async Task<IActionResult> Create([FromBody] CreateSubscriptionRequest request) {
-            var adminId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (adminId == null) {
-                return Unauthorized(new { message = MessageKeys.UNAUTHORIZED_ACCESS });
+            try {
+                if (!ModelState.IsValid) {
+                    return BadRequest(ModelState);
+                }
+                //var adminId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                //if (adminId == null) {
+                //    return Unauthorized(new { message = MessageKeys.UNAUTHORIZED_ACCESS });
+                //}
+                await _subscriptionService.CreateAsync(request, "1001");
+                return NoContent();
             }
-            await _subscriptionService.CreateAsync(request, adminId);
-            return NoContent();
+            catch (InvalidInformationException ex) {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch {
+                return StatusCode(StatusCodes.Status500InternalServerError, new { message = MessageKeys.UNEXPECTED_ERROR });
+            }
+        }
+
+        /// <summary>
+        /// Update an existing subscription.
+        /// </summary>
+        [HttpPut]
+        //[Authorize(Roles = "Admin")]
+        public async Task<IActionResult> Update([FromBody] UpdateSubscriptionRequest request) {
+            try {
+                if (!ModelState.IsValid) {
+                    return BadRequest(ModelState);
+                }
+                //var adminId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                //if (adminId == null) {
+                //    return Unauthorized(new { message = MessageKeys.UNAUTHORIZED_ACCESS });
+                //}
+                await _subscriptionService.UpdateAsync(request, "1001");
+                return NoContent();
+            }
+            catch (InvalidInformationException ex) {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch {
+                return StatusCode(StatusCodes.Status500InternalServerError, new { message = MessageKeys.UNEXPECTED_ERROR });
+            }
         }
 
         /// <summary>
@@ -66,12 +103,23 @@ namespace SAPLSServer.Controllers {
         [HttpPut("status")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateStatus([FromBody] UpdateSubscriptionStatusRequest request) {
-            var adminId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (adminId == null) {
-                return Unauthorized(new { message = MessageKeys.UNAUTHORIZED_ACCESS });
+            try {
+                if (!ModelState.IsValid) {
+                    return BadRequest(ModelState);
+                }
+                var adminId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (adminId == null) {
+                    return Unauthorized(new { message = MessageKeys.UNAUTHORIZED_ACCESS });
+                }
+                await _subscriptionService.UpdateStatusAsync(request, "1001");
+                return NoContent();
             }
-            await _subscriptionService.UpdateStatusAsync(request, adminId);
-            return NoContent();
+            catch (InvalidInformationException ex) {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch {
+                return StatusCode(StatusCodes.Status500InternalServerError, new { message = MessageKeys.UNEXPECTED_ERROR });
+            }
         }
     }
 }

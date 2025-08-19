@@ -70,25 +70,45 @@ namespace SAPLSServer.Services.Implementations
 
         public async Task<PageResult<ParkingLotSummaryDto>> GetParkingLotsPage(PageRequest pageRequest, GetParkingLotListRequest request)
         {
-            var criterias = new Expression<Func<ParkingLot, bool>>[] 
+            // Kh?i t?o danh sách criteria r?ng
+            var criteriaList = new List<Expression<Func<ParkingLot, bool>>>();
+            
+            // Ch? thêm ?i?u ki?n ParkingLotOwnerId khi có giá tr?
+            if (!string.IsNullOrEmpty(request.ParkingLotOwnerId))
             {
-                p1 => p1.ParkingLotOwnerId == request.ParkingLotOwnerId,
-                pl => request.Status != null && pl.Status == request.Status,
-                pl => !string.IsNullOrEmpty(request.SearchCriteria) && (
-                        pl.Name.Contains(request.SearchCriteria) || 
-                        pl.Address.Contains(request.SearchCriteria) ||
-                        pl.Id.Contains(request.SearchCriteria)
-                    )
-            };
-            var totalCount = await _parkingLotRepository.CountAsync(criterias);
+                criteriaList.Add(pl => pl.ParkingLotOwnerId == request.ParkingLotOwnerId);
+            }
+            
+            // Ch? thêm ?i?u ki?n Status khi có giá tr?
+            if (request.Status != null)
+            {
+                criteriaList.Add(pl => pl.Status == request.Status);
+            }
+            
+            // Ch? thêm ?i?u ki?n tìm ki?m khi SearchCriteria có giá tr?
+            if (!string.IsNullOrEmpty(request.SearchCriteria))
+            {
+                criteriaList.Add(pl => pl.Name.Contains(request.SearchCriteria) ||
+                                     pl.Address.Contains(request.SearchCriteria) ||
+                                     pl.Id.Contains(request.SearchCriteria));
+            }
+            
+            // Chuy?n danh sách sang m?ng ?? truy?n vào các ph??ng th?c repository
+            var criterias = criteriaList.ToArray();
+            
+            // ??m t?ng s? b?n ghi phù h?p
+            var totalCount = await _parkingLotRepository.CountAsync(criterias.Length > 0 ? criterias : null);
+            
+            // L?y d? li?u trang hi?n t?i
             var parkingLots = await _parkingLotRepository.GetPageAsync(
                 pageRequest.PageNumber,
                 pageRequest.PageSize,
-                criterias,
+                criterias.Length > 0 ? criterias : null,
                 null,
                 request.Order == OrderType.Asc.ToString()
             );
 
+            // Chuy?n ??i thành DTO và tr? v? k?t qu? phân trang
             var items = parkingLots.Select(pl => new ParkingLotSummaryDto(pl)).ToList();
             return new PageResult<ParkingLotSummaryDto>
             {
@@ -100,17 +120,37 @@ namespace SAPLSServer.Services.Implementations
         }
         public async Task<List<ParkingLotSummaryDto>> GetParkingLots(GetParkingLotListRequest request)
         {
-            var criterias = new Expression<Func<ParkingLot, bool>>[]
-                        {
-                p1 => p1.ParkingLotOwnerId == request.ParkingLotOwnerId,
-                pl => request.Status != null && pl.Status == request.Status,
-                pl => !string.IsNullOrEmpty(request.SearchCriteria) && (
-                        pl.Name.Contains(request.SearchCriteria) ||
-                        pl.Address.Contains(request.SearchCriteria) ||
-                        pl.Id.Contains(request.SearchCriteria)
-                    )
-                        };
-            var parkingLots = await _parkingLotRepository.GetAllAsync(criterias, null,request.Order == OrderType.Asc.ToString());
+            // Kh?i t?o danh sách criteria r?ng
+            var criteriaList = new List<Expression<Func<ParkingLot, bool>>>();
+            
+            // Ch? thêm ?i?u ki?n ParkingLotOwnerId khi có giá tr?
+            if (!string.IsNullOrEmpty(request.ParkingLotOwnerId))
+            {
+                criteriaList.Add(pl => pl.ParkingLotOwnerId == request.ParkingLotOwnerId);
+            }
+            
+            // Ch? thêm ?i?u ki?n Status khi có giá tr?
+            if (request.Status != null)
+            {
+                criteriaList.Add(pl => pl.Status == request.Status);
+            }
+            
+            // Ch? thêm ?i?u ki?n tìm ki?m khi SearchCriteria có giá tr?
+            if (!string.IsNullOrEmpty(request.SearchCriteria))
+            {
+                criteriaList.Add(pl => pl.Name.Contains(request.SearchCriteria) ||
+                                     pl.Address.Contains(request.SearchCriteria) ||
+                                     pl.Id.Contains(request.SearchCriteria));
+            }
+            
+            // Chuy?n danh sách sang m?ng ?? truy?n vào GetAllAsync
+            var criterias = criteriaList.ToArray();
+            
+            // L?y d? li?u t? repository
+            var parkingLots = await _parkingLotRepository.GetAllAsync(
+                criterias.Length > 0 ? criterias : null, 
+                null,
+                request.Order == OrderType.Asc.ToString());
 
             return parkingLots.Select(pl => new ParkingLotSummaryDto(pl)).ToList();
         }

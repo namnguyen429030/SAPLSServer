@@ -59,10 +59,10 @@ namespace SAPLSServer.Extensions
             services.AddScoped<IParkingSessionRepository, ParkingSessionRepository>();
             services.AddScoped<IVehicleRepository, VehicleRepository>();
             services.AddScoped<ISharedVehicleRepository, SharedVehicleRepository>();
+            services.AddScoped<IPaymentSourceRepository, PaymentSourceRepository>();
+            services.AddScoped<IParkingLotRepository, ParkingLotRepository>();
+
             services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
-
-
-
             //Services
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IUserService, UserService>();
@@ -78,6 +78,8 @@ namespace SAPLSServer.Extensions
 
 
 
+            services.AddScoped<IPaymentSourceService, PaymentSourceService>();
+            services.AddScoped<IParkingLotService, ParkingLotService>();
             return services;
         }
 

@@ -35,11 +35,19 @@ namespace SAPLSServer.Services.Interfaces {
         Task CreateAsync(CreateSubscriptionRequest request, string adminId);
 
         /// <summary>
+        /// Updates an existing subscription with the provided information.
+        /// </summary>
+        /// <param name="request">The subscription update data.</param>
+        /// <param name="adminId">The ID of the admin performing the update.</param>
+        Task UpdateAsync(UpdateSubscriptionRequest request, string adminId);
+
+        /// <summary>
         /// Updates the status of an existing subscription.
         /// </summary>
         /// <param name="request">The request containing the subscription ID and new status.</param>
         /// <param name="adminId">The ID of the admin performing the update.</param>
         Task UpdateStatusAsync(UpdateSubscriptionStatusRequest request, string adminId);
+
         /// <summary>
         /// Retrieves the duration (in days, months, or other unit as defined) of a specific subscription by its unique identifier.
         /// </summary>

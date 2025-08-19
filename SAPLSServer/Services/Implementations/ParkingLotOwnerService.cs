@@ -62,19 +62,25 @@ namespace SAPLSServer.Services.Implementations
 
         public async Task<PageResult<ParkingLotOwnerProfileSummaryDto>> GetParkingLotOwnerProfilesPage(PageRequest pageRequest, GetParkingLotOwnerListRequest request)
         {
-            var criterias = new Expression<Func<ParkingLotOwnerProfile, bool>>[]
-            {
-                plo => !string.IsNullOrEmpty(request.Status) && plo.User.Status == request.Status,
-                plo => !string.IsNullOrEmpty(request.SearchCriteria) && (
-                        plo.User.FullName.Contains(request.SearchCriteria) ||
-                        plo.User.Email.Contains(request.SearchCriteria) ||
-                        plo.User.Phone.Contains(request.SearchCriteria)
-                    )
-            };
-            var totalCount = await _parkingLotOwnerProfileRepository.CountAsync(criterias);
+            var criteriaList = new List<Expression<Func<ParkingLotOwnerProfile, bool>>>();
+            
+            // Ch? thêm ?i?u ki?n khi giá tr? t?n t?i
+            if (!string.IsNullOrEmpty(request.Status))
+                criteriaList.Add(plo => plo.User.Status == request.Status);
+                
+            if (!string.IsNullOrEmpty(request.SearchCriteria))
+                criteriaList.Add(plo => plo.User.FullName.Contains(request.SearchCriteria) ||
+                                       plo.User.Email.Contains(request.SearchCriteria) ||
+                                       plo.User.Phone.Contains(request.SearchCriteria));
+            
+            var totalCount = await _parkingLotOwnerProfileRepository.CountAsync(
+                criteriaList.Count > 0 ? criteriaList.ToArray() : null);
+                
             var owners = await _parkingLotOwnerProfileRepository.GetPageAsync(
-                                        pageRequest.PageNumber, pageRequest.PageSize, criterias, 
-                                        null, request.Order == OrderType.Asc.ToString());
+                pageRequest.PageNumber, pageRequest.PageSize, 
+                criteriaList.Count > 0 ? criteriaList.ToArray() : null, 
+                null, request.Order == OrderType.Asc.ToString());
+                
             var items = new List<ParkingLotOwnerProfileSummaryDto>();
             foreach (var owner in owners)
             {
@@ -85,6 +91,7 @@ namespace SAPLSServer.Services.Implementations
                 }
                 items.Add(new ParkingLotOwnerProfileSummaryDto(ownerIncludingUser));
             }
+            
             return new PageResult<ParkingLotOwnerProfileSummaryDto>
             {
                 Items = items,
@@ -92,6 +99,39 @@ namespace SAPLSServer.Services.Implementations
                 PageNumber = pageRequest.PageNumber,
                 PageSize = pageRequest.PageSize,
             };
+        }
+
+        public async Task<List<ParkingLotOwnerProfileSummaryDto>> GetAllParkingLotOwners(GetParkingLotOwnerListRequest request)
+        {
+            var criteriaList = new List<Expression<Func<ParkingLotOwnerProfile, bool>>>();
+            
+            // Ch? thêm ?i?u ki?n khi giá tr? t?n t?i
+            if (!string.IsNullOrEmpty(request.Status))
+                criteriaList.Add(plo => plo.User.Status == request.Status);
+                
+            if (!string.IsNullOrEmpty(request.SearchCriteria))
+                criteriaList.Add(plo => plo.User.FullName.Contains(request.SearchCriteria) ||
+                                       plo.User.Email.Contains(request.SearchCriteria) ||
+                                       plo.User.Phone.Contains(request.SearchCriteria));
+            
+            // L?y t?t c? owners mà không phân trang
+            var owners = await _parkingLotOwnerProfileRepository.GetAllAsync(
+                criteriaList.Count > 0 ? criteriaList.ToArray() : null, 
+                null, 
+                request.Order == OrderType.Asc.ToString());
+                
+            var items = new List<ParkingLotOwnerProfileSummaryDto>();
+            foreach (var owner in owners)
+            {
+                var ownerIncludingUser = await _parkingLotOwnerProfileRepository.FindIncludingUserReadOnly(owner.UserId);
+                if(ownerIncludingUser == null)
+                {
+                    continue;
+                }
+                items.Add(new ParkingLotOwnerProfileSummaryDto(ownerIncludingUser));
+            }
+            
+            return items;
         }
     }
 }

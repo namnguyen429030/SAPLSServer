@@ -30,6 +30,7 @@
     <Folder Include="DTOs\Concrete\AttachedFile\IncidenceEvidence\" />
     <Folder Include="DTOs\Concrete\AttachedFile\RequestAttachedFIle\" />
     <Folder Include="DTOs\Concrete\ParkingFeeSchedule\" />
+    <Folder Include="DTOs\Concrete\PaymentSourceDto\" />
     <Folder Include="Hubs\" />
     <Folder Include="SignalRHub\" />
   </ItemGroup>
