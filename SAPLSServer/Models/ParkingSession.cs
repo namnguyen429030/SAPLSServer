@@ -35,6 +35,8 @@ public partial class ParkingSession
 
     public string PaymentStatus { get; set; } = null!;
 
+    public string? DriverId { get; set; }
+
     public virtual ParkingLot ParkingLot { get; set; } = null!;
 
     public virtual Vehicle Vehicle { get; set; } = null!;

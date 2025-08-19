@@ -3,98 +3,65 @@ using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using SAPLSServer.Models;
 
-namespace SAPLSServer.Models.New;
+namespace SAPLSServer.Models;
 
-public partial class SaplsContext : DbContext {
-    public SaplsContext() {
+public partial class SaplsContext : DbContext
+{
+    public SaplsContext()
+    {
     }
 
     public SaplsContext(DbContextOptions<SaplsContext> options)
-        : base(options) {
+        : base(options)
+    {
     }
 
-    public virtual DbSet<AdminProfile> AdminProfiles {
-        get; set;
-    }
+    public virtual DbSet<AdminProfile> AdminProfiles { get; set; }
 
-    public virtual DbSet<AttachedFile> AttachedFiles {
-        get; set;
-    }
+    public virtual DbSet<AttachedFile> AttachedFiles { get; set; }
 
-    public virtual DbSet<ClientProfile> ClientProfiles {
-        get; set;
-    }
+    public virtual DbSet<ClientProfile> ClientProfiles { get; set; }
 
-    public virtual DbSet<IncidenceEvidence> IncidenceEvidences {
-        get; set;
-    }
+    public virtual DbSet<IncidenceEvidence> IncidenceEvidences { get; set; }
 
-    public virtual DbSet<IncidenceReport> IncidenceReports {
-        get; set;
-    }
+    public virtual DbSet<IncidenceReport> IncidenceReports { get; set; }
 
-    public virtual DbSet<ParkingFeeSchedule> ParkingFeeSchedules {
-        get; set;
-    }
+    public virtual DbSet<ParkingFeeSchedule> ParkingFeeSchedules { get; set; }
 
-    public virtual DbSet<ParkingLot> ParkingLots {
-        get; set;
-    }
+    public virtual DbSet<ParkingLot> ParkingLots { get; set; }
 
-    public virtual DbSet<ParkingLotOwnerProfile> ParkingLotOwnerProfiles {
-        get; set;
-    }
+    public virtual DbSet<ParkingLotOwnerProfile> ParkingLotOwnerProfiles { get; set; }
 
-    public virtual DbSet<ParkingSession> ParkingSessions {
-        get; set;
-    }
+    public virtual DbSet<ParkingSession> ParkingSessions { get; set; }
 
-    public virtual DbSet<PaymentSource> PaymentSources {
-        get; set;
-    }
+    public virtual DbSet<PaymentSource> PaymentSources { get; set; }
 
-    public virtual DbSet<Request> Requests {
-        get; set;
-    }
+    public virtual DbSet<Request> Requests { get; set; }
 
-    public virtual DbSet<RequestAttachedFile> RequestAttachedFiles {
-        get; set;
-    }
+    public virtual DbSet<RequestAttachedFile> RequestAttachedFiles { get; set; }
 
-    public virtual DbSet<SharedVehicle> SharedVehicles {
-        get; set;
-    }
+    public virtual DbSet<SharedVehicle> SharedVehicles { get; set; }
 
-    public virtual DbSet<ShiftDiary> ShiftDiaries {
-        get; set;
-    }
+    public virtual DbSet<ShiftDiary> ShiftDiaries { get; set; }
 
-    public virtual DbSet<StaffProfile> StaffProfiles {
-        get; set;
-    }
+    public virtual DbSet<StaffProfile> StaffProfiles { get; set; }
 
-    public virtual DbSet<Subscription> Subscriptions {
-        get; set;
-    }
+    public virtual DbSet<Subscription> Subscriptions { get; set; }
 
-    public virtual DbSet<User> Users {
-        get; set;
-    }
+    public virtual DbSet<User> Users { get; set; }
 
-    public virtual DbSet<Vehicle> Vehicles {
-        get; set;
-    }
+    public virtual DbSet<Vehicle> Vehicles { get; set; }
 
-    public virtual DbSet<WhiteList> WhiteLists {
-        get; set;
-    }
+    public virtual DbSet<WhiteList> WhiteLists { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
         => optionsBuilder.UseSqlServer("server=localhost;database=SAPLS2;uid=sa;pwd=Bach123@;TrustServerCertificate=True");
 
-    protected override void OnModelCreating(ModelBuilder modelBuilder) {
-        modelBuilder.Entity<AdminProfile>(entity => {
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<AdminProfile>(entity =>
+        {
             entity.HasKey(e => e.UserId).HasName("PK__AdminPro__1788CC4C56CFD539");
 
             entity.ToTable("AdminProfile");
@@ -116,7 +83,8 @@ public partial class SaplsContext : DbContext {
                 .HasConstraintName("AdminProfile_fk0");
         });
 
-        modelBuilder.Entity<AttachedFile>(entity => {
+        modelBuilder.Entity<AttachedFile>(entity =>
+        {
             entity.HasKey(e => e.Id).HasName("PK__Attached__3214EC07ED2064FF");
 
             entity.ToTable("AttachedFile");
@@ -132,7 +100,8 @@ public partial class SaplsContext : DbContext {
             entity.Property(e => e.UploadAt).HasDefaultValueSql("(getdate())");
         });
 
-        modelBuilder.Entity<ClientProfile>(entity => {
+        modelBuilder.Entity<ClientProfile>(entity =>
+        {
             entity.HasKey(e => e.UserId).HasName("PK__ClientPr__1788CC4C04CA9841");
 
             entity.ToTable("ClientProfile");
@@ -161,7 +130,8 @@ public partial class SaplsContext : DbContext {
                 .HasConstraintName("ClientProfile_fk0");
         });
 
-        modelBuilder.Entity<IncidenceEvidence>(entity => {
+        modelBuilder.Entity<IncidenceEvidence>(entity =>
+        {
             entity.HasKey(e => e.Id).HasName("PK__Incidenc__3214EC072A603248");
 
             entity.ToTable("IncidenceEvidence");
@@ -180,7 +150,8 @@ public partial class SaplsContext : DbContext {
                 .HasConstraintName("IncidenceEvidence_fk1");
         });
 
-        modelBuilder.Entity<IncidenceReport>(entity => {
+        modelBuilder.Entity<IncidenceReport>(entity =>
+        {
             entity.HasKey(e => e.Id).HasName("PK__Incidenc__3214EC07D412DE08");
 
             entity.ToTable("IncidenceReport");
@@ -218,7 +189,8 @@ public partial class SaplsContext : DbContext {
                 .HasConstraintName("IncidenceReport_fk6");
         });
 
-        modelBuilder.Entity<ParkingFeeSchedule>(entity => {
+        modelBuilder.Entity<ParkingFeeSchedule>(entity =>
+        {
             entity.HasKey(e => e.Id).HasName("PK__ParkingF__3214EC07A45DDDE5");
 
             entity.ToTable("ParkingFeeSchedule");
@@ -250,7 +222,8 @@ public partial class SaplsContext : DbContext {
                 .HasConstraintName("ParkingFeeSchedule_fk10");
         });
 
-        modelBuilder.Entity<ParkingLot>(entity => {
+        modelBuilder.Entity<ParkingLot>(entity =>
+        {
             entity.HasKey(e => e.Id).HasName("PK__ParkingL__3214EC07D98A3F04");
 
             entity.ToTable("ParkingLot");
@@ -287,7 +260,8 @@ public partial class SaplsContext : DbContext {
                 .HasConstraintName("FK_ParkingLot_Subscription_fk3");
         });
 
-        modelBuilder.Entity<ParkingLotOwnerProfile>(entity => {
+        modelBuilder.Entity<ParkingLotOwnerProfile>(entity =>
+        {
             entity.HasKey(e => e.UserId).HasName("PK__ParkingL__1788CC4C15532F76");
 
             entity.ToTable("ParkingLotOwnerProfile");
@@ -306,7 +280,8 @@ public partial class SaplsContext : DbContext {
                 .HasConstraintName("ParkingLotOwnerProfile_fk0");
         });
 
-        modelBuilder.Entity<ParkingSession>(entity => {
+        modelBuilder.Entity<ParkingSession>(entity =>
+        {
             entity.HasKey(e => e.Id).HasName("PK__ParkingS__3214EC076244C9DD");
 
             entity.ToTable("ParkingSession");
@@ -363,7 +338,8 @@ public partial class SaplsContext : DbContext {
                 .HasConstraintName("ParkingSession_fk1");
         });
 
-        modelBuilder.Entity<PaymentSource>(entity => {
+        modelBuilder.Entity<PaymentSource>(entity =>
+        {
             entity.HasKey(e => e.Id).HasName("PK__PaymentS__3214EC074DD2D6E5");
 
             entity.ToTable("PaymentSource");
@@ -384,7 +360,8 @@ public partial class SaplsContext : DbContext {
                 .HasConstraintName("PaymentSource_fk5");
         });
 
-        modelBuilder.Entity<Request>(entity => {
+        modelBuilder.Entity<Request>(entity =>
+        {
             entity.HasKey(e => e.Id).HasName("PK__Request__3214EC07B2ACCA82");
 
             entity.ToTable("Request");
@@ -427,7 +404,8 @@ public partial class SaplsContext : DbContext {
                 .HasConstraintName("Request_fk_Sender");
         });
 
-        modelBuilder.Entity<RequestAttachedFile>(entity => {
+        modelBuilder.Entity<RequestAttachedFile>(entity =>
+        {
             entity.HasKey(e => e.Id).HasName("PK__RequestA__3214EC07127A9CAD");
 
             entity.ToTable("RequestAttachedFile");
@@ -446,7 +424,8 @@ public partial class SaplsContext : DbContext {
                 .HasConstraintName("RequestAttachedFile_fk1");
         });
 
-        modelBuilder.Entity<SharedVehicle>(entity => {
+        modelBuilder.Entity<SharedVehicle>(entity =>
+        {
             entity.HasKey(e => e.Id).HasName("PK__SharedVe__3214EC07EDA49C12");
 
             entity.ToTable("SharedVehicle");
@@ -478,7 +457,8 @@ public partial class SaplsContext : DbContext {
                 .HasConstraintName("SharedVehicle_fk1");
         });
 
-        modelBuilder.Entity<ShiftDiary>(entity => {
+        modelBuilder.Entity<ShiftDiary>(entity =>
+        {
             entity.HasKey(e => e.Id).HasName("PK__ShiftDia__3214EC07971A02B0");
 
             entity.ToTable("ShiftDiary");
@@ -508,7 +488,8 @@ public partial class SaplsContext : DbContext {
                 .HasConstraintName("ShiftDiary_fk5");
         });
 
-        modelBuilder.Entity<StaffProfile>(entity => {
+        modelBuilder.Entity<StaffProfile>(entity =>
+        {
             entity.HasKey(e => e.UserId).HasName("PK__StaffPro__1788CC4C779A7398");
 
             entity.ToTable("StaffProfile");
@@ -535,7 +516,8 @@ public partial class SaplsContext : DbContext {
                 .HasConstraintName("StaffProfile_fk0");
         });
 
-        modelBuilder.Entity<Subscription>(entity => {
+        modelBuilder.Entity<Subscription>(entity =>
+        {
             entity.ToTable("Subscription");
 
             entity.Property(e => e.Id).HasMaxLength(36);
@@ -556,7 +538,8 @@ public partial class SaplsContext : DbContext {
                 .HasConstraintName("FK_Subscription_UpdatedBy_fk1");
         });
 
-        modelBuilder.Entity<User>(entity => {
+        modelBuilder.Entity<User>(entity =>
+        {
             entity.HasKey(e => e.Id).HasName("PK__User__3214EC0786524D8F");
 
             entity.ToTable("User");
@@ -591,7 +574,8 @@ public partial class SaplsContext : DbContext {
             entity.Property(e => e.UpdatedAt).HasDefaultValueSql("(getdate())");
         });
 
-        modelBuilder.Entity<Vehicle>(entity => {
+        modelBuilder.Entity<Vehicle>(entity =>
+        {
             entity.HasKey(e => e.Id).HasName("PK__Vehicle__3214EC07D7D77C04");
 
             entity.ToTable("Vehicle");
@@ -635,7 +619,8 @@ public partial class SaplsContext : DbContext {
                 .HasConstraintName("Vehicle_fk12");
         });
 
-        modelBuilder.Entity<WhiteList>(entity => {
+        modelBuilder.Entity<WhiteList>(entity =>
+        {
             entity.HasKey(e => e.Id).HasName("PK_WhiteList_Id");
 
             entity.ToTable("WhiteList");

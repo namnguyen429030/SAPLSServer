@@ -27,6 +27,12 @@ public partial class User
 
     public string Role { get; set; } = null!;
 
+    public string? GoogleId { get; set; }
+
+    public string? RefreshToken { get; set; }
+
+    public DateTime? RefreshTokenExpiresAt { get; set; }
+
     public virtual AdminProfile? AdminProfile { get; set; }
 
     public virtual ClientProfile? ClientProfile { get; set; }

@@ -23,19 +23,23 @@ public partial class ParkingLot
 
     public string Status { get; set; } = null!;
 
-    public string ParkingLotOwnerId { get; set; } = null!;
+    public string? ParkingLotOwnerId { get; set; }
+
+    public string? SubscriptionId { get; set; }
 
     public virtual ICollection<IncidenceReport> IncidenceReports { get; set; } = new List<IncidenceReport>();
 
     public virtual ICollection<ParkingFeeSchedule> ParkingFeeSchedules { get; set; } = new List<ParkingFeeSchedule>();
 
-    public virtual ParkingLotOwnerProfile ParkingLotOwner { get; set; } = null!;
+    public virtual ParkingLotOwnerProfile? ParkingLotOwner { get; set; }
 
     public virtual ICollection<ParkingSession> ParkingSessions { get; set; } = new List<ParkingSession>();
 
     public virtual ICollection<ShiftDiary> ShiftDiaries { get; set; } = new List<ShiftDiary>();
 
     public virtual ICollection<StaffProfile> StaffProfiles { get; set; } = new List<StaffProfile>();
+
+    public virtual Subscription? Subscription { get; set; }
 
     public virtual ICollection<WhiteList> WhiteLists { get; set; } = new List<WhiteList>();
 }

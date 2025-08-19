@@ -23,7 +23,7 @@ public partial class Request
 
     public string? LastUpdatePersonId { get; set; }
 
-    public string? DataType { get; set; }
+    public string? Type { get; set; }
 
     public string? Data { get; set; }
 
