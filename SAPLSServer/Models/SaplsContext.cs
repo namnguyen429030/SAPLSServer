@@ -323,11 +323,6 @@ public partial class SaplsContext : DbContext
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_ParkingLot_CreatedBy");
 
-            entity.HasOne(d => d.IdNavigation).WithOne(p => p.ParkingLotIdNavigation)
-                .HasForeignKey<ParkingLot>(d => d.Id)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_ParkingLot_UpdatedBy");
-
             entity.HasOne(d => d.ParkingLotOwner).WithMany(p => p.ParkingLots)
                 .HasForeignKey(d => d.ParkingLotOwnerId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
@@ -337,6 +332,11 @@ public partial class SaplsContext : DbContext
                 .HasForeignKey(d => d.SubscriptionId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_ParkingLot_Subscription_fk3");
+
+            entity.HasOne(d => d.UpdatedByNavigation).WithMany(p => p.ParkingLotUpdatedByNavigations)
+                .HasForeignKey(d => d.UpdatedBy)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_ParkingLot_UpdatedBy");
         });
 
         modelBuilder.Entity<ParkingLotOwnerProfile>(entity =>
@@ -409,8 +409,6 @@ public partial class SaplsContext : DbContext
             entity.HasIndex(e => e.VehicleId, "IX_ParkingSession_VehicleId");
 
             entity.HasIndex(e => e.Id, "UQ__ParkingS__3214EC06ED8B4805").IsUnique();
-
-            entity.HasIndex(e => e.TransactionId, "UQ__ParkingS__55433A6AF76245F4").IsUnique();
 
             entity.Property(e => e.Id).HasMaxLength(36);
             entity.Property(e => e.CheckInStaffId).HasMaxLength(36);
@@ -757,15 +755,15 @@ public partial class SaplsContext : DbContext
                 .HasForeignKey(d => d.CurrentHolderId)
                 .HasConstraintName("Vehicle_fk13");
 
-            entity.HasOne(d => d.IdNavigation).WithOne(p => p.Vehicle)
-                .HasForeignKey<Vehicle>(d => d.Id)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_Vehicle_UpdatedBy");
-
             entity.HasOne(d => d.Owner).WithMany(p => p.VehicleOwners)
                 .HasForeignKey(d => d.OwnerId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("Vehicle_fk12");
+
+            entity.HasOne(d => d.UpdatedByNavigation).WithMany(p => p.Vehicles)
+                .HasForeignKey(d => d.UpdatedBy)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Vehicle_UpdatedBy");
         });
 
         modelBuilder.Entity<WhiteList>(entity =>

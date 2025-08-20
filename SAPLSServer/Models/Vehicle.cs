@@ -43,11 +43,11 @@ public partial class Vehicle
 
     public virtual ClientProfile? CurrentHolder { get; set; }
 
-    public virtual AdminProfile IdNavigation { get; set; } = null!;
-
     public virtual ClientProfile Owner { get; set; } = null!;
 
     public virtual ICollection<ParkingSession> ParkingSessions { get; set; } = new List<ParkingSession>();
 
     public virtual ICollection<SharedVehicle> SharedVehicles { get; set; } = new List<SharedVehicle>();
+
+    public virtual AdminProfile UpdatedByNavigation { get; set; } = null!;
 }

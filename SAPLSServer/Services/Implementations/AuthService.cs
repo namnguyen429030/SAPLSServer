@@ -265,10 +265,6 @@ namespace SAPLSServer.Services.Implementations
                 if (string.IsNullOrWhiteSpace(request.RefreshToken))
                     return null;
 
-                // Extract userId from the current (expired) access token
-                // This assumes the client still sends the expired token in the Authorization header
-                // or you can add userId to the RefreshTokenRequest
-                                
                 if (string.IsNullOrWhiteSpace(userId))
                     return null;
 

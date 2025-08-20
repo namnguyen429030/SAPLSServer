@@ -25,11 +25,11 @@ public partial class AdminProfile
 
     public virtual ICollection<ParkingLot> ParkingLotCreatedByNavigations { get; set; } = new List<ParkingLot>();
 
-    public virtual ParkingLot? ParkingLotIdNavigation { get; set; }
-
     public virtual ICollection<ParkingLotOwnerProfile> ParkingLotOwnerProfileCreatedByNavigations { get; set; } = new List<ParkingLotOwnerProfile>();
 
     public virtual ICollection<ParkingLotOwnerProfile> ParkingLotOwnerProfileUpdatedByNavigations { get; set; } = new List<ParkingLotOwnerProfile>();
+
+    public virtual ICollection<ParkingLot> ParkingLotUpdatedByNavigations { get; set; } = new List<ParkingLot>();
 
     public virtual ICollection<Request> Requests { get; set; } = new List<Request>();
 
@@ -41,5 +41,5 @@ public partial class AdminProfile
 
     public virtual User User { get; set; } = null!;
 
-    public virtual Vehicle? Vehicle { get; set; }
+    public virtual ICollection<Vehicle> Vehicles { get; set; } = new List<Vehicle>();
 }

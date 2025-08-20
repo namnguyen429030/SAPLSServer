@@ -35,8 +35,6 @@ public partial class ParkingLot
 
     public virtual AdminProfile CreatedByNavigation { get; set; } = null!;
 
-    public virtual AdminProfile IdNavigation { get; set; } = null!;
-
     public virtual ICollection<IncidenceReport> IncidenceReports { get; set; } = new List<IncidenceReport>();
 
     public virtual ICollection<ParkingFeeSchedule> ParkingFeeSchedules { get; set; } = new List<ParkingFeeSchedule>();
@@ -52,6 +50,8 @@ public partial class ParkingLot
     public virtual ICollection<StaffProfile> StaffProfiles { get; set; } = new List<StaffProfile>();
 
     public virtual Subscription Subscription { get; set; } = null!;
+
+    public virtual AdminProfile UpdatedByNavigation { get; set; } = null!;
 
     public virtual ICollection<WhiteList> WhiteLists { get; set; } = new List<WhiteList>();
 }
