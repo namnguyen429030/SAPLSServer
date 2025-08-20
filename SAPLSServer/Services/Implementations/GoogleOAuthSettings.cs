@@ -1,4 +1,5 @@
-﻿using SAPLSServer.Exceptions;
+﻿using SAPLSServer.Constants;
+using SAPLSServer.Exceptions;
 using SAPLSServer.Services.Interfaces;
 
 namespace SAPLSServer.Services.Implementations
@@ -8,7 +9,7 @@ namespace SAPLSServer.Services.Implementations
         private readonly string _clientId;
         public GoogleOAuthSettings(IConfiguration configuration)
         {
-            _clientId = configuration["GoogleOAuth:ClientId"] ?? throw new EmptyConfigurationValueException();
+            _clientId = configuration[ConfigurationConstants.GoogleAuthClientId] ?? throw new EmptyConfigurationValueException();
         }
 
         public string ClientId => _clientId;
