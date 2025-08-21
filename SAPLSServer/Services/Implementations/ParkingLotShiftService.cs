@@ -104,6 +104,8 @@ namespace SAPLSServer.Services.Implementations
                         shift.StaffUsers.Add(staffProfile);
                     }
                 }
+                _shiftRepository.Update(shift);
+                await _shiftRepository.SaveChangesAsync();
             }
             return true;
         }

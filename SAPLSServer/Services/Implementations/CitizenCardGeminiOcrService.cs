@@ -24,7 +24,7 @@ namespace SAPLSServer.Services.Implementations
             _modelName = settings.OcrModelName;
             _apiKey = settings.OcrApiKey;
         }
-        public async Task<CitizenIdOcrResponse> AttractDataFromBase64(CitizenIdOcrRequest request)
+        public async Task<CitizenIdOcrResponse> ExtractDataFromBase64(CitizenIdOcrRequest request)
         {
             var prompt = _promptProviderService.CitizenCardPrompt;
             var geminiRequest = CreateGeminiRequest(prompt, request.FrontImageBase64, request.BackImageBase64, request.FrontImageFormat, request.BackImageFormat);
@@ -47,7 +47,7 @@ namespace SAPLSServer.Services.Implementations
             return ParseCitizenIdResponse(jsonContent);
         }
 
-        public async Task<CitizenIdOcrResponse> AttractDataFromFile(CitizenIdOcrFileRequest request)
+        public async Task<CitizenIdOcrResponse> ExtractDataFromFile(CitizenIdOcrFileRequest request)
         {
             if(request.FrontImage == null || request.BackImage == null)
             {
@@ -64,7 +64,7 @@ namespace SAPLSServer.Services.Implementations
                 BackImageFormat = backMimeType.Replace("image/", "")
             };
 
-            return await AttractDataFromBase64(base64Request);
+            return await ExtractDataFromBase64(base64Request);
         }
 
         private static object CreateGeminiRequest(string prompt, string frontImageBase64, string backImageBase64, string frontImageFormat, string backImageFormat)

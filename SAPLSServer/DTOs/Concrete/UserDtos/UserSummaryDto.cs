@@ -17,7 +17,7 @@ namespace SAPLSServer.DTOs.Concrete.UserDtos
             FullName = user.FullName;
             PhoneNumber = user.Phone;
             CreatedAt = user.CreatedAt;
-            Status = user.Status.ToString();
+            Status = user.Status;
         }
     }
 }

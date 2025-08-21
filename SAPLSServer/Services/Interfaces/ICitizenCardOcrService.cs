@@ -9,12 +9,12 @@ namespace SAPLSServer.Services.Interfaces
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
-        Task<CitizenIdOcrResponse> AttractDataFromFile(CitizenIdOcrFileRequest request);
+        Task<CitizenIdOcrResponse> ExtractDataFromFile(CitizenIdOcrFileRequest request);
         /// <summary>
         /// 
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
-        Task<CitizenIdOcrResponse> AttractDataFromBase64(CitizenIdOcrRequest request);
+        Task<CitizenIdOcrResponse> ExtractDataFromBase64(CitizenIdOcrRequest request);
     }
 }

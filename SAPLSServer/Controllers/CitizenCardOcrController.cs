@@ -21,7 +21,7 @@ namespace SAPLSServer.Controllers
         {
             try
             {
-                var result = await _ocrService.AttractDataFromBase64(request);
+                var result = await _ocrService.ExtractDataFromBase64(request);
                 return Ok(result);
             }
             catch (InvalidInformationException ex)
@@ -50,7 +50,7 @@ namespace SAPLSServer.Controllers
         {
             try
             {
-                var result = await _ocrService.AttractDataFromFile(request);
+                var result = await _ocrService.ExtractDataFromFile(request);
                 return Ok(result);
             }
             catch (InvalidInformationException ex)
