@@ -69,6 +69,7 @@ namespace SAPLSServer.Services.Interfaces
         /// <param name="ownerId">The ID of the owner recalling the shared vehicle.</param>
         /// <returns>A task representing the asynchronous recall operation.</returns>
         Task RecallSharedVehicle(string id, string ownerId);
+        Task<SharedVehicleDetailsDto?> GetByVehicleId(string vehicleId);
     }
 }
 

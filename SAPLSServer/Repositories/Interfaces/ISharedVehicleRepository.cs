@@ -1,4 +1,5 @@
 using SAPLSServer.Models;
+using System.Linq.Expressions;
 
 namespace SAPLSServer.Repositories.Interfaces
 {
@@ -52,5 +53,7 @@ namespace SAPLSServer.Repositories.Interfaces
         /// <returns>A task that represents the asynchronous operation. The task result contains the <see cref="SharedVehicle"/>
         /// object with associated vehicle, owner, and shared person data if found; otherwise, <see langword="null"/>.</returns>
         Task<SharedVehicle?> FindIncludingVehicleAndOwnerAndSharedPerson(string id);
+        Task<SharedVehicle?> FindIncludingVehicleAndOwnerAndSharedPersonReadOnly(string id);
+        Task<SharedVehicle?> FindIncludingVehicleAndOwnerAndSharedPersonReadOnly(Expression<Func<SharedVehicle, bool>>[] criterias);
     }
 }

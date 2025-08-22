@@ -122,9 +122,9 @@ namespace SAPLSServer.Controllers
             }
         }
 
-        [HttpGet("{vehicleId}")]
+        [HttpGet("{sharedVehicleId}")]
         [Authorize]
-        public async Task<IActionResult> GetSharedVehicleById(string vehicleId)
+        public async Task<IActionResult> GetSharedVehicleById(string sharedVehicleId)
         {
             try
             {
@@ -133,7 +133,7 @@ namespace SAPLSServer.Controllers
                 {
                     return Unauthorized(new { message = MessageKeys.UNAUTHORIZED_ACCESS });
                 }
-                var vehicle = await _sharedVehicleService.GetSharedVehicleDetails(vehicleId, userId);
+                var vehicle = await _sharedVehicleService.GetSharedVehicleDetails(sharedVehicleId, userId);
                 if (vehicle == null)
                 {
                     return NotFound(new { message = MessageKeys.VEHICLE_NOT_FOUND });
@@ -189,6 +189,30 @@ namespace SAPLSServer.Controllers
 
             await _sharedVehicleService.RecallSharedVehicle(id, userId);
             return Ok(new { message = MessageKeys.VEHICLE_SHARE_RECALLED });
+        }
+        /// <summary>
+        /// Gets detailed information about a shared vehicle by its vehicle ID.
+        /// </summary>
+        /// <param name="vehicleId">The unique identifier of the vehicle.</param>
+        /// <returns>Shared vehicle details if found; otherwise, NotFound.</returns>
+        [HttpGet("by-vehicle/{vehicleId}")]
+        [Authorize(Policy = Accessibility.CLIENT_ACCESS)]
+        public async Task<IActionResult> GetByVehicleId(string vehicleId)
+        {
+            try
+            {
+                var result = await _sharedVehicleService.GetByVehicleId(vehicleId);
+                if (result == null)
+                {
+                    return NotFound(new { message = MessageKeys.SHARED_VEHICLE_NOT_FOUND });
+                }
+                return Ok(result);
+            }
+            catch (Exception)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    new { message = MessageKeys.UNEXPECTED_ERROR });
+            }
         }
     }
 }

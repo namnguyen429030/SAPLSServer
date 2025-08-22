@@ -228,5 +228,16 @@ namespace SAPLSServer.Services.Implementations
                     owner.FullName);
             }
         }
+
+        public async Task<SharedVehicleDetailsDto?> GetByVehicleId(string vehicleId)
+        {
+            var sharedVehicle = await _sharedVehicleRepository.FindIncludingVehicleAndOwnerAndSharedPersonReadOnly(
+                [sv => sv.VehicleId == vehicleId]);
+            if (sharedVehicle == null)
+            {
+                return null;
+            }
+            return new SharedVehicleDetailsDto(sharedVehicle);
+        }
     }
 }

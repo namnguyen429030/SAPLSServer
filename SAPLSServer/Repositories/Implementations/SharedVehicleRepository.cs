@@ -55,5 +55,29 @@ namespace SAPLSServer.Repositories.Implementations
                 .ThenInclude(sp => sp!.User)
                 .FirstOrDefaultAsync(CreateIdPredicate(id));
         }
+
+        public Task<SharedVehicle?> FindIncludingVehicleAndOwnerAndSharedPersonReadOnly(string id)
+        {
+            return _dbSet.Include(sv => sv.Vehicle)
+                .ThenInclude(v => v.Owner)
+                .ThenInclude(r => r.User)
+                .Include(sv => sv.SharedPerson)
+                .ThenInclude(sp => sp!.User)
+                .AsNoTracking()
+                .FirstOrDefaultAsync(CreateIdPredicate(id));
+        }
+
+        public async Task<SharedVehicle?> FindIncludingVehicleAndOwnerAndSharedPersonReadOnly(
+            Expression<Func<SharedVehicle, bool>>[] criterias)
+        {
+            var query = _dbSet.Include(sv => sv.Vehicle)
+                            .ThenInclude(v => v.Owner)
+                            .ThenInclude(r => r.User)
+                            .Include(sv => sv.SharedPerson)
+                            .ThenInclude(sp => sp!.User)
+                            .AsNoTracking();
+            query = ApplyFilters(query, criterias);
+            return await query.FirstOrDefaultAsync();
+        }
     }
 }
