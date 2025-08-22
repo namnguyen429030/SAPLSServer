@@ -43,7 +43,7 @@ namespace SAPLSServer.Repositories.Implementations
 
         protected override Expression<Func<SharedVehicle, bool>> CreateIdPredicate(string id)
         {
-            return sv => sv.VehicleId == id;
+            return sv => sv.Id == id;
         }
 
         public Task<SharedVehicle?> FindIncludingVehicleAndOwnerAndSharedPerson(string id)
