@@ -12,12 +12,16 @@ namespace SAPLSServer.DTOs.Concrete.SharedVehicleDtos
         public DateTime? ExpirationDate { get; set; }
         public string OwnerName { get; set; }
         public string? Note { get; set; }
+        public string VehicleId { get; set; }
         public SharedVehicleDetailsDto(SharedVehicle sharedVehicle) : base(sharedVehicle.Vehicle)
         {
             AccessDuration = sharedVehicle.AccessDuration;
+            Note = sharedVehicle.Note;
             InviteAt = sharedVehicle.InviteAt;
             ExpirationDate = sharedVehicle.ExpireAt;
             OwnerName = sharedVehicle.Vehicle.OwnerVehicleFullName;
+            Id = sharedVehicle.Id;
+            VehicleId = sharedVehicle.VehicleId;
         }
     }
 }
