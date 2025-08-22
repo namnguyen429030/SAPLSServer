@@ -229,9 +229,9 @@ namespace SAPLSServer.Controllers
         /// </summary>
         /// <param name="request">Verification request containing images and client info</param>
         /// <returns>Success response</returns>
-        [HttpPost("verify")]
+        [HttpPost("verify-lvl-2")]
         [Authorize(Policy = Accessibility.CLIENT_ACCESS)]
-        public async Task<IActionResult> VerifyClient([FromForm] VerifyClientRequest request)
+        public async Task<IActionResult> VerifyClient([FromForm] VerifyLevelTwoClientRequest request)
         {
             try
             {
@@ -246,7 +246,7 @@ namespace SAPLSServer.Controllers
                     return Unauthorized(new { message = MessageKeys.UNAUTHORIZED_ACCESS });
                 }
 
-                await _clientService.Verify(request, userId);
+                await _clientService.VerifyLevelTwo(request, userId);
                 return Ok(new { message = MessageKeys.CLIENT_VERIFIED_SUCCESSFULLY});
             }
             catch (InvalidInformationException ex)
@@ -256,6 +256,32 @@ namespace SAPLSServer.Controllers
             catch (UnauthorizedAccessException ex)
             {
                 return Unauthorized(new { message = ex.Message });
+            }
+            catch (Exception)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    new { message = MessageKeys.UNEXPECTED_ERROR });
+            }
+        }
+
+        /// <summary>
+        /// Checks if the current client has completed level two verification.
+        /// </summary>
+        /// <returns>True if the client is verified at level two, otherwise false.</returns>
+        [HttpGet("is-verify-level-two")]
+        [Authorize(Policy = Accessibility.CLIENT_ACCESS)]
+        public async Task<IActionResult> IsVerifyLevelTwo()
+        {
+            try
+            {
+                var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrWhiteSpace(userId))
+                {
+                    return Unauthorized(new { message = MessageKeys.UNAUTHORIZED_ACCESS });
+                }
+
+                var isVerified = await _clientService.IsVerifyLevelTwo(userId);
+                return Ok(new { isVerified });
             }
             catch (Exception)
             {

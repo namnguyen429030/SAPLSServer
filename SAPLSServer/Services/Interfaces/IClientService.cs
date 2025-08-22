@@ -66,6 +66,19 @@ namespace SAPLSServer.Services.Interfaces
         /// <returns>A task that returns the device token, or null if not found.</returns>
         Task<string?> GetDeviceToken(string userId);
         Task<bool> IsClientValid(string userId);
-        Task Verify(VerifyClientRequest request, string performerId);
+        /// <summary>
+        /// Verifies and updates the client profile with level two verification data, including citizen card images and personal information.
+        /// </summary>
+        /// <param name="request">The request containing all required verification data and images.</param>
+        /// <param name="performerId">The user ID performing the verification (should match the client).</param>
+        /// <returns>A task representing the asynchronous operation.</returns>
+        Task VerifyLevelTwo(VerifyLevelTwoClientRequest request, string performerId);
+
+        /// <summary>
+        /// Checks if the client profile has completed level two verification.
+        /// </summary>
+        /// <param name="userId">The user ID of the client.</param>
+        /// <returns>A task that returns true if the client is verified at level two, otherwise false.</returns>
+        Task<bool> IsVerifyLevelTwo(string userId);
     }
 }

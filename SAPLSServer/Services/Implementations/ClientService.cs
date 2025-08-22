@@ -174,7 +174,7 @@ namespace SAPLSServer.Services.Implementations
             return await _clientProfileRepository.ExistsAsync(cp => cp.UserId == userId);
         }
 
-        public async Task Verify(VerifyClientRequest request, string performerId)
+        public async Task VerifyLevelTwo(VerifyLevelTwoClientRequest request, string performerId)
         {
             // Only allow the user to verify their own profile
             if (performerId != request.Id)
@@ -223,7 +223,7 @@ namespace SAPLSServer.Services.Implementations
             };
             var backImageResult = await _fileService.UploadFileAsync(backImageUploadRequest);
 
-            // Update all properties from VerifyClientRequest
+            // Update all properties from VerifyLevelTwoClientRequest
             client.CitizenId = request.CitizenId;
             client.DateOfBirth = request.DateOfBirth;
             client.Sex = request.Sex;
@@ -237,6 +237,25 @@ namespace SAPLSServer.Services.Implementations
 
             _clientProfileRepository.Update(client);
             await _clientProfileRepository.SaveChangesAsync();
+        }
+
+        public async Task<bool> IsVerifyLevelTwo(string userId)
+        {
+            var client = await _clientProfileRepository.FindIncludingUser(userId);
+            if (client == null)
+                return false;
+
+            // Level two verification: all required fields and both images must be present
+            bool hasAllInfo =
+                !string.IsNullOrWhiteSpace(client.CitizenId) &&
+                client.DateOfBirth != default &&
+                !string.IsNullOrWhiteSpace(client.Nationality) &&
+                !string.IsNullOrWhiteSpace(client.PlaceOfOrigin) &&
+                !string.IsNullOrWhiteSpace(client.PlaceOfResidence) &&
+                client.FrontCitizenIdCardImageUrl != null &&
+                client.BackCitizenIdCardImageUrl != null;
+
+            return hasAllInfo;
         }
     }
 }

@@ -135,7 +135,7 @@ namespace SAPLSServer.Services.Implementations
                     return null;
                 }
 
-                // Verify Google token and get user info
+                // VerifyLevelTwo Google token and get user info
                 var payload = await VerifyGoogleIdTokenAsync(request.AccessToken);
                 if (payload == null)
                 {
@@ -188,7 +188,7 @@ namespace SAPLSServer.Services.Implementations
         {
             try
             {
-                // Verify the ID token using Google's official library
+                // VerifyLevelTwo the ID token using Google's official library
                 var settings = new GoogleJsonWebSignature.ValidationSettings()
                 {
                     Audience = new List<string> { _clientId }

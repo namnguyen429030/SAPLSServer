@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace SAPLSServer.DTOs.Concrete.UserDtos
 {
-    public class VerifyClientRequest : UpdateRequest
+    public class VerifyLevelTwoClientRequest : UpdateRequest
     {
         [Required(ErrorMessage = MessageKeys.FRONT_ID_CARD_IMAGE_REQUIRED)]
         [DataType(DataType.Upload, ErrorMessage = MessageKeys.INVALID_FRONT_ID_CARD_IMAGE_UPLOADED)]
