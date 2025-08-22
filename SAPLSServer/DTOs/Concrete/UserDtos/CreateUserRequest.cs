@@ -4,7 +4,7 @@ using SAPLSServer.Constants;
 
 namespace SAPLSServer.DTOs.Concrete.UserDtos
 {
-    public abstract class CreateUserRequest
+    public class CreateUserRequest
     {
         [Required(ErrorMessage = MessageKeys.EMAIL_REQUIRED)]
         [EmailAddress(ErrorMessage = MessageKeys.INVALID_EMAIL_FORMAT)]

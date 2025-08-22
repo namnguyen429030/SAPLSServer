@@ -223,5 +223,45 @@ namespace SAPLSServer.Controllers
                     new { message = MessageKeys.UNEXPECTED_ERROR });
             }
         }
+
+        /// <summary>
+        /// Verifies and updates the client profile with citizen card images and information.
+        /// </summary>
+        /// <param name="request">Verification request containing images and client info</param>
+        /// <returns>Success response</returns>
+        [HttpPost("verify")]
+        [Authorize(Policy = Accessibility.CLIENT_ACCESS)]
+        public async Task<IActionResult> VerifyClient([FromForm] VerifyClientRequest request)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrWhiteSpace(userId))
+                {
+                    return Unauthorized(new { message = MessageKeys.UNAUTHORIZED_ACCESS });
+                }
+
+                await _clientService.Verify(request, userId);
+                return Ok(new { message = MessageKeys.CLIENT_VERIFIED_SUCCESSFULLY});
+            }
+            catch (InvalidInformationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(new { message = ex.Message });
+            }
+            catch (Exception)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    new { message = MessageKeys.UNEXPECTED_ERROR });
+            }
+        }
     }
 }

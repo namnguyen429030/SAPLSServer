@@ -28,7 +28,7 @@ namespace SAPLSServer.Services.Implementations
             if (staffIdExists)
                 throw new InvalidInformationException(MessageKeys.STAFF_ID_ALREADY_EXISTS);
 
-            var userId = await _userService.Create(request);
+            var userId = await _userService.Create(request, UserRole.Staff);
 
             var staffProfile = new StaffProfile
             {

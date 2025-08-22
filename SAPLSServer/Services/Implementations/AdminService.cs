@@ -28,7 +28,7 @@ namespace SAPLSServer.Services.Implementations
             if (adminIdExists)
                 throw new InvalidInformationException(MessageKeys.ADMIN_ID_ALREADY_EXISTS);
 
-            var userId = await _userService.Create(request);
+            var userId = await _userService.Create(request, UserRole.Admin);
 
             var adminProfile = new AdminProfile
             {

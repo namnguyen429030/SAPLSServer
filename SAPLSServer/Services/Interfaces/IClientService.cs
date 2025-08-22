@@ -66,5 +66,6 @@ namespace SAPLSServer.Services.Interfaces
         /// <returns>A task that returns the device token, or null if not found.</returns>
         Task<string?> GetDeviceToken(string userId);
         Task<bool> IsClientValid(string userId);
+        Task Verify(VerifyClientRequest request, string performerId);
     }
 }

@@ -29,7 +29,7 @@ namespace SAPLSServer.Services.Implementations
             _httpContextAccessor = httpContextAccessor;
         }
 
-        public async Task<string> Create(CreateUserRequest request)
+        public async Task<string> Create(CreateUserRequest request, UserRole role)
         {
             // Check for unique Email
             bool emailExists = await _userRepository.ExistsAsync(u => u.Email == request.Email);
@@ -75,7 +75,7 @@ namespace SAPLSServer.Services.Implementations
                 Phone = request.Phone,
                 ProfileImageUrl = profileImageUrl,
                 Status = UserStatus.Inactive.ToString(),
-                Role = UserRole.Client.ToString(),
+                Role = role.ToString(),
                 OneTimePassword = confirmationOtp,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow

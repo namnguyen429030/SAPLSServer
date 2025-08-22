@@ -19,7 +19,7 @@ namespace SAPLSServer.Services.Implementations
         private readonly IAdminService _adminService;
         private readonly IFileService _fileService;
 
-        public ClientService(IUserService userService, IVehicleShareCodeService vehicleShareCodeService, 
+        public ClientService(IUserService userService, IVehicleShareCodeService vehicleShareCodeService,
             IClientProfileRepository clientProfileRepository, IFileService fileService, IAdminService adminService)
         {
             _userService = userService;
@@ -32,57 +32,19 @@ namespace SAPLSServer.Services.Implementations
 
         public async Task Create(CreateClientProfileRequest request)
         {
-            bool citizenIdExists = await _clientProfileRepository.ExistsAsync(cp => cp.CitizenId == request.CitizenId);
-            if (citizenIdExists)
-                throw new InvalidInformationException(MessageKeys.CITIZEN_ID_ALREADY_EXISTS);
-            
-            string userId = await _userService.Create(request);
-            var frontImageUploadRequest = new FileUploadRequest
-            {
-                File = request.FrontCitizenCardImage,
-                Container = "citizen-id-cards",
-                SubFolder = $"client-{userId}",
-                GenerateUniqueFileName = true,
-                Metadata = new Dictionary<string, string>
-                {
-                    { "UserId", userId },
-                    { "ImageType", "FrontCitizenIdCard" }
-                }
-            };
-
-            var frontImageResult = await _fileService.UploadFileAsync(frontImageUploadRequest);
-
-
-            var backImageUploadRequest = new FileUploadRequest
-            {
-                File = request.BackCitizenCardImage,
-                Container = "citizen-id-cards",
-                SubFolder = $"client-{userId}",
-                GenerateUniqueFileName = true,
-                Metadata = new Dictionary<string, string>
-                {
-                    { "UserId", userId },
-                    { "ImageType", "BackCitizenIdCard" }
-                }
-            };
-
-            var backImageResult = await _fileService.UploadFileAsync(backImageUploadRequest);
-
-
+            string userId = await _userService.Create(request, UserRole.Client);
             var clientProfile = new ClientProfile
             {
                 UserId = userId,
-                CitizenId = request.CitizenId,
-                DateOfBirth = request.DateOfBirth,
-                Sex = request.Sex,
-                Nationality = request.Nationality,
-                PlaceOfOrigin = request.PlaceOfOrigin,
-                PlaceOfResidence = request.PlaceOfResidence,
+                CitizenId = string.Empty,
+                DateOfBirth = DateOnly.FromDateTime(DateTime.UtcNow),
+                Sex = true,
+                Nationality = string.Empty,
+                PlaceOfOrigin = string.Empty,
+                PlaceOfResidence = string.Empty,
                 ShareCode = _vehicleShareCodeService.GenerateShareCode(VehicleShareCodeService.VEHICLE_SHARE_CODE_LENGTH),
-                FrontCitizenIdCardImageUrl = frontImageResult.CloudUrl,
-                BackCitizenIdCardImageUrl = backImageResult.CloudUrl,
             };
-            while(await _clientProfileRepository.ExistsAsync(cp => cp.ShareCode == clientProfile.ShareCode))
+            while (await _clientProfileRepository.ExistsAsync(cp => cp.ShareCode == clientProfile.ShareCode))
             {
                 clientProfile.ShareCode = _vehicleShareCodeService.GenerateShareCode(VehicleShareCodeService.VEHICLE_SHARE_CODE_LENGTH);
             }
@@ -99,7 +61,7 @@ namespace SAPLSServer.Services.Implementations
                                                                                 && cp.UserId != request.Id);
             if (citizenIdExists)
                 throw new InvalidInformationException(MessageKeys.CITIZEN_ID_ALREADY_EXISTS);
-            if(await _adminService.IsAdminValid(updatePerformerId))
+            if (await _adminService.IsAdminValid(updatePerformerId))
             {
                 throw new UnauthorizedAccessException(MessageKeys.UNAUTHORIZED_ACCESS);
             }
@@ -145,13 +107,13 @@ namespace SAPLSServer.Services.Implementations
             var criteriasArray = criterias.ToArray();
             var totalCount = await _clientProfileRepository.CountAsync(criteriasArray);
             var clients = await _clientProfileRepository.GetPageAsync(
-                                        pageRequest.PageNumber, pageRequest.PageSize, 
-                                        criteriasArray , null, request.Order == OrderType.Asc.ToString());
+                                        pageRequest.PageNumber, pageRequest.PageSize,
+                                        criteriasArray, null, request.Order == OrderType.Asc.ToString());
             var items = new List<ClientProfileSummaryDto>();
             foreach (var client in clients)
             {
                 var clientIncludingUser = await _clientProfileRepository.FindIncludingUserReadOnly(client.UserId);
-                if(clientIncludingUser == null)
+                if (clientIncludingUser == null)
                     continue; // Skip if client profile is not found
                 items.Add(new ClientProfileSummaryDto(clientIncludingUser));
             }
@@ -187,7 +149,7 @@ namespace SAPLSServer.Services.Implementations
 
         public async Task UpdateDeviceToken(string userId, string? deviceToken)
         {
-            var client = await _clientProfileRepository.FindIncludingUser(userId) 
+            var client = await _clientProfileRepository.FindIncludingUser(userId)
                 ?? throw new InvalidInformationException(MessageKeys.USER_NOT_FOUND);
             client.DeviceToken = deviceToken;
             _clientProfileRepository.Update(client);
@@ -197,7 +159,7 @@ namespace SAPLSServer.Services.Implementations
         public async Task<string?> GetDeviceToken(string userId)
         {
             var client = await _clientProfileRepository.Find(userId);
-            if(client == null)
+            if (client == null)
             {
                 return null;
             }
@@ -205,11 +167,76 @@ namespace SAPLSServer.Services.Implementations
         }
         public async Task<bool> IsClientValid(string userId)
         {
-            if(!await _userService.IsUserValid(userId))
+            if (!await _userService.IsUserValid(userId))
             {
                 return false;
             }
             return await _clientProfileRepository.ExistsAsync(cp => cp.UserId == userId);
+        }
+
+        public async Task Verify(VerifyClientRequest request, string performerId)
+        {
+            // Only allow the user to verify their own profile
+            if (performerId != request.Id)
+            {
+                throw new UnauthorizedAccessException(MessageKeys.UNAUTHORIZED_ACCESS);
+            }
+
+            // Retrieve the client profile
+            var client = await _clientProfileRepository.FindIncludingUser(request.Id)
+                ?? throw new InvalidInformationException(MessageKeys.CLIENT_PROFILE_NOT_FOUND);
+
+            // Check if the citizen ID is already used by another client
+            bool citizenIdExists = await _clientProfileRepository.ExistsAsync(cp => cp.CitizenId == request.CitizenId && cp.UserId != request.Id);
+            if (citizenIdExists)
+            {
+                throw new InvalidInformationException(MessageKeys.CITIZEN_ID_ALREADY_EXISTS);
+            }
+
+            // Upload front citizen card image
+            var frontImageUploadRequest = new FileUploadRequest
+            {
+                File = request.FrontCitizenCardImage,
+                Container = "citizen-id-cards",
+                SubFolder = $"client-{request.Id}",
+                GenerateUniqueFileName = true,
+                Metadata = new Dictionary<string, string>
+                {
+                    { "UserId", request.Id },
+                    { "ImageType", "FrontCitizenIdCard" }
+                }
+            };
+            var frontImageResult = await _fileService.UploadFileAsync(frontImageUploadRequest);
+
+            // Upload back citizen card image
+            var backImageUploadRequest = new FileUploadRequest
+            {
+                File = request.BackCitizenCardImage,
+                Container = "citizen-id-cards",
+                SubFolder = $"client-{request.Id}",
+                GenerateUniqueFileName = true,
+                Metadata = new Dictionary<string, string>
+                {
+                    { "UserId", request.Id },
+                    { "ImageType", "BackCitizenIdCard" }
+                }
+            };
+            var backImageResult = await _fileService.UploadFileAsync(backImageUploadRequest);
+
+            // Update all properties from VerifyClientRequest
+            client.CitizenId = request.CitizenId;
+            client.DateOfBirth = request.DateOfBirth;
+            client.Sex = request.Sex;
+            client.Nationality = request.Nationality;
+            client.PlaceOfOrigin = request.PlaceOfOrigin;
+            client.PlaceOfResidence = request.PlaceOfResidence;
+            client.FrontCitizenIdCardImageUrl = frontImageResult.CdnUrl ?? frontImageResult.CloudUrl;
+            client.BackCitizenIdCardImageUrl = backImageResult.CdnUrl ?? backImageResult.CloudUrl;
+            client.UpdatedBy = performerId;
+            client.User.UpdatedAt = DateTime.UtcNow;
+
+            _clientProfileRepository.Update(client);
+            await _clientProfileRepository.SaveChangesAsync();
         }
     }
 }

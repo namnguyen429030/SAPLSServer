@@ -31,7 +31,7 @@ namespace SAPLSServer.Services.Implementations
             if (ownerIdExists)
                 throw new InvalidInformationException(MessageKeys.PARKING_LOT_OWNER_ID_ALREADY_EXISTS);
 
-            var userId = await _userService.Create(request);
+            var userId = await _userService.Create(request, UserRole.ParkingLotOwner);
 
             var ownerProfile = new ParkingLotOwnerProfile
             {

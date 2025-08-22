@@ -1,4 +1,5 @@
-﻿using SAPLSServer.DTOs.Concrete.UserDtos;
+﻿using SAPLSServer.Constants;
+using SAPLSServer.DTOs.Concrete.UserDtos;
 
 namespace SAPLSServer.Services.Interfaces
 {
@@ -12,7 +13,7 @@ namespace SAPLSServer.Services.Interfaces
         /// </summary>
         /// <param name="request">The request containing user registration details.</param>
         /// <returns>A task that returns the unique identifier of the newly created user.</returns>
-        Task<string> Create(CreateUserRequest request);
+        Task<string> Create(CreateUserRequest request, UserRole role);
 
         /// <summary>
         /// Updates the profile image of the specified user.
