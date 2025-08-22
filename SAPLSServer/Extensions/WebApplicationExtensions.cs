@@ -22,7 +22,14 @@ namespace SAPLSServer.Extensions
 
             // Configure common middleware
             app.UseHttpsRedirection();
-            app.UseCors("DefaultPolicy");
+            if (app.Environment.IsDevelopment())
+            {
+                app.UseCors("DefaultPolicy");
+            }
+            else
+            {
+                app.UseCors("ProductionPolicy");
+            }
             app.UseAuthentication();
             app.UseAuthorization();
             app.MapControllers();

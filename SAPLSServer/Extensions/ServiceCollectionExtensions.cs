@@ -4,8 +4,6 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using SAPLSServer.Constants;
 using SAPLSServer.Exceptions;
@@ -224,24 +222,29 @@ namespace SAPLSServer.Extensions
         /// </summary>
         /// <param name="services">Service collection</param>
         /// <returns>Service collection for chaining</returns>
-        public static IServiceCollection AddCorsConfiguration(this IServiceCollection services)
+        public static IServiceCollection AddCorsConfiguration(this IServiceCollection services, IWebHostEnvironment environment)
         {
             services.AddCors(options =>
             {
-                options.AddPolicy("DefaultPolicy", policy =>
+                if (environment.IsDevelopment())
                 {
-                    policy.AllowAnyOrigin()
-                          .AllowAnyMethod()
-                          .AllowAnyHeader();
-                });
-
-                options.AddPolicy("ProductionPolicy", policy =>
+                    options.AddPolicy("DefaultPolicy", policy =>
+                    {
+                        policy.AllowAnyOrigin()
+                              .AllowAnyMethod()
+                              .AllowAnyHeader();
+                    });
+                }
+                else
                 {
-                    policy.WithOrigins("https://yourdomain.com", "https://www.yourdomain.com")
-                          .AllowAnyMethod()
-                          .AllowAnyHeader()
-                          .AllowCredentials();
-                });
+                    options.AddPolicy("ProductionPolicy", policy =>
+                    {
+                        policy.WithOrigins("https://your-domain.com", "https://www.your-domain.com")
+                              .AllowAnyMethod()
+                              .AllowAnyHeader()
+                              .AllowCredentials();
+                    });
+                }
             });
 
             return services;
