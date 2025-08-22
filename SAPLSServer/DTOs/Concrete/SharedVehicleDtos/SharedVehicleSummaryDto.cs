@@ -11,6 +11,7 @@ namespace SAPLSServer.DTOs.Concrete.SharedVehicleDtos
         {
             AccessDuration = sharedVehicle.AccessDuration;
             OwnerName = sharedVehicle.Vehicle.Owner.User.FullName;
+            Id = sharedVehicle.Id;
         }
     }
 }
