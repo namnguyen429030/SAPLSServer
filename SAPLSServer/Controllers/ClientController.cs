@@ -289,5 +289,30 @@ namespace SAPLSServer.Controllers
                     new { message = MessageKeys.UNEXPECTED_ERROR });
             }
         }
+
+        /// <summary>
+        /// Retrieves a client profile summary by the provided vehicle share code.
+        /// </summary>
+        /// <param name="shareCode">The unique share code associated with the client.</param>
+        /// <returns>The client profile summary if found; otherwise, NotFound.</returns>
+        [HttpGet("by-share-code/{shareCode}")]
+        [Authorize(Policy = Accessibility.ADMIN_CLIENT_ACCESS)]
+        public async Task<IActionResult> GetUserIdByShareCode(string shareCode)
+        {
+            try
+            {
+                var result = await _clientService.GetUserIdByShareCode(shareCode);
+                return Ok(result);
+            }
+            catch (InvalidInformationException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (Exception)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    new { message = MessageKeys.UNEXPECTED_ERROR });
+            }
+        }
     }
 }
