@@ -17,7 +17,7 @@ namespace SAPLSServer
                 builder.AddAzureKeyVault();
             }
             // Configure services
-            builder.Services.AddApplicationServices(builder.Configuration);
+            builder.Services.AddApplicationServices(builder.Configuration, builder.Environment);
             builder.Services.AddExternalServices();
             builder.Services.AddApiDocumentation();
             if(builder.Environment.IsDevelopment())

@@ -49,7 +49,8 @@ namespace SAPLSServer.Extensions
         /// </summary>
         /// <param name="services">Service collection</param>
         /// <returns>Service collection for chaining</returns>
-        public static IServiceCollection AddApplicationServices(this IServiceCollection services, IConfiguration configuration)
+        public static IServiceCollection AddApplicationServices(this IServiceCollection services, 
+            IConfiguration configuration, IWebHostEnvironment environment)
         {
             //Add singletons
             services.AddSingleton<IPromptProviderService, GeminiModelPromptProviderService>();
@@ -70,9 +71,17 @@ namespace SAPLSServer.Extensions
             });
 
             // Add DbContext for Entity Framework Core
-            services.AddDbContext<SaplsContext>(opt =>
+            if(environment.IsDevelopment())
             {
-                opt.UseSqlServer(configuration.GetConnectionString(ConfigurationConstants.DefaultConnectionString));
+                services.AddDbContext<SaplsContext>(opt =>
+                {
+                    opt.UseSqlServer(configuration.GetConnectionString(ConfigurationConstants.DefaultConnectionString));
+                });
+            }
+            else
+                services.AddDbContext<SaplsContext>(opt =>
+            {
+                opt.UseSqlServer(configuration.GetConnectionString(ConfigurationConstants.AzureConnectionString));
             });
 
             // Add repositories
