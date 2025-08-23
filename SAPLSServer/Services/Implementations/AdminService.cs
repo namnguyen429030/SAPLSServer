@@ -14,10 +14,13 @@ namespace SAPLSServer.Services.Implementations
     {
         private readonly IAdminProfileRepository _adminProfileRepository;
         private readonly IUserService _userService;
+        private readonly IPasswordService _passwordService;
 
-        public AdminService(IUserService userService, IAdminProfileRepository adminProfileRepository)
+        public AdminService(IUserService userService, IAdminProfileRepository adminProfileRepository, 
+            IPasswordService passwordService)
         {
             _userService = userService;
+            _passwordService = passwordService;
             _adminProfileRepository = adminProfileRepository;
         }
 
@@ -27,7 +30,7 @@ namespace SAPLSServer.Services.Implementations
             bool adminIdExists = await _adminProfileRepository.ExistsAsync(a => a.AdminId == request.AdminId);
             if (adminIdExists)
                 throw new InvalidInformationException(MessageKeys.ADMIN_ID_ALREADY_EXISTS);
-
+            request.Password = _passwordService.RandomizePassword();
             var userId = await _userService.Create(request, UserRole.Admin);
 
             var adminProfile = new AdminProfile

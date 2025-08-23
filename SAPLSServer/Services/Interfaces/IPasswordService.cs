@@ -43,5 +43,6 @@ namespace SAPLSServer.Services.Interfaces
         /// <param name="request">The reset password request containing user ID, OTP, and new password.</param>
         /// <returns>A task representing the asynchronous operation.</returns>
         Task ResetPassword(ResetUserPasswordRequest request);
+        string RandomizePassword(int minLength = 8, int maxLength = 24);
     }
 }

@@ -96,5 +96,36 @@ namespace SAPLSServer.Services.Implementations
         {
             return BCrypt.Net.BCrypt.Verify(password, hashedPassword);
         }
+
+        public string RandomizePassword(int minLength = 8, int maxLength = 24)
+        {
+            const string lower = "abcdefghijklmnopqrstuvwxyz";
+            const string upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+            const string digits = "0123456789";
+            const string special = "!@#$%^&*()_+-=[]{};':\"\\|,.<>/?";
+            var random = new Random();
+
+            // Ensure at least one character from each required set
+            var chars = new List<char>
+            {
+                lower[random.Next(lower.Length)],
+                upper[random.Next(upper.Length)],
+                digits[random.Next(digits.Length)],
+                special[random.Next(special.Length)]
+            };
+
+            // Fill the rest with random chars from all sets
+            string all = lower + upper + digits + special;
+            int length = random.Next(minLength, maxLength + 1);
+            for (int i = chars.Count; i < length; i++)
+            {
+                chars.Add(all[random.Next(all.Length)]);
+            }
+
+            // Shuffle to avoid predictable positions
+            chars = chars.OrderBy(_ => random.Next()).ToList();
+
+            return new string(chars.ToArray());
+        }
     }
 }

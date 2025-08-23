@@ -14,10 +14,13 @@ namespace SAPLSServer.Services.Implementations
     {
         private readonly IStaffProfileRepository _staffProfileRepository;
         private readonly IUserService _userService;
+        private readonly IPasswordService _passwordService;
 
-        public StaffService(IUserService userService, IStaffProfileRepository staffProfileRepository)
+        public StaffService(IUserService userService, IStaffProfileRepository staffProfileRepository,
+            IPasswordService passwordService)
         {
             _userService = userService;
+            _passwordService = passwordService;
             _staffProfileRepository = staffProfileRepository;
         }
 
@@ -28,6 +31,7 @@ namespace SAPLSServer.Services.Implementations
             if (staffIdExists)
                 throw new InvalidInformationException(MessageKeys.STAFF_ID_ALREADY_EXISTS);
 
+            request.Password = _passwordService.RandomizePassword();
             var userId = await _userService.Create(request, UserRole.Staff);
 
             var staffProfile = new StaffProfile

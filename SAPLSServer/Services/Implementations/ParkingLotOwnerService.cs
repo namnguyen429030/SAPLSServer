@@ -15,11 +15,14 @@ namespace SAPLSServer.Services.Implementations
     {
         private readonly IParkingLotOwnerProfileRepository _parkingLotOwnerProfileRepository;
         private readonly IUserService _userService;
+        private readonly IPasswordService _passwordService;
 
-        public ParkingLotOwnerService(IUserService userService, 
+        public ParkingLotOwnerService(IUserService userService,
+            IPasswordService passwordService,
             IParkingLotOwnerProfileRepository parkingLotOwnerProfileRepository)
         {
             _userService = userService;
+            _passwordService = passwordService;
             _parkingLotOwnerProfileRepository = parkingLotOwnerProfileRepository;
         }
 
@@ -30,7 +33,7 @@ namespace SAPLSServer.Services.Implementations
                 .ExistsAsync(o => o.ParkingLotOwnerId == request.ParkingLotOwnerId);
             if (ownerIdExists)
                 throw new InvalidInformationException(MessageKeys.PARKING_LOT_OWNER_ID_ALREADY_EXISTS);
-
+            request.Password = _passwordService.RandomizePassword();
             var userId = await _userService.Create(request, UserRole.ParkingLotOwner);
 
             var ownerProfile = new ParkingLotOwnerProfile
