@@ -22,6 +22,7 @@
         public const string JwtSecretKey = "JwtSettings:SecretKey";
 
         public const string DefaultConnectionString = "DefaultConnection";
+        public const string AzureConnectionString = "ConnectionStrings:AzureConnectionString";
 
         public const string EmailSmtpServer = "MailKitMailSettings:SmtpServer";
         public const string EmailSmtpPort = "MailKitMailSettings:SmtpPort";
