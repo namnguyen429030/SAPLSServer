@@ -56,6 +56,7 @@ namespace SAPLSServer.Services.Implementations
                 InviteAt = DateTime.UtcNow,
                 ExpireAt = DateTime.UtcNow.AddHours(1),
                 Note = request.Note,
+                SharedPersonId = request.SharedPersonId,
             };
             
             await _sharedVehicleRepository.AddAsync(sharedVehicle);
