@@ -13,7 +13,7 @@ namespace SAPLSServer.Services.Interfaces
         /// <summary>
         /// Path to Firebase service account key file
         /// </summary>
-        string ServiceAccountKeyPath { get; }
+        string ServiceAccountJson { get; }
 
         /// <summary>
         /// Default notification sound
