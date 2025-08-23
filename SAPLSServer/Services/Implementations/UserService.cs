@@ -210,7 +210,7 @@ namespace SAPLSServer.Services.Implementations
 
         public async Task<UserDetailsDto?> GetByRefreshToken(string refreshToken)
         {
-            var user = await _userRepository.Find([u => u.RefreshToken == refreshToken && 
+            var user = await _userRepository.Find([u => u.RefreshToken!.Trim() == refreshToken.Trim() && 
                                                   u.RefreshTokenExpiresAt > DateTime.UtcNow &&
                                                   u.Status == UserStatus.Active.ToString()]);
             if (user == null)
@@ -276,7 +276,7 @@ namespace SAPLSServer.Services.Implementations
                 return false;
 
             // Check if refresh token matches and is not expired
-            return user.RefreshToken == refreshToken && 
+            return user.RefreshToken!.Trim() == refreshToken.Trim() && 
                    user.RefreshTokenExpiresAt.HasValue && 
                    user.RefreshTokenExpiresAt > DateTime.UtcNow &&
                    user.Status == UserStatus.Active.ToString();

@@ -22,7 +22,7 @@ namespace SAPLSServer.Services.Implementations
             {
                 _firebaseApp = FirebaseApp.Create(new AppOptions()
                 {
-                    Credential = GoogleCredential.FromFile(_firebaseSettings.ServiceAccountKeyPath),
+                    Credential = GoogleCredential.FromJson(_firebaseSettings.ServiceAccountJson),
                     ProjectId = _firebaseSettings.ProjectId
                 });
             }

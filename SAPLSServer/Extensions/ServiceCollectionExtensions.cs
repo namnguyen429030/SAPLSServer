@@ -269,7 +269,10 @@ namespace SAPLSServer.Extensions
 
                 options.AddPolicy("ProductionPolicy", policy =>
                 {
-                    policy.WithOrigins("https://yourdomain.com", "https://www.yourdomain.com")
+                    policy.WithOrigins(
+                        "https://yourdomain.com", 
+                        "https://www.yourdomain.com",
+                        "http://localhost:5173")
                           .AllowAnyMethod()
                           .AllowAnyHeader()
                           .AllowCredentials();
