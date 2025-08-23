@@ -14,14 +14,14 @@ namespace SAPLSServer.Repositories.Implementations
         public async Task<ShiftDiary?> FindIncludingSender(string id)
         {
             return await _dbSet.Include(id => id.Sender)
-                .ThenInclude(s => s.User)
+                .ThenInclude(s => s!.User)
                 .FirstOrDefaultAsync(CreateIdPredicate(id));
         }
 
         public async Task<ShiftDiary?> FindIncludingSenderReadOnly(string id)
         {
             return await _dbSet.Include(id => id.Sender)
-                .ThenInclude(s => s.User)
+                .ThenInclude(s => s!.User)
                 .AsNoTracking()
                 .FirstOrDefaultAsync(CreateIdPredicate(id));
         }
