@@ -112,9 +112,15 @@ namespace SAPLSServer.Services.Implementations
                 sp.User.Phone.Contains(request.SearchCriteria));
             }
             var staffs = await _staffProfileRepository.GetAllAsync(criterias.ToArray(), null, request.Order == OrderType.Asc.ToString());
-            return staffs
-                .Select(staff => new StaffProfileSummaryDto(staff))
-                .ToList();
+            var items = new List<StaffProfileSummaryDto>();
+            foreach (var staff in staffs)
+            {
+                var staffIncludingUser = await _staffProfileRepository.FindIncludingUserReadOnly(staff.UserId);
+                if (staffIncludingUser == null)
+                    continue; // Skip if staff profile is not found
+                items.Add(new StaffProfileSummaryDto(staffIncludingUser));
+            }
+            return items;
         }
 
         public async Task<StaffProfileDetailsDto?> FindByStaffId(string staffId)

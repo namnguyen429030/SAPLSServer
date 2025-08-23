@@ -125,9 +125,18 @@ namespace SAPLSServer.Services.Implementations
             }
             var owners = await _parkingLotOwnerProfileRepository.GetAllAsync(criterias.ToArray(), 
                 null, request.Order == OrderType.Asc.ToString());
-            return owners
-                .Select(owner => new ParkingLotOwnerProfileSummaryDto(owner))
-                .ToList();
+            var items = new List<ParkingLotOwnerProfileSummaryDto>();
+            foreach (var owner in owners)
+            {
+                var ownerIncludingUser = await _parkingLotOwnerProfileRepository
+                    .FindIncludingUserReadOnly(owner.UserId);
+                if (ownerIncludingUser == null)
+                {
+                    continue;
+                }
+                items.Add(new ParkingLotOwnerProfileSummaryDto(ownerIncludingUser));
+            }
+            return items;
         }
 
         public async Task<ParkingLotOwnerProfileDetailsDto?> GetByParkingLotOwnerId(string parkingLotOwnerId)

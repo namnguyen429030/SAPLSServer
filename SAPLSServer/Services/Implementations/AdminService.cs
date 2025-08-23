@@ -116,9 +116,15 @@ namespace SAPLSServer.Services.Implementations
                 ap.User.Phone.Contains(request.SearchCriteria));
             }
             var admins = await _adminProfileRepository.GetAllAsync(criterias.ToArray(), null, request.Order == OrderType.Asc.ToString());
-            return admins
-                .Select(admin => new AdminProfileSummaryDto(admin))
-                .ToList();
+            var items = new List<AdminProfileSummaryDto>();
+            foreach (var admin in admins)
+            {
+                var adminIncludingUser = await _adminProfileRepository.FindIncludingUserReadOnly(admin.UserId);
+                if (adminIncludingUser == null)
+                    continue;
+                items.Add(new AdminProfileSummaryDto(adminIncludingUser));
+            }
+            return items;
         }
 
         public async Task<AdminProfileDetailsDto?> GetByAdminIdAsync(string adminId)
