@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.Extensions.Logging; // Add this at the top if not present
 using SAPLSServer.Constants;
 using SAPLSServer.Exceptions;
 using SAPLSServer.Models;
@@ -35,7 +36,26 @@ namespace SAPLSServer.Extensions
                 // Add Azure Key Vault configuration
                 builder.Configuration.AddAzureKeyVault(
                     new Uri(keyVaultUrl),
-                    new DefaultAzureCredential());
+                    new Azure.Identity.DefaultAzureCredential());
+
+                // Log all configuration values from Azure that match keys in ConfigurationConstants
+                var logger = builder.Services.BuildServiceProvider().GetRequiredService<ILoggerFactory>()
+                    .CreateLogger("AzureKeyVaultLogger");
+
+                var configKeys = typeof(ConfigurationConstants)
+                    .GetFields(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static)
+                    .Where(f => f.FieldType == typeof(string))
+                    .Select(f => (string)f.GetValue(null)!)
+                    .ToList();
+
+                foreach (var key in configKeys)
+                {
+                    var value = builder.Configuration[key];
+                    if (!string.IsNullOrEmpty(value))
+                    {
+                        logger.LogInformation("Azure Key Vault configuration loaded: {Key} = {Value}", key, value);
+                    }
+                }
             }
             else
             {
@@ -52,6 +72,21 @@ namespace SAPLSServer.Extensions
         public static IServiceCollection AddApplicationServices(this IServiceCollection services, 
             IConfiguration configuration, IWebHostEnvironment environment)
         {
+            // Add DbContext for Entity Framework Core
+            if (environment.IsDevelopment())
+            {
+                services.AddDbContext<SaplsContext>(opt =>
+                {
+                    opt.UseSqlServer(configuration.GetConnectionString(ConfigurationConstants.DefaultConnectionString));
+                });
+            }
+            else
+            {
+                services.AddDbContext<SaplsContext>(opt =>
+                {
+                    opt.UseAzureSql(configuration[ConfigurationConstants.AzureConnectionString]);
+                });
+            }
             //Add singletons
             services.AddSingleton<IPromptProviderService, GeminiModelPromptProviderService>();
             services.AddSingleton<IMailSettings, MailKitSettings>();
@@ -70,19 +105,7 @@ namespace SAPLSServer.Extensions
                 return new BlobServiceClient(settings.ConnectionString);
             });
 
-            // Add DbContext for Entity Framework Core
-            if(environment.IsDevelopment())
-            {
-                services.AddDbContext<SaplsContext>(opt =>
-                {
-                    opt.UseSqlServer(configuration.GetConnectionString(ConfigurationConstants.DefaultConnectionString));
-                });
-            }
-            else
-                services.AddDbContext<SaplsContext>(opt =>
-            {
-                opt.UseSqlServer(configuration.GetConnectionString(ConfigurationConstants.AzureConnectionString));
-            });
+            
 
             // Add repositories
             services.AddScoped<IUserRepository, UserRepository>();
