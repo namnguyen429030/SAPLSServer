@@ -200,7 +200,7 @@ namespace SAPLSServer.Services.Implementations
             if (user == null)
                 throw new InvalidInformationException(MessageKeys.USER_NOT_FOUND);
 
-            user.RefreshToken = refreshToken;
+            user.RefreshToken = refreshToken.Trim();
             user.RefreshTokenExpiresAt = expiresAt;
             user.UpdatedAt = DateTime.UtcNow;
 
