@@ -84,7 +84,7 @@ namespace SAPLSServer.Extensions
             {
                 services.AddDbContext<SaplsContext>(opt =>
                 {
-                    opt.UseAzureSql(configuration.GetConnectionString(ConfigurationConstants.AzureConnectionString));
+                    opt.UseAzureSql(configuration[ConfigurationConstants.AzureConnectionString]);
                 });
             }
             //Add singletons
