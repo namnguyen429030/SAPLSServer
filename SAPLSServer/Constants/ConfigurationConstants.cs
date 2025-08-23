@@ -41,7 +41,7 @@
         public const string AzureBlobStorageDefaultContainer = "AzureBlobStorage:DefaultContainer";
 
         public const string FirebaseProjectId = "Firebase:ProjectId";
-        public const string FirebaseServiceAccountKeyPath = "Firebase:ServiceAccountKeyPath";
+        public const string FirebaseServiceAccountJson = "Firebase:ServiceAccountJson";
         public const string FirebaseDatabaseUrl = "Firebase:DatabaseUrl";
         public const string FirebaseDefaultSound = "Firebase:DefaultSound";
         public const string FirebaseDefaultIcon = "Firebase:DefaultIcon";

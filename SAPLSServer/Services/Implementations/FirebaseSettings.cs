@@ -16,8 +16,8 @@ namespace SAPLSServer.Services.Implementations
         public string ProjectId => _configuration[ConfigurationConstants.FirebaseProjectId] 
             ?? throw new EmptyConfigurationValueException(ConfigurationConstants.FirebaseProjectId);
 
-        public string ServiceAccountKeyPath => _configuration[ConfigurationConstants.FirebaseServiceAccountKeyPath] 
-            ?? throw new EmptyConfigurationValueException(ConfigurationConstants.FirebaseServiceAccountKeyPath);
+        public string ServiceAccountKeyPath => _configuration[ConfigurationConstants.FirebaseServiceAccountJson] 
+            ?? throw new EmptyConfigurationValueException(ConfigurationConstants.FirebaseServiceAccountJson);
 
         public string DefaultSound => _configuration[ConfigurationConstants.FirebaseDefaultSound] ?? "default";
 
