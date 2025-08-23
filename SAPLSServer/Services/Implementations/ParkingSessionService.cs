@@ -50,8 +50,13 @@ namespace SAPLSServer.Services.Implementations
                 return null;
             if (session.Status != ParkingSessionStatus.CheckedOut.ToString())
                 session.Cost = await CalculateSessionFee(session);
-
-            return new ParkingSessionDetailsForClientDto(session);
+            var sessionDto = new ParkingSessionDetailsForClientDto(session);
+            if (!string.IsNullOrWhiteSpace(session.PaymentInformation))
+            {
+                sessionDto.PaymentInformation = 
+                    JsonSerializer.Deserialize<PaymentResponseDto>(session.PaymentInformation);
+            }
+            return sessionDto;
         }
 
         public async Task<ParkingSessionDetailsForParkingLotDto?> GetSessionDetailsForParkingLot(string sessionId)
@@ -158,6 +163,7 @@ namespace SAPLSServer.Services.Implementations
                     Status = ParkingSessionStatus.Parking.ToString(),
                     PaymentStatus = ParkingSessionPayStatus.NotPaid.ToString(),
                     Cost = 0,
+                    TransactionCount = 0,
                     DriverId = driverId,
                     CheckInStaffId = staffId,
                     ParkingFeeSchedule = await _parkingFeeScheduleService
@@ -169,11 +175,10 @@ namespace SAPLSServer.Services.Implementations
             }
             else
             {
-                // Delegate guest session check-in to the guest service
+                // Delegate guest sessionDto check-in to the guest service
                 await _guestParkingSessionService.CheckIn(request, staffId);
             }
         }
-
         public async Task CheckOut(CheckOutParkingSessionRequest request, string userId)
         {
             var session = await _parkingSessionRepository.FindIncludingVehicle(request.SessionId);
@@ -191,21 +196,23 @@ namespace SAPLSServer.Services.Implementations
 
             if (request.PaymentMethod == PaymentMethod.Bank.ToString())
             {
-                int transactionId = await _parkingSessionRepository.CountAsync() + 1;
+                int transactionId = await _parkingSessionRepository.CountTransactions() + 1;
                 session.TransactionId = transactionId;
+                session.TransactionCount++;
                 var apiKey = await _parkingLotService.GetParkingLotApiKey(session.ParkingLotId);
                 var clientKey = await _parkingLotService.GetParkingLotClientKey(session.ParkingLotId);
                 var checkSumKey = await _parkingLotService.GetParkingLotCheckSumKey(session.ParkingLotId);
-
+                string data = $"amount={(int)session.Cost}&cancelUrl={""}&description={session.Id}&orderCode={transactionId}&returnUrl={""}";
+                var signature = _paymentService.GenerateSignature(data, checkSumKey);
                 // Prepare payment request
                 var paymentRequest = new PaymentRequestDto
                 {
                     OrderCode = transactionId,
                     Amount = (int)session.Cost,
-                    Description = $"Parking session payment for session {session.Id}",
-                    CancelUrl = UrlPaths.CANCEL_URL,
-                    ReturnUrl = UrlPaths.RETURN_URL,
-
+                    Description = $"{session.Id}",
+                    CancelUrl = "",
+                    ReturnUrl = "",
+                    Signature = signature,
                     BuyerName = session.Driver?.User?.FullName,
                     BuyerEmail = session.Driver?.User?.Email,
                     BuyerPhone = session.Driver?.User?.Phone,
@@ -285,7 +292,7 @@ namespace SAPLSServer.Services.Implementations
             }
             else
             {
-                // Delegate guest session finish to the guest service
+                // Delegate guest sessionDto finish to the guest service
                 await _guestParkingSessionService.Finish(request, staffId);
             }
         }
@@ -488,6 +495,11 @@ namespace SAPLSServer.Services.Implementations
                 return null;
             }
             return JsonSerializer.Deserialize<PaymentResponseDto>(session.PaymentInformation);
+        }
+
+        public Task CancelTransaction()
+        {
+            throw new NotImplementedException();
         }
     }
 }

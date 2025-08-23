@@ -57,7 +57,7 @@ namespace SAPLSServer.Controllers
         /// Updates the address of a parking lot.
         /// </summary>
         [HttpPut("address")]
-        [Authorize(Policy = Accessibility.HEAD_ADMIN_ACCESS)]
+        [Authorize(Policy = Accessibility.ADMIN_ACCESS)]
         public async Task<IActionResult> UpdateAddress([FromBody] UpdateParkingLotAddressRequest request)
         {
             if (!ModelState.IsValid)

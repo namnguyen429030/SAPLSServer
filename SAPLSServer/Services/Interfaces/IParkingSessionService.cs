@@ -104,5 +104,6 @@ namespace SAPLSServer.Services.Interfaces
         Task<long?> GetSessionTransactionId(string sessionId);
 
         Task<PaymentResponseDto?> GetSessionPaymentInfo(string sessionId);
+        Task CancelTransaction();
     }
 }

@@ -7,6 +7,7 @@ namespace SAPLSServer.DTOs.Concrete.ParkingSessionDtos
     public class ParkingSessionDetailsForClientDto : ParkingSessionSummaryForClientDto
     {
         public ParkingLotSummaryDto ParkingLot { get; set; }
+        public PaymentResponseDto? PaymentInformation { get; set; }
         public ParkingSessionDetailsForClientDto(ParkingSession session) 
             : base(session)
         {

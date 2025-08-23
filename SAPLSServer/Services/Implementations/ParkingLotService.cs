@@ -178,7 +178,6 @@ namespace SAPLSServer.Services.Implementations
             parkingLot.UpdatedBy = performerId;
             _parkingLotRepository.Update(parkingLot);
             await _parkingLotRepository.SaveChangesAsync();
-
         }
 
         public Task<bool> IsParkingLotValid(string parkingLotId)
