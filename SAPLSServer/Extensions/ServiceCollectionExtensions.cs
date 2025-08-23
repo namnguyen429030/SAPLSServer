@@ -72,6 +72,21 @@ namespace SAPLSServer.Extensions
         public static IServiceCollection AddApplicationServices(this IServiceCollection services, 
             IConfiguration configuration, IWebHostEnvironment environment)
         {
+            // Add DbContext for Entity Framework Core
+            if (environment.IsDevelopment())
+            {
+                services.AddDbContext<SaplsContext>(opt =>
+                {
+                    opt.UseSqlServer(configuration.GetConnectionString(ConfigurationConstants.DefaultConnectionString));
+                });
+            }
+            else
+            {
+                services.AddDbContext<SaplsContext>(opt =>
+                {
+                    opt.UseSqlServer(configuration.GetConnectionString(ConfigurationConstants.AzureConnectionString));
+                });
+            }
             //Add singletons
             services.AddSingleton<IPromptProviderService, GeminiModelPromptProviderService>();
             services.AddSingleton<IMailSettings, MailKitSettings>();
@@ -90,19 +105,7 @@ namespace SAPLSServer.Extensions
                 return new BlobServiceClient(settings.ConnectionString);
             });
 
-            // Add DbContext for Entity Framework Core
-            if(environment.IsDevelopment())
-            {
-                services.AddDbContext<SaplsContext>(opt =>
-                {
-                    opt.UseSqlServer(configuration.GetConnectionString(ConfigurationConstants.DefaultConnectionString));
-                });
-            }
-            else
-                services.AddDbContext<SaplsContext>(opt =>
-            {
-                opt.UseSqlServer(configuration.GetConnectionString(ConfigurationConstants.AzureConnectionString));
-            });
+            
 
             // Add repositories
             services.AddScoped<IUserRepository, UserRepository>();
