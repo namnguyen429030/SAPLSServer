@@ -145,6 +145,14 @@ namespace SAPLSServer.Services.Implementations
 
             var extractedData = root.TryGetProperty("extractedData", out var data) ? data : default;
 
+            if (root.TryGetProperty("validationErrors", out var errorsElement) 
+                && errorsElement.ValueKind == JsonValueKind.Array 
+                && errorsElement.GetArrayLength() > 0)
+            {
+                var error = errorsElement.EnumerateArray().FirstOrDefault();
+                throw new InvalidMediaException(error.GetString() ?? string.Empty);
+            }
+
             // Throw NullValueDataException if any required field is missing
             var requiredFields = new[]
             {
