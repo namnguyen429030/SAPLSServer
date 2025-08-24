@@ -89,7 +89,7 @@ namespace SAPLSServer.Services.Implementations
                 var adminIncludingUser = await _adminProfileRepository.FindIncludingUserReadOnly(admin.UserId);
                 if(adminIncludingUser == null)
                     continue; // Skip if admin profile is not found
-                items.Add(new AdminProfileSummaryDto(admin));
+                items.Add(new AdminProfileSummaryDto(adminIncludingUser));
             }
             return new PageResult<AdminProfileSummaryDto>
             {
