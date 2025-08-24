@@ -28,7 +28,7 @@ namespace SAPLSServer.Services.Interfaces
         /// </summary>
         /// <param name="request">The request containing client and filter information.</param>
         /// <returns>List of parking session summaries for the client.</returns>
-        Task<List<ParkingSessionSummaryForParkingLotDto>> GetSessionsByClient(
+        Task<List<ParkingSessionSummaryForClientDto>> GetSessionsByClient(
             GetParkingSessionListByClientIdRequest request);
 
         /// <summary>
@@ -79,7 +79,7 @@ namespace SAPLSServer.Services.Interfaces
         /// <param name="request">The page request containing client and paging information.</param>
         /// <param name="listRequest">The filter and search criteria for the client sessions.</param>
         /// <returns>Paged result of parking session summaries for the client.</returns>
-        Task<PageResult<ParkingSessionSummaryForParkingLotDto>> GetPageByClient(PageRequest request,
+        Task<PageResult<ParkingSessionSummaryForClientDto>> GetPageByClient(PageRequest request,
             GetParkingSessionListByClientIdRequest listRequest);
 
         /// <summary>

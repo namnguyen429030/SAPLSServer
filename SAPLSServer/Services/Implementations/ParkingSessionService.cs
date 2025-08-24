@@ -70,12 +70,12 @@ namespace SAPLSServer.Services.Implementations
             return new ParkingSessionDetailsForParkingLotDto(session);
         }
 
-        public async Task<List<ParkingSessionSummaryForParkingLotDto>> GetSessionsByClient(
+        public async Task<List<ParkingSessionSummaryForClientDto>> GetSessionsByClient(
             GetParkingSessionListByClientIdRequest request)
         {
             var criterias = BuildSessionCriterias(request);
             var sessions = await _parkingSessionRepository.GetAllAsync(criterias.ToArray());
-            var result = new List<ParkingSessionSummaryForParkingLotDto>();
+            var result = new List<ParkingSessionSummaryForClientDto>();
             foreach (var session in sessions)
             {
                 var sessionIncludingVehicle = await _parkingSessionRepository
@@ -86,7 +86,7 @@ namespace SAPLSServer.Services.Implementations
                 }
                 if (sessionIncludingVehicle.Status != ParkingSessionStatus.CheckedOut.ToString())
                     sessionIncludingVehicle.Cost = await CalculateSessionFee(sessionIncludingVehicle);
-                result.Add(new ParkingSessionSummaryForParkingLotDto(sessionIncludingVehicle));
+                result.Add(new ParkingSessionSummaryForClientDto(sessionIncludingVehicle));
             }
             return result;
         }
@@ -322,7 +322,7 @@ namespace SAPLSServer.Services.Implementations
             return result;
         }
 
-        public async Task<PageResult<ParkingSessionSummaryForParkingLotDto>> GetPageByClient(PageRequest pageRequest,
+        public async Task<PageResult<ParkingSessionSummaryForClientDto>> GetPageByClient(PageRequest pageRequest,
             GetParkingSessionListByClientIdRequest listRequest)
         {
             var criterias = BuildSessionCriterias(listRequest);
@@ -331,7 +331,7 @@ namespace SAPLSServer.Services.Implementations
             var totalCount = await _parkingSessionRepository.CountAsync(criterias.ToArray());
             var page = await _parkingSessionRepository.GetPageAsync(pageRequest.PageNumber, pageRequest.PageSize,
                 criterias.ToArray(), null, true);
-            var items = new List<ParkingSessionSummaryForParkingLotDto>();
+            var items = new List<ParkingSessionSummaryForClientDto>();
             foreach (var session in page)
             {
                 var sessionIncludingVehicle = await _parkingSessionRepository
@@ -342,9 +342,9 @@ namespace SAPLSServer.Services.Implementations
                 }
                 if (sessionIncludingVehicle.Status != ParkingSessionStatus.CheckedOut.ToString())
                     sessionIncludingVehicle.Cost = await CalculateSessionFee(sessionIncludingVehicle);
-                items.Add(new ParkingSessionSummaryForParkingLotDto(sessionIncludingVehicle));
+                items.Add(new ParkingSessionSummaryForClientDto(sessionIncludingVehicle));
             }
-            return new PageResult<ParkingSessionSummaryForParkingLotDto>
+            return new PageResult<ParkingSessionSummaryForClientDto>
             {
                 Items = items,
                 TotalCount = totalCount,
