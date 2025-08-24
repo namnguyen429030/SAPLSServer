@@ -7,6 +7,7 @@ using SAPLSServer.DTOs.PaginationDto;
 using SAPLSServer.Exceptions;
 using SAPLSServer.Services.Interfaces;
 using System.Security.Claims;
+using System.Text.Json;
 
 namespace SAPLSServer.Controllers
 {
@@ -16,10 +17,12 @@ namespace SAPLSServer.Controllers
     public class ParkingSessionController : ControllerBase
     {
         private readonly IParkingSessionService _parkingSessionService;
+        private readonly ILogger<ParkingSessionController> _logger;
 
-        public ParkingSessionController(IParkingSessionService parkingSessionService)
+        public ParkingSessionController(IParkingSessionService parkingSessionService, ILogger<ParkingSessionController> logger)
         {
             _parkingSessionService = parkingSessionService;
+            _logger = logger;
         }
 
         /// <summary>
@@ -441,22 +444,9 @@ namespace SAPLSServer.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> CompletePayment([FromBody] PaymentWebHookRequest paymentWebHookRequest)
         {
-            try
-            {
-                await _parkingSessionService.ConfirmTransaction(paymentWebHookRequest);
-                return Ok(new
-                {
-                    message = MessageKeys.PAYMENT_COMPLETED_SUCCESSFULLY
-                });
-            }
-            catch (InvalidInformationException ex)
-            {
-                return BadRequest(new { error = ex.Message });
-            }
-            catch (Exception)
-            {
-                return StatusCode(500, new { error = MessageKeys.UNEXPECTED_ERROR });
-            }
+            _logger.LogInformation("Received PaymentWebHookRequest: {Request}", JsonSerializer.Serialize(paymentWebHookRequest));
+            await _parkingSessionService.ConfirmTransaction(paymentWebHookRequest);
+            return Ok();
         }
     }
 }

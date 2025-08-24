@@ -138,22 +138,8 @@ namespace SAPLSServer.Controllers
         {
             // Log the incoming webhook request
             _logger.LogInformation("Received PaymentWebHookRequest: {Request}", JsonSerializer.Serialize(paymentWebHookRequest));
-            try
-            {
-                await _parkingLotService.ConfirmTransaction(paymentWebHookRequest);
-                return Ok(new
-                {
-                    message = MessageKeys.PAYMENT_COMPLETED_SUCCESSFULLY
-                });
-            }
-            catch (InvalidInformationException ex)
-            {
-                return BadRequest(new { error = ex.Message });
-            }
-            catch (Exception)
-            {
-                return StatusCode(500, new { error = MessageKeys.UNEXPECTED_ERROR });
-            }
+            await _parkingLotService.ConfirmTransaction(paymentWebHookRequest);
+            return Ok();
         }
     }
 }
