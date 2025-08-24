@@ -311,6 +311,7 @@ public partial class SaplsContext : DbContext
                 .HasMaxLength(20)
                 .HasDefaultValue("Active");
             entity.Property(e => e.SubscriptionId).HasMaxLength(36);
+            entity.Property(e => e.TempSubscriptionId).HasMaxLength(36);
             entity.Property(e => e.UpdatedAt).HasDefaultValueSql("(getdate())");
             entity.Property(e => e.UpdatedBy).HasMaxLength(36);
 

@@ -107,5 +107,13 @@ namespace SAPLSServer.Services.Implementations
                 throw new InvalidInformationException(MessageKeys.SUBSCRIPTION_NOT_FOUND);
             return subscription.Duration;
         }
+
+        public async Task<double> GetCostOfSubscription(string subscriptionId)
+        {
+            var subscription =  await _subscriptionRepository.Find(subscriptionId);
+            if (subscription == null)
+                throw new InvalidInformationException(MessageKeys.SUBSCRIPTION_NOT_FOUND);
+            return subscription.Price;
+        }
     }
 }

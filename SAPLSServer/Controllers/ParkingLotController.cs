@@ -3,10 +3,13 @@ using Microsoft.AspNetCore.Mvc;
 using SAPLSServer.Constants;
 using SAPLSServer.DTOs.Base;
 using SAPLSServer.DTOs.Concrete.ParkingLotDtos;
+using SAPLSServer.DTOs.Concrete.PaymentDtos;
 using SAPLSServer.DTOs.PaginationDto;
 using SAPLSServer.Exceptions;
+using SAPLSServer.Services.Implementations;
 using SAPLSServer.Services.Interfaces;
 using System.Security.Claims;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace SAPLSServer.Controllers
@@ -17,10 +20,11 @@ namespace SAPLSServer.Controllers
     public class ParkingLotController : ControllerBase
     {
         private readonly IParkingLotService _parkingLotService;
-
-        public ParkingLotController(IParkingLotService parkingLotService)
+        private readonly ILogger<ParkingLotController> _logger;
+        public ParkingLotController(IParkingLotService parkingLotService, ILogger<ParkingLotController> logger)
         {
             _parkingLotService = parkingLotService;
+            _logger = logger;
         }
 
         /// <summary>
@@ -57,7 +61,7 @@ namespace SAPLSServer.Controllers
         /// Updates the address of a parking lot.
         /// </summary>
         [HttpPut("address")]
-        [Authorize(Policy = Accessibility.HEAD_ADMIN_ACCESS)]
+        [Authorize(Policy = Accessibility.ADMIN_ACCESS)]
         public async Task<IActionResult> UpdateAddress([FromBody] UpdateParkingLotAddressRequest request)
         {
             if (!ModelState.IsValid)
@@ -127,6 +131,15 @@ namespace SAPLSServer.Controllers
 
             await _parkingLotService.DeleteParkingLot(request);
             return Ok(new { message = MessageKeys.PARKING_LOT_DELETED_SUCCESSFULLY });
+        }
+        [HttpPost("complete-payment")]
+        [AllowAnonymous]
+        public async Task<IActionResult> CompletePayment([FromBody] PaymentWebHookRequest paymentWebHookRequest)
+        {
+            // Log the incoming webhook request
+            _logger.LogInformation("Received PaymentWebHookRequest: {Request}", JsonSerializer.Serialize(paymentWebHookRequest));
+            await _parkingLotService.ConfirmTransaction(paymentWebHookRequest);
+            return Ok();
         }
     }
 }

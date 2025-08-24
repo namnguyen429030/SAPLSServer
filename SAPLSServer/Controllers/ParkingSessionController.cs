@@ -2,10 +2,12 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SAPLSServer.Constants;
 using SAPLSServer.DTOs.Concrete.ParkingSessionDtos;
+using SAPLSServer.DTOs.Concrete.PaymentDtos;
 using SAPLSServer.DTOs.PaginationDto;
 using SAPLSServer.Exceptions;
 using SAPLSServer.Services.Interfaces;
 using System.Security.Claims;
+using System.Text.Json;
 
 namespace SAPLSServer.Controllers
 {
@@ -15,10 +17,12 @@ namespace SAPLSServer.Controllers
     public class ParkingSessionController : ControllerBase
     {
         private readonly IParkingSessionService _parkingSessionService;
+        private readonly ILogger<ParkingSessionController> _logger;
 
-        public ParkingSessionController(IParkingSessionService parkingSessionService)
+        public ParkingSessionController(IParkingSessionService parkingSessionService, ILogger<ParkingSessionController> logger)
         {
             _parkingSessionService = parkingSessionService;
+            _logger = logger;
         }
 
         /// <summary>
@@ -435,6 +439,14 @@ namespace SAPLSServer.Controllers
             {
                 return StatusCode(500, new { error = MessageKeys.UNEXPECTED_ERROR });
             }
+        }
+        [HttpPost("complete-payment")]
+        [AllowAnonymous]
+        public async Task<IActionResult> CompletePayment([FromBody] PaymentWebHookRequest paymentWebHookRequest)
+        {
+            _logger.LogInformation("Received PaymentWebHookRequest: {Request}", JsonSerializer.Serialize(paymentWebHookRequest));
+            await _parkingSessionService.ConfirmTransaction(paymentWebHookRequest);
+            return Ok();
         }
     }
 }
