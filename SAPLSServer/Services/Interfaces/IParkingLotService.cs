@@ -123,7 +123,7 @@ namespace SAPLSServer.Services.Interfaces
         /// <returns>The checksum key as a string.</returns>
         Task<string> GetParkingLotCheckSumKey(string parkingLotId);
         Task ConfirmTransaction(PaymentWebHookRequest request);
-        Task<SubscriptionDetailsDto?> GetSubscriptionByParkingLotId(string parkingLotId)
+        Task<SubscriptionDetailsDto?> GetSubscriptionByParkingLotId(string parkingLotId);
     }
 }
 
