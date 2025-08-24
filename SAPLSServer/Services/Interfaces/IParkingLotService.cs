@@ -1,6 +1,7 @@
 using SAPLSServer.DTOs.Base;
 using SAPLSServer.DTOs.Concrete.ParkingLotDtos;
 using SAPLSServer.DTOs.Concrete.PaymentDtos;
+using SAPLSServer.DTOs.Concrete.SubscriptionDtos;
 using SAPLSServer.DTOs.PaginationDto;
 
 namespace SAPLSServer.Services.Interfaces
@@ -122,6 +123,7 @@ namespace SAPLSServer.Services.Interfaces
         /// <returns>The checksum key as a string.</returns>
         Task<string> GetParkingLotCheckSumKey(string parkingLotId);
         Task ConfirmTransaction(PaymentWebHookRequest request);
+        Task<SubscriptionDetailsDto?> GetSubscriptionByParkingLotId(string parkingLotId)
     }
 }
 

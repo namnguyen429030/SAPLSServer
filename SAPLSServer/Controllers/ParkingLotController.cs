@@ -141,5 +141,26 @@ namespace SAPLSServer.Controllers
             await _parkingLotService.ConfirmTransaction(paymentWebHookRequest);
             return Ok();
         }
+        [HttpGet("subscription/{parkingLotId}")]
+        [Authorize(Policy = Accessibility.ADMIN_PARKINGLOT_OWNER_ACCESS)]
+        public async Task<IActionResult> GetSubscriptionByParkingLotId(string parkingLotId)
+        {
+            try
+            {
+                var result = await _parkingLotService.GetSubscriptionByParkingLotId(parkingLotId);
+                if (result == null)
+                    return NotFound(new { message = MessageKeys.SUBSCRIPTION_NOT_FOUND });
+                return Ok(result);
+            }
+            catch(InvalidInformationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    new { message = MessageKeys.UNEXPECTED_ERROR });
+            }
+        }
     }
 }

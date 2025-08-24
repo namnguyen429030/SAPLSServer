@@ -2,6 +2,7 @@ using SAPLSServer.Constants;
 using SAPLSServer.DTOs.Base;
 using SAPLSServer.DTOs.Concrete.ParkingLotDtos;
 using SAPLSServer.DTOs.Concrete.PaymentDtos;
+using SAPLSServer.DTOs.Concrete.SubscriptionDtos;
 using SAPLSServer.DTOs.PaginationDto;
 using SAPLSServer.Exceptions;
 using SAPLSServer.Helpers;
@@ -279,7 +280,14 @@ namespace SAPLSServer.Services.Implementations
                     }
                 }
             }
+        }
 
+        public async Task<SubscriptionDetailsDto?> GetSubscriptionByParkingLotId(string parkingLotId)
+        {
+            var parkingLot = await _parkingLotRepository.Find(parkingLotId);
+            if (parkingLot == null)
+                throw new InvalidInformationException(MessageKeys.PARKING_LOT_NOT_FOUND);
+            return await _subscriptionService.GetDetailsAsync(parkingLot.SubscriptionId);
         }
     }
 }
