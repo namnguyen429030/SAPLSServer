@@ -263,21 +263,15 @@ namespace SAPLSServer.Services.Implementations
         public async Task ConfirmTransaction(PaymentWebHookRequest request)
         {
             var parkingLot = await _parkingLotRepository.Find([plo => plo.SubscriptionTransactionId == request.Data.OrderCode]);
-            if (parkingLot == null)
+            if (parkingLot != null)
             {
-                throw new InvalidInformationException(MessageKeys.PARKING_LOT_NOT_FOUND);
+                var signature = _paymentService.GenerateSignature(PayOutDataToStringConverter.ConvertToSignatureString(request.Data),
+                                    _paymentSettings.PaymentGatewayCheckSumKey);
+                if (signature == request.Signature)
+                {
+                }
             }
 
-            if(string.IsNullOrWhiteSpace(parkingLot.SubscriptionTransactionInformation))
-            {
-                throw new InvalidInformationException(MessageKeys.PARKING_LOT_SUBSCSRIPTION_PAYMENT_INFO_NOT_FOUND);
-            }
-            var signature = _paymentService.GenerateSignature(PayOutDataToStringConverter.ConvertToSignatureString(request.Data),
-                _paymentSettings.PaymentGatewayCheckSumKey);
-            if (signature != request.Signature)
-            {
-                throw new InvalidInformationException(MessageKeys.PAYMENT_SIGNATURE_MISMATCH);
-            }
         }
     }
 }

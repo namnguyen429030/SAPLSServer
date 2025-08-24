@@ -54,7 +54,7 @@ namespace SAPLSServer.Services.Implementations
             var sessionDto = new ParkingSessionDetailsForClientDto(session);
             if (!string.IsNullOrWhiteSpace(session.PaymentInformation))
             {
-                sessionDto.PaymentInformation = 
+                sessionDto.PaymentInformation =
                     JsonSerializer.Deserialize<PaymentResponseDto>(session.PaymentInformation);
             }
             return sessionDto;
@@ -80,7 +80,7 @@ namespace SAPLSServer.Services.Implementations
             {
                 var sessionIncludingVehicle = await _parkingSessionRepository
                     .FindIncludingVehicleReadOnly(session.Id);
-                if(sessionIncludingVehicle == null)
+                if (sessionIncludingVehicle == null)
                 {
                     continue;
                 }
@@ -117,7 +117,7 @@ namespace SAPLSServer.Services.Implementations
             if (!await _parkingLotService.IsParkingLotValid(request.ParkingLotId))
                 throw new InvalidInformationException(MessageKeys.PARKING_LOT_NOT_FOUND);
             var vehicle = await _vehicleService.GetByLicensePlate(request.VehicleLicensePlate);
-            if (vehicle != null) 
+            if (vehicle != null)
             {
                 var frontCaptureUploadRequest = new FileUploadRequest
                 {
@@ -232,7 +232,7 @@ namespace SAPLSServer.Services.Implementations
 
                 // Send payment request
                 var response = await _paymentService.SendPaymentRequest(paymentRequest, clientKey, apiKey, checkSumKey);
-                if(response == null)
+                if (response == null)
                     throw new InvalidOperationException(MessageKeys.PAYOS_SERVICE_UNAVAILABLE);
                 var responseData = JsonSerializer.Serialize(response);
                 session.PaymentStatus = ParkingSessionPayStatus.Pending.ToString();
@@ -251,7 +251,7 @@ namespace SAPLSServer.Services.Implementations
                 var session = await _parkingSessionRepository.FindLatest(request.VehicleLicensePlate, request.ParkingLotId);
                 if (session == null)
                     throw new InvalidInformationException(MessageKeys.PARKING_SESSION_NOT_FOUND);
-                if(session.PaymentStatus == ParkingSessionPayStatus.NotPaid.ToString())
+                if (session.PaymentStatus == ParkingSessionPayStatus.NotPaid.ToString())
                 {
                     throw new ParkingSessionException(MessageKeys.PARKING_SESSION_NOT_PAID);
                 }
@@ -315,7 +315,7 @@ namespace SAPLSServer.Services.Implementations
                     continue;
                 }
                 if (sessionIncludingVehicleAndParkingLot.Status != ParkingSessionStatus.CheckedOut.ToString())
-                    sessionIncludingVehicleAndParkingLot.Cost = await 
+                    sessionIncludingVehicleAndParkingLot.Cost = await
                         CalculateSessionFee(sessionIncludingVehicleAndParkingLot);
                 result.Add(new ParkingSessionSummaryForClientDto(sessionIncludingVehicleAndParkingLot));
             }
@@ -329,7 +329,7 @@ namespace SAPLSServer.Services.Implementations
             var sortBy = GetSortByExpression(listRequest.SortBy);
             var orderBy = IsAscending(listRequest.Order);
             var totalCount = await _parkingSessionRepository.CountAsync(criterias.ToArray());
-            var page = await _parkingSessionRepository.GetPageAsync(pageRequest.PageNumber, pageRequest.PageSize, 
+            var page = await _parkingSessionRepository.GetPageAsync(pageRequest.PageNumber, pageRequest.PageSize,
                 criterias.ToArray(), null, true);
             var items = new List<ParkingSessionSummaryForParkingLotDto>();
             foreach (var session in page)
@@ -353,14 +353,14 @@ namespace SAPLSServer.Services.Implementations
             };
         }
 
-        public async Task<PageResult<ParkingSessionSummaryForParkingLotDto>> GetPageByParkingLot(PageRequest pageRequest, 
+        public async Task<PageResult<ParkingSessionSummaryForParkingLotDto>> GetPageByParkingLot(PageRequest pageRequest,
             GetParkingSessionListByParkingLotIdRequest listRequest)
         {
             var criterias = BuildSessionCriterias(listRequest, s => s.ParkingLotId == listRequest.ParkingLotId);
             var sortBy = GetSortByExpression(listRequest.SortBy);
             var orderBy = IsAscending(listRequest.Order);
             var totalCount = await _parkingSessionRepository.CountAsync(criterias.ToArray());
-            var page = await _parkingSessionRepository.GetPageAsync(pageRequest.PageNumber, pageRequest.PageSize, 
+            var page = await _parkingSessionRepository.GetPageAsync(pageRequest.PageNumber, pageRequest.PageSize,
                 criterias.ToArray(), null, true);
             var items = new List<ParkingSessionSummaryForParkingLotDto>();
             foreach (var session in page)
@@ -410,7 +410,7 @@ namespace SAPLSServer.Services.Implementations
             };
         }
 
-        private List<Expression<Func<ParkingSession, bool>>> BuildSessionCriterias(GetOwnedParkingSessionListRequest request, 
+        private List<Expression<Func<ParkingSession, bool>>> BuildSessionCriterias(GetOwnedParkingSessionListRequest request,
             Expression<Func<ParkingSession, bool>>? extra = null)
         {
             var criterias = new List<Expression<Func<ParkingSession, bool>>>();
@@ -419,19 +419,19 @@ namespace SAPLSServer.Services.Implementations
             if (!string.IsNullOrWhiteSpace(request.Status))
                 criterias.Add(s => s.Status == request.Status);
             if (request.StartEntryDate.HasValue)
-                criterias.Add(s => s.EntryDateTime.Date 
+                criterias.Add(s => s.EntryDateTime.Date
                 >= request.StartEntryDate.Value.ToDateTime(TimeOnly.MinValue).Date);
             if (request.EndEntryDate.HasValue)
-                criterias.Add(s => s.EntryDateTime.Date 
+                criterias.Add(s => s.EntryDateTime.Date
                 <= request.EndEntryDate.Value.ToDateTime(TimeOnly.MaxValue).Date);
             if (request.StartExitDate.HasValue)
-                criterias.Add(s => s.ExitDateTime.HasValue && s.ExitDateTime.Value.Date 
+                criterias.Add(s => s.ExitDateTime.HasValue && s.ExitDateTime.Value.Date
                 >= request.StartExitDate.Value.ToDateTime(TimeOnly.MinValue).Date);
             if (request.EndExitDate.HasValue)
-                criterias.Add(s => s.ExitDateTime.HasValue && s.ExitDateTime.Value.Date 
+                criterias.Add(s => s.ExitDateTime.HasValue && s.ExitDateTime.Value.Date
                 <= request.EndExitDate.Value.ToDateTime(TimeOnly.MaxValue).Date);
             if (!string.IsNullOrWhiteSpace(request.SearchCriteria))
-                criterias.Add(s => s.VehicleId.Contains(request.SearchCriteria) 
+                criterias.Add(s => s.VehicleId.Contains(request.SearchCriteria)
                 || s.Vehicle.LicensePlate.Contains(request.SearchCriteria)
                 || s.Driver.User.FullName.Contains(request.SearchCriteria));
             return criterias;
@@ -477,7 +477,7 @@ namespace SAPLSServer.Services.Implementations
         public async Task<int?> GetSessionTransactionId(string sessionId)
         {
             var session = await _parkingSessionRepository.Find(sessionId);
-            if(session == null)
+            if (session == null)
             {
                 return null;
             }
@@ -491,7 +491,7 @@ namespace SAPLSServer.Services.Implementations
             {
                 throw new InvalidInformationException(MessageKeys.PARKING_SESSION_NOT_FOUND);
             }
-            if(string.IsNullOrWhiteSpace(session.PaymentInformation))
+            if (string.IsNullOrWhiteSpace(session.PaymentInformation))
             {
                 return null;
             }
@@ -501,24 +501,19 @@ namespace SAPLSServer.Services.Implementations
         public async Task ConfirmTransaction(PaymentWebHookRequest request)
         {
             var session = await _parkingSessionRepository.Find([p => p.TransactionId == request.Data.OrderCode]);
-            if (session == null)
+            if (session != null)
             {
-                throw new InvalidInformationException(MessageKeys.PARKING_SESSION_NOT_FOUND);
-            }
-            if (string.IsNullOrWhiteSpace(session.PaymentInformation))
-            {
-                throw new InvalidInformationException(MessageKeys.PARKING_SESSION_PAYMENT_INFO_NOT_FOUND);
-            }
-            var signature = _paymentService.GenerateSignature(PayOutDataToStringConverter.ConvertToSignatureString(request.Data),
-                await _parkingLotService.GetParkingLotCheckSumKey(session.ParkingLotId));
-            if (signature != request.Signature)
-            {
-                throw new InvalidInformationException(MessageKeys.PAYMENT_SIGNATURE_MISMATCH);
-            }
-            //session.PaymentStatus = ParkingSessionPayStatus.Paid.ToString();
-            //_parkingSessionRepository.Update(session);
-            //await _parkingSessionRepository.SaveChangesAsync();
-        }
+                var signature = _paymentService.GenerateSignature(PayOutDataToStringConverter.ConvertToSignatureString(request.Data),
+                    await _parkingLotService.GetParkingLotCheckSumKey(session.ParkingLotId));
+                if (signature == request.Signature)
+                {
+                }
+                //session.PaymentStatus = ParkingSessionPayStatus.Paid.ToString();
+                //_parkingSessionRepository.Update(session);
+                //await _parkingSessionRepository.SaveChangesAsync();
 
+            }
+
+        }
     }
 }
