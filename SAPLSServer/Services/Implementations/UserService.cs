@@ -82,14 +82,22 @@ namespace SAPLSServer.Services.Implementations
             };
             await _userRepository.AddAsync(user);
             await _userRepository.SaveChangesAsync();
-            if (role == UserRole.Staff || role == UserRole.Admin || role == UserRole.Staff)
+            try
             {
-                await SendConfirmationEmail(user, request.Password);
+                if (role == UserRole.Staff || role == UserRole.Admin || role == UserRole.Staff)
+                {
+                    await SendConfirmationEmail(user, request.Password);
+                }
+                // Send confirmation email
+                else
+                {
+                    await SendConfirmationEmail(user);
+                }
             }
-            // Send confirmation email
-            else
+            catch(Exception)
             {
-                await SendConfirmationEmail(user);
+                _userRepository.Remove(user);
+                return string.Empty;
             }
             return user.Id;
         }
