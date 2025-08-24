@@ -269,5 +269,6 @@ namespace SAPLSServer.Constants
         public const string PARKING_SESSION_ID_REQUIRED = "PARKING_SESSION_ID_REQUIRED";
         public const string TRANSACTION_ID_NOT_FOUND = "TRANSACTION_ID_NOT_FOUND";
         public const string CLIENT_VERIFIED_SUCCESSFULLY = "CLIENT_VERIFIED_SUCCESSFULLY";
+        public const string INACTIVE_USER = "INACTIVE_USER";
     }
 }

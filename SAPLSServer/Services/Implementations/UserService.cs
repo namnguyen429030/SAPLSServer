@@ -286,7 +286,7 @@ namespace SAPLSServer.Services.Implementations
                 content = await System.IO.File.ReadAllTextAsync(filePath);
                 content = content.Replace("{userFullName}", user.FullName)
                                  .Replace("{confirmationUrl}", confirmationLink)
-                                 .Replace("{password}", user.Password)
+                                 .Replace("{password}", passwword)
                                  .Replace("{tokenExpirationMinutes}", CONFIRMATION_EXPIRATION_MINUTES.ToString());
             }
             else
@@ -328,6 +328,19 @@ namespace SAPLSServer.Services.Implementations
             if (user == null)
                 return false;
             return user.Status == UserStatus.Active.ToString();
+        }
+
+        public async Task SendNewConfirmationEmail(string email)
+        {
+            var user = await _userRepository.Find([u => u.Email == email]);
+            if (user == null)
+                throw new InvalidInformationException(MessageKeys.USER_NOT_FOUND);
+            var confirmationOtp = _otpService.GenerateOtp(OtpService.DEFAULT_OTP_LENGTH,
+                OtpService.DEFAULT_OTP_DURATION);
+            user.OneTimePassword = confirmationOtp;
+            _userRepository.Update(user);
+            await _userRepository.SaveChangesAsync();
+            await SendConfirmationEmail(user);
         }
     }
 }
