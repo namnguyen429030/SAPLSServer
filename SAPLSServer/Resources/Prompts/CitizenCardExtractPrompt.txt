@@ -1,28 +1,8 @@
-﻿
-Extract data from Vietnamese National ID Card. Return ONLY valid JSON, no markdown, no explanations.
-
-REQUIRED OUTPUT FORMAT:
-{
-  "success": true,
-  "extractedData": {
-    "citizenId": "12-digit number only",
-    "fullName": "UPPERCASE NAME AS PRINTED",
-    "dateOfBirth": "DD/MM/YYYY",
-    "sex": "Male or Female",
-    "nationality": "Viet Nam",
-    "placeOfOrigin": "full address",
-    "placeOfResidence": "full address",
-    "expiryDate": "DD/MM/YYYY or Permanent"
-  },
-  "validationErrors": []
-}
-
-RULES:
-- CitizenId: exactly 12 digits, no dashes (001234567890)
-- Names: ALL UPPERCASE as printed on card
-- Dates: DD/MM/YYYY format only
-- Sex: convert Nam->Male, Nữ->Female
-- If image unreadable: {"success": false, "validationErrors": ["BLURRY_IMAGE"]}
-- If not Vietnamese ID: {"success": false, "validationErrors": ["INVALID_IMAGE"]}
-
-Return only the JSON object.
+﻿Extract data from Vietnamese National ID Card (Căn cước công dân). 
+Focus on the front side for main information. 
+Use the back side only for validation.
+Names should be ALL UPPERCASE as printed on the card.
+Dates must be in DD/MM/YYYY format.
+If the image is too blurry or unreadable, set success to false and add 'BLURRY_IMAGE' to validationErrors.
+If this is not a Vietnamese National ID Card, set success to false and add 'INVALID_IMAGE' to validationErrors.
+CitizenId must be exactly 12 digits without dashes.

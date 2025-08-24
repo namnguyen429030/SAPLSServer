@@ -12,12 +12,12 @@ namespace SAPLSServer.Services.Implementations
         private readonly IHttpClientService _httpClientService;
         private readonly IPromptProviderService _promptProviderService;
         private readonly ILogger<VehicleRegistrationCertGeminiOcrService> _logger;
-
         private readonly string _baseUrl;
         private readonly string _modelName;
         private readonly string _apiKey;
+
         public VehicleRegistrationCertGeminiOcrService(IPromptProviderService promptProviderService,
-            IHttpClientService httpClientService, 
+            IHttpClientService httpClientService,
             IVehicleRegistrationCertOcrSettings settings,
             ILogger<VehicleRegistrationCertGeminiOcrService> logger)
         {
@@ -28,10 +28,11 @@ namespace SAPLSServer.Services.Implementations
             _apiKey = settings.OcrApiKey;
             _logger = logger;
         }
+
         public async Task<VehicleRegistrationOcrResponse> AttractDataFromBase64(VehicleRegistrationOcrRequest request)
         {
-            var prompt = _promptProviderService.VehicleRegistrationPrompt;
-            var geminiRequest = CreateGeminiRequest(prompt, request.FrontImageBase64, request.BackImageBase64, request.FrontImageFormat, request.BackImageFormat);
+            var geminiRequest = CreateStructuredGeminiRequest(_promptProviderService.VehicleRegistrationPrompt, 
+                request.FrontImageBase64, request.BackImageBase64, request.FrontImageFormat, request.BackImageFormat);
             var url = $"{_baseUrl}/models/{_modelName}:generateContent?key={_apiKey}";
 
             var response = await _httpClientService.PostAsync(url, JsonSerializer.Serialize(geminiRequest));
@@ -42,25 +43,16 @@ namespace SAPLSServer.Services.Implementations
                 throw new InvalidOperationException(MessageKeys.GEMINI_OCR_SERVICE_IS_UNAVAILABLE);
             }
 
-            string jsonContent;
-            try
-            {
-                jsonContent = ExtractJsonFromResponse(response);
-            }
-            catch (JsonException)
-            {
-                throw new InvalidInformationException();
-            }
-
-            return ParseVehicleRegistrationResponse(jsonContent);
+            return ExtractStructuredResponse(response);
         }
 
         public async Task<VehicleRegistrationOcrResponse> AttractDataFromFile(VehicleRegistrationOcrFileRequest request)
         {
-            if(request.FrontImage == null || request.BackImage == null)
+            if (request.FrontImage == null || request.BackImage == null)
             {
-                throw new InvalidInformationException(); // should not run here
+                throw new InvalidInformationException();
             }
+
             var (frontImageBase64, frontMimeType) = await GetImageAsBase64Async(request.FrontImage);
             var (backImageBase64, backMimeType) = await GetImageAsBase64Async(request.BackImage);
 
@@ -75,7 +67,8 @@ namespace SAPLSServer.Services.Implementations
             return await AttractDataFromBase64(base64Request);
         }
 
-        private static object CreateGeminiRequest(string prompt, string frontImageBase64, string backImageBase64, string frontImageFormat, string backImageFormat)
+        private static object CreateStructuredGeminiRequest(string prompt, string frontImageBase64, string backImageBase64, 
+            string frontImageFormat, string backImageFormat)
         {
             var imageParts = new List<object>
             {
@@ -113,63 +106,159 @@ namespace SAPLSServer.Services.Implementations
                     temperature = 0.1,
                     topK = 32,
                     topP = 1,
-                    maxOutputTokens = 2048
+                    maxOutputTokens = 2048,
+                    responseMimeType = "application/json",
+                    responseSchema = new
+                    {
+                        type = "object",
+                        properties = new
+                        {
+                            success = new
+                            {
+                                type = "boolean",
+                                description = "Whether extraction was successful"
+                            },
+                            extractedData = new
+                            {
+                                type = "object",
+                                properties = new
+                                {
+                                    licensePlate = new
+                                    {
+                                        type = "string",
+                                        description = "License plate in format XX#-###.## or XX#.#### (e.g., 29A-123.45 or 51F.1234)"
+                                    },
+                                    brand = new
+                                    {
+                                        type = "string",
+                                        description = "Vehicle brand (HONDA, YAMAHA, TOYOTA, etc.)"
+                                    },
+                                    model = new
+                                    {
+                                        type = "string",
+                                        description = "Vehicle model as written on document"
+                                    },
+                                    engineNumber = new
+                                    {
+                                        type = "string",
+                                        description = "Engine serial number"
+                                    },
+                                    chassisNumber = new
+                                    {
+                                        type = "string",
+                                        description = "Chassis/frame serial number"
+                                    },
+                                    color = new
+                                    {
+                                        type = "string",
+                                        description = "Vehicle color as written"
+                                    },
+                                    ownerFullName = new
+                                    {
+                                        type = "string",
+                                        description = "Owner's full name in ALL UPPERCASE as printed"
+                                    },
+                                    registrationDate = new
+                                    {
+                                        type = "string",
+                                        description = "Registration date in DD/MM/YYYY format"
+                                    },
+                                    vehicleType = new
+                                    {
+                                        type = "string",
+                                        description = "Vehicle type: Motorbike or Car",
+                                        @enum = new[] { "Motorbike", "Car" }
+                                    }
+                                },
+                                required = new[] { "licensePlate", "brand", "model", "engineNumber", "chassisNumber", "color", 
+                                    "ownerFullName", "registrationDate", "vehicleType" }
+                            },
+                            validationErrors = new
+                            {
+                                type = "array",
+                                items = new
+                                {
+                                    type = "string",
+                                    @enum = new[] { "BLURRY_IMAGE", "INVALID_IMAGE" }
+                                }
+                            }
+                        },
+                        required = new[] { "success", "extractedData", "validationErrors" }
+                    }
                 }
             };
         }
 
-        private static string ExtractJsonFromResponse(string response)
+        private VehicleRegistrationOcrResponse ExtractStructuredResponse(string response)
         {
-            using var doc = JsonDocument.Parse(response);
-            if (!doc.RootElement.TryGetProperty("candidates", out var candidates) || candidates.ValueKind != JsonValueKind.Array)
+            try
             {
-                return "{}"; // Return empty JSON if no candidates found
-            }
-            if (candidates.GetArrayLength() > 0)
-            {
-                var content = candidates[0].GetProperty("content");
-                var parts = content.GetProperty("parts");
-                if (parts.GetArrayLength() > 0)
+                using var doc = JsonDocument.Parse(response);
+                if (!doc.RootElement.TryGetProperty("candidates", out var candidates) || candidates.ValueKind != JsonValueKind.Array)
                 {
-                    var text = parts[0].GetProperty("text").GetString() ?? "";
-                    var jsonStart = text.IndexOf('{');
-                    var jsonEnd = text.LastIndexOf('}');
+                    throw new InvalidInformationException("No candidates in response");
+                }
 
-                    if (jsonStart != -1 && jsonEnd != -1 && jsonEnd > jsonStart)
+                if (candidates.GetArrayLength() > 0)
+                {
+                    var content = candidates[0].GetProperty("content");
+                    var parts = content.GetProperty("parts");
+                    if (parts.GetArrayLength() > 0)
                     {
-                        return text.Substring(jsonStart, jsonEnd - jsonStart + 1);
+                        var structuredText = parts[0].GetProperty("text").GetString() ?? "{}";
+                        _logger.LogInformation("Structured response: {StructuredText}", structuredText);
+
+                        return ParseStructuredVehicleResponse(structuredText);
                     }
                 }
+
+                throw new InvalidInformationException("Empty response from API");
             }
-            return "{}";
+            catch (JsonException ex)
+            {
+                _logger.LogError(ex, "Failed to parse Gemini response: {Response}", response);
+                throw new InvalidInformationException("Invalid API response format");
+            }
         }
 
-        private static VehicleRegistrationOcrResponse ParseVehicleRegistrationResponse(string jsonContent)
+        private static VehicleRegistrationOcrResponse ParseStructuredVehicleResponse(string jsonContent)
         {
             using var doc = JsonDocument.Parse(jsonContent);
             var root = doc.RootElement;
 
-            var extractedData = root.TryGetProperty("extractedData", out var data) ? data : default;
-
-            if (root.TryGetProperty("validationErrors", out var errorsElement) 
-                && errorsElement.ValueKind == JsonValueKind.Array 
-                && errorsElement.GetArrayLength() > 0)
+            // Check if extraction was successful
+            if (root.TryGetProperty("success", out var successElement) && !successElement.GetBoolean())
             {
-                var error = errorsElement.EnumerateArray().FirstOrDefault();
-                throw new InvalidMediaException(error.GetString() ?? string.Empty);
+                // Handle validation errors
+                if (root.TryGetProperty("validationErrors", out var errorsElement)
+                    && errorsElement.ValueKind == JsonValueKind.Array
+                    && errorsElement.GetArrayLength() > 0)
+                {
+                    var error = errorsElement.EnumerateArray().FirstOrDefault();
+                    throw new InvalidMediaException(error.GetString() ?? "Unknown validation error");
+                }
+                throw new InvalidInformationException("Extraction failed");
             }
 
-            // Throw NullValueDataException if any required field is missing
+            if (!root.TryGetProperty("extractedData", out var extractedData))
+            {
+                throw new InvalidInformationException("No extracted data found");
+            }
+
+            // Validate required fields
             var requiredFields = new[]
             {
                 "licensePlate", "brand", "model", "engineNumber", "chassisNumber",
                 "color", "ownerFullName", "registrationDate", "vehicleType"
             };
+
             foreach (var field in requiredFields)
             {
-                if (!extractedData.TryGetProperty(field, out var prop) || prop.ValueKind == JsonValueKind.Null || (prop.ValueKind == JsonValueKind.String && string.IsNullOrWhiteSpace(prop.GetString())))
+                if (!extractedData.TryGetProperty(field, out var prop) ||
+                    prop.ValueKind == JsonValueKind.Null ||
+                    (prop.ValueKind == JsonValueKind.String && string.IsNullOrWhiteSpace(prop.GetString())))
                 {
-                    throw new NullValueDataException();
+                    throw new NullValueDataException($"Missing required field: {field}");
                 }
             }
 
@@ -190,8 +279,8 @@ namespace SAPLSServer.Services.Implementations
         private static string GetStringValue(JsonElement element, string propertyName)
         {
             return element.TryGetProperty(propertyName, out var prop)
-                ? prop.GetString() ?? throw new NullValueDataException()
-                : throw new NullValueDataException();
+                ? prop.GetString() ?? throw new NullValueDataException($"Null value for {propertyName}")
+                : throw new NullValueDataException($"Missing property: {propertyName}");
         }
 
         private static DateOnly? ParseDate(string dateString)
@@ -199,7 +288,8 @@ namespace SAPLSServer.Services.Implementations
             if (string.IsNullOrWhiteSpace(dateString))
                 return null;
 
-            return DateOnly.TryParseExact(dateString, "dd/MM/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out var date) ? date : null;
+            return DateOnly.TryParseExact(dateString, "dd/MM/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out var date) 
+                ? date : null;
         }
 
         private static async Task<(string base64Image, string mimeType)> GetImageAsBase64Async(IFormFile file)
