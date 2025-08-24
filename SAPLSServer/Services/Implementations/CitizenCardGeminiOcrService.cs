@@ -14,8 +14,10 @@ namespace SAPLSServer.Services.Implementations
         private readonly string _baseUrl;
         private readonly string _modelName;
         private readonly string _apiKey;
-        public CitizenCardGeminiOcrService(IPromptProviderService promptProviderService, 
-            IHttpClientService httpClientService, 
+
+        public CitizenCardGeminiOcrService(IPromptProviderService promptProviderService,
+            ILogger<CitizenCardGeminiOcrService> logger,
+            IHttpClientService httpClientService,
             ICitizenCardOcrSettings settings)
         {
             _promptProviderService = promptProviderService;
@@ -24,35 +26,30 @@ namespace SAPLSServer.Services.Implementations
             _modelName = settings.OcrModelName;
             _apiKey = settings.OcrApiKey;
         }
+
         public async Task<CitizenIdOcrResponse> ExtractDataFromBase64(CitizenIdOcrRequest request)
         {
-            var prompt = _promptProviderService.CitizenCardPrompt;
-            var geminiRequest = CreateGeminiRequest(prompt, request.FrontImageBase64, request.BackImageBase64, request.FrontImageFormat, request.BackImageFormat);
+            var geminiRequest = CreateStructuredGeminiRequest(_promptProviderService.CitizenCardPrompt, request.FrontImageBase64, 
+                request.BackImageBase64, request.FrontImageFormat, request.BackImageFormat);
             var url = $"{_baseUrl}/models/{_modelName}:generateContent?key={_apiKey}";
 
             var response = await _httpClientService.PostAsync(url, JsonSerializer.Serialize(geminiRequest));
-            if(string.IsNullOrWhiteSpace(response))
+
+            if (string.IsNullOrWhiteSpace(response))
             {
                 throw new InvalidOperationException(MessageKeys.GEMINI_OCR_SERVICE_IS_UNAVAILABLE);
             }
-            string jsonContent;
-            try
-            {
-                jsonContent = ExtractJsonFromResponse(response);
-            }
-            catch (JsonException)
-            {
-                throw new InvalidInformationException();
-            }
-            return ParseCitizenIdResponse(jsonContent);
+
+            return ExtractStructuredResponse(response);
         }
 
         public async Task<CitizenIdOcrResponse> ExtractDataFromFile(CitizenIdOcrFileRequest request)
         {
-            if(request.FrontImage == null || request.BackImage == null)
+            if (request.FrontImage == null || request.BackImage == null)
             {
-                throw new InvalidInformationException();//should not run here
+                throw new InvalidInformationException();
             }
+
             var (frontImageBase64, frontMimeType) = await GetImageAsBase64Async(request.FrontImage);
             var (backImageBase64, backMimeType) = await GetImageAsBase64Async(request.BackImage);
 
@@ -67,7 +64,8 @@ namespace SAPLSServer.Services.Implementations
             return await ExtractDataFromBase64(base64Request);
         }
 
-        private static object CreateGeminiRequest(string prompt, string frontImageBase64, string backImageBase64, string frontImageFormat, string backImageFormat)
+        private static object CreateStructuredGeminiRequest(string prompt, string frontImageBase64, string backImageBase64, 
+            string frontImageFormat, string backImageFormat)
         {
             var imageParts = new List<object>
             {
@@ -105,59 +103,147 @@ namespace SAPLSServer.Services.Implementations
                     temperature = 0.1,
                     topK = 32,
                     topP = 1,
-                    maxOutputTokens = 2048
+                    maxOutputTokens = 2048,
+                    responseMimeType = "application/json",
+                    responseSchema = new
+                    {
+                        type = "object",
+                        properties = new
+                        {
+                            success = new
+                            {
+                                type = "boolean",
+                                description = "Whether extraction was successful"
+                            },
+                            extractedData = new
+                            {
+                                type = "object",
+                                properties = new
+                                {
+                                    citizenId = new
+                                    {
+                                        type = "string",
+                                        description = "12-digit citizen ID without dashes"
+                                    },
+                                    fullName = new
+                                    {
+                                        type = "string",
+                                        description = "Full name in ALL UPPERCASE as printed"
+                                    },
+                                    dateOfBirth = new
+                                    {
+                                        type = "string",
+                                        description = "Date of birth in DD/MM/YYYY format"
+                                    },
+                                    sex = new
+                                    {
+                                        type = "string",
+                                        description = "Gender: Male or Female"
+                                    },
+                                    nationality = new
+                                    {
+                                        type = "string",
+                                        description = "Nationality as written on card"
+                                    },
+                                    placeOfOrigin = new
+                                    {
+                                        type = "string",
+                                        description = "Place of origin/birth"
+                                    },
+                                    placeOfResidence = new
+                                    {
+                                        type = "string",
+                                        description = "Current residence address"
+                                    },
+                                    expiryDate = new
+                                    {
+                                        type = "string",
+                                        description = "Expiry date in DD/MM/YYYY format or 'Permanent'"
+                                    }
+                                },
+                                required = new[] { "citizenId", "fullName", "dateOfBirth", "sex", "nationality", "placeOfOrigin", 
+                                    "placeOfResidence", "expiryDate" }
+                            },
+                            validationErrors = new
+                            {
+                                type = "array",
+                                items = new
+                                {
+                                    type = "string",
+                                    @enum = new[] { "BLURRY_IMAGE", "INVALID_IMAGE" }
+                                }
+                            }
+                        },
+                        required = new[] { "success", "extractedData", "validationErrors" }
+                    }
                 }
             };
         }
 
-        private static string ExtractJsonFromResponse(string response)
+        private CitizenIdOcrResponse ExtractStructuredResponse(string response)
         {
-            using var doc = JsonDocument.Parse(response);
-            if(!doc.RootElement.TryGetProperty("candidates", out var candidates) || candidates.ValueKind != JsonValueKind.Array)
+            try
             {
-                return "{}"; // Return empty JSON if no candidates found
-            }
-            if (candidates.GetArrayLength() > 0)
-            {
-                var content = candidates[0].GetProperty("content");
-                var parts = content.GetProperty("parts");
-                if (parts.GetArrayLength() > 0)
+                using var doc = JsonDocument.Parse(response);
+                if (!doc.RootElement.TryGetProperty("candidates", out var candidates) || candidates.ValueKind != JsonValueKind.Array)
                 {
-                    var text = parts[0].GetProperty("text").GetString() ?? "";
-                    var jsonStart = text.IndexOf('{');
-                    var jsonEnd = text.LastIndexOf('}');
+                    throw new InvalidInformationException("No candidates in response");
+                }
 
-                    if (jsonStart != -1 && jsonEnd != -1 && jsonEnd > jsonStart)
+                if (candidates.GetArrayLength() > 0)
+                {
+                    var content = candidates[0].GetProperty("content");
+                    var parts = content.GetProperty("parts");
+                    if (parts.GetArrayLength() > 0)
                     {
-                        return text.Substring(jsonStart, jsonEnd - jsonStart + 1);
+                        var structuredText = parts[0].GetProperty("text").GetString() ?? "{}";
+
+                        return ParseStructuredCitizenIdResponse(structuredText);
                     }
                 }
+
+                throw new InvalidInformationException("Empty response from API");
             }
-            return "{}";
+            catch (JsonException)
+            {
+                throw new InvalidInformationException("Invalid API response format");
+            }
         }
 
-        private static CitizenIdOcrResponse ParseCitizenIdResponse(string jsonContent)
+        private static CitizenIdOcrResponse ParseStructuredCitizenIdResponse(string jsonContent)
         {
             using var doc = JsonDocument.Parse(jsonContent);
             var root = doc.RootElement;
 
-            var extractedData = root.TryGetProperty("extractedData", out var data) ? data : default;
-
-            if (root.TryGetProperty("validationErrors", out var errorsElement)
-                && errorsElement.ValueKind == JsonValueKind.Array
-                && errorsElement.GetArrayLength() > 0)
+            // Check if extraction was successful
+            if (root.TryGetProperty("success", out var successElement) && !successElement.GetBoolean())
             {
-                var error = errorsElement.EnumerateArray().FirstOrDefault();
-                throw new InvalidMediaException(error.GetString() ?? string.Empty);
+                // Handle validation errors
+                if (root.TryGetProperty("validationErrors", out var errorsElement)
+                    && errorsElement.ValueKind == JsonValueKind.Array
+                    && errorsElement.GetArrayLength() > 0)
+                {
+                    var error = errorsElement.EnumerateArray().FirstOrDefault();
+                    throw new InvalidMediaException(error.GetString() ?? "Unknown validation error");
+                }
+                throw new InvalidInformationException("Extraction failed");
             }
 
-            // Throw NullValueDataException if any required field is missing
-            var requiredFields = new[] { "citizenId", "fullName", "dateOfBirth", "sex", "nationality", "placeOfOrigin", "placeOfResidence", "expiryDate" };
+            if (!root.TryGetProperty("extractedData", out var extractedData))
+            {
+                throw new InvalidInformationException("No extracted data found");
+            }
+
+            // Validate required fields
+            var requiredFields = new[] { "citizenId", "fullName", "dateOfBirth", "sex", "nationality", "placeOfOrigin", 
+                "placeOfResidence", "expiryDate" };
             foreach (var field in requiredFields)
             {
-                if (!extractedData.TryGetProperty(field, out var prop) || prop.ValueKind == JsonValueKind.Null || (prop.ValueKind == JsonValueKind.String && string.IsNullOrWhiteSpace(prop.GetString())))
+                if (!extractedData.TryGetProperty(field, out var prop) ||
+                    prop.ValueKind == JsonValueKind.Null ||
+                    (prop.ValueKind == JsonValueKind.String && string.IsNullOrWhiteSpace(prop.GetString())))
                 {
-                    throw new NullValueDataException();
+                    throw new NullValueDataException($"Missing required field: {field}");
                 }
             }
 
@@ -176,15 +262,18 @@ namespace SAPLSServer.Services.Implementations
 
         private static string GetStringValue(JsonElement element, string propertyName)
         {
-            return element.TryGetProperty(propertyName, out var prop) ? prop.GetString() ?? throw new NullValueDataException() : "Unknown";
+            return element.TryGetProperty(propertyName, out var prop) ?
+                prop.GetString() ?? throw new NullValueDataException($"Null value for {propertyName}") :
+                throw new NullValueDataException($"Missing property: {propertyName}");
         }
 
         private static DateOnly? ParseDate(string dateString)
         {
-            if (string.IsNullOrWhiteSpace(dateString))
+            if (string.IsNullOrWhiteSpace(dateString) || dateString.Equals("Permanent", StringComparison.OrdinalIgnoreCase))
                 return null;
 
-            return DateOnly.TryParseExact(dateString, "dd/MM/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out var date) ? date : null;
+            return DateOnly.TryParseExact(dateString, "dd/MM/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out var date) 
+                ? date : null;
         }
 
         private static async Task<(string base64Image, string mimeType)> GetImageAsBase64Async(IFormFile file)

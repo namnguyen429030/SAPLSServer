@@ -9,10 +9,11 @@ namespace SAPLSServer.Services.Implementations
     public class HttpClientService : IHttpClientService
     {
         private readonly HttpClient _httpClient;
-
-        public HttpClientService(HttpClient httpClient)
+        private readonly ILogger<HttpClientService> _logger;
+        public HttpClientService(HttpClient httpClient, ILogger<HttpClientService> logger)
         {
             _httpClient = httpClient;
+            _logger = logger;
         }
 
         // GET
@@ -47,8 +48,9 @@ namespace SAPLSServer.Services.Implementations
                 Content = new StringContent(body, Encoding.UTF8, "application/json")
             };
             AddHeaders(request, headers);
-
+            _logger.LogInformation("POST Request to {Url} with body: {Body}", url, body);
             var response = await _httpClient.SendAsync(request);
+            _logger.LogInformation("POST {Response}: ",response);
             response.EnsureSuccessStatusCode();
 
             return await response.Content.ReadAsStringAsync();
