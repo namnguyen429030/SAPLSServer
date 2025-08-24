@@ -11,7 +11,6 @@ namespace SAPLSServer.Services.Implementations
     {
         private readonly IHttpClientService _httpClientService;
         private readonly IPromptProviderService _promptProviderService;
-        private readonly ILogger<CitizenCardGeminiOcrService> _logger;
         private readonly string _baseUrl;
         private readonly string _modelName;
         private readonly string _apiKey;
@@ -22,7 +21,6 @@ namespace SAPLSServer.Services.Implementations
             ICitizenCardOcrSettings settings)
         {
             _promptProviderService = promptProviderService;
-            _logger = logger;
             _httpClientService = httpClientService;
             _baseUrl = settings.OcrBaseUrl;
             _modelName = settings.OcrModelName;
@@ -36,7 +34,6 @@ namespace SAPLSServer.Services.Implementations
             var url = $"{_baseUrl}/models/{_modelName}:generateContent?key={_apiKey}";
 
             var response = await _httpClientService.PostAsync(url, JsonSerializer.Serialize(geminiRequest));
-            _logger.LogInformation("Gemini OCR response: {Response}", response);
 
             if (string.IsNullOrWhiteSpace(response))
             {
@@ -200,7 +197,6 @@ namespace SAPLSServer.Services.Implementations
                     if (parts.GetArrayLength() > 0)
                     {
                         var structuredText = parts[0].GetProperty("text").GetString() ?? "{}";
-                        _logger.LogInformation("Structured response: {StructuredText}", structuredText);
 
                         return ParseStructuredCitizenIdResponse(structuredText);
                     }
@@ -208,9 +204,8 @@ namespace SAPLSServer.Services.Implementations
 
                 throw new InvalidInformationException("Empty response from API");
             }
-            catch (JsonException ex)
+            catch (JsonException)
             {
-                _logger.LogError(ex, "Failed to parse Gemini response: {Response}", response);
                 throw new InvalidInformationException("Invalid API response format");
             }
         }

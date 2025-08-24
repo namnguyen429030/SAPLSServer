@@ -11,22 +11,19 @@ namespace SAPLSServer.Services.Implementations
     {
         private readonly IHttpClientService _httpClientService;
         private readonly IPromptProviderService _promptProviderService;
-        private readonly ILogger<VehicleRegistrationCertGeminiOcrService> _logger;
         private readonly string _baseUrl;
         private readonly string _modelName;
         private readonly string _apiKey;
 
         public VehicleRegistrationCertGeminiOcrService(IPromptProviderService promptProviderService,
             IHttpClientService httpClientService,
-            IVehicleRegistrationCertOcrSettings settings,
-            ILogger<VehicleRegistrationCertGeminiOcrService> logger)
+            IVehicleRegistrationCertOcrSettings settings)
         {
             _promptProviderService = promptProviderService;
             _httpClientService = httpClientService;
             _baseUrl = settings.OcrBaseUrl;
             _modelName = settings.OcrModelName;
             _apiKey = settings.OcrApiKey;
-            _logger = logger;
         }
 
         public async Task<VehicleRegistrationOcrResponse> AttractDataFromBase64(VehicleRegistrationOcrRequest request)
@@ -36,7 +33,6 @@ namespace SAPLSServer.Services.Implementations
             var url = $"{_baseUrl}/models/{_modelName}:generateContent?key={_apiKey}";
 
             var response = await _httpClientService.PostAsync(url, JsonSerializer.Serialize(geminiRequest));
-            _logger.LogInformation("Gemini OCR response: {Response}", response);
 
             if (string.IsNullOrWhiteSpace(response))
             {
@@ -206,7 +202,6 @@ namespace SAPLSServer.Services.Implementations
                     if (parts.GetArrayLength() > 0)
                     {
                         var structuredText = parts[0].GetProperty("text").GetString() ?? "{}";
-                        _logger.LogInformation("Structured response: {StructuredText}", structuredText);
 
                         return ParseStructuredVehicleResponse(structuredText);
                     }
@@ -214,9 +209,8 @@ namespace SAPLSServer.Services.Implementations
 
                 throw new InvalidInformationException("Empty response from API");
             }
-            catch (JsonException ex)
+            catch (JsonException)
             {
-                _logger.LogError(ex, "Failed to parse Gemini response: {Response}", response);
                 throw new InvalidInformationException("Invalid API response format");
             }
         }
