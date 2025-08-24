@@ -9,6 +9,7 @@ using SAPLSServer.Exceptions;
 using SAPLSServer.Services.Implementations;
 using SAPLSServer.Services.Interfaces;
 using System.Security.Claims;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace SAPLSServer.Controllers
@@ -19,10 +20,11 @@ namespace SAPLSServer.Controllers
     public class ParkingLotController : ControllerBase
     {
         private readonly IParkingLotService _parkingLotService;
-
-        public ParkingLotController(IParkingLotService parkingLotService)
+        private readonly ILogger<ParkingLotController> _logger;
+        public ParkingLotController(IParkingLotService parkingLotService, ILogger<ParkingLotController> logger)
         {
             _parkingLotService = parkingLotService;
+            _logger = logger;
         }
 
         /// <summary>
@@ -134,6 +136,8 @@ namespace SAPLSServer.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> CompletePayment([FromBody] PaymentWebHookRequest paymentWebHookRequest)
         {
+            // Log the incoming webhook request
+            _logger.LogInformation("Received PaymentWebHookRequest: {Request}", JsonSerializer.Serialize(paymentWebHookRequest));
             try
             {
                 await _parkingLotService.ConfirmTransaction(paymentWebHookRequest);
