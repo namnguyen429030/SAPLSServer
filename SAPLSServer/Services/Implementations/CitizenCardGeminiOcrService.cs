@@ -11,14 +11,17 @@ namespace SAPLSServer.Services.Implementations
     {
         private readonly IHttpClientService _httpClientService;
         private readonly IPromptProviderService _promptProviderService;
+        private readonly ILogger<CitizenCardGeminiOcrService> _logger;
         private readonly string _baseUrl;
         private readonly string _modelName;
         private readonly string _apiKey;
-        public CitizenCardGeminiOcrService(IPromptProviderService promptProviderService, 
+        public CitizenCardGeminiOcrService(IPromptProviderService promptProviderService,
+            ILogger<CitizenCardGeminiOcrService> logger,
             IHttpClientService httpClientService, 
             ICitizenCardOcrSettings settings)
         {
             _promptProviderService = promptProviderService;
+            _logger = logger;
             _httpClientService = httpClientService;
             _baseUrl = settings.OcrBaseUrl;
             _modelName = settings.OcrModelName;
@@ -31,7 +34,8 @@ namespace SAPLSServer.Services.Implementations
             var url = $"{_baseUrl}/models/{_modelName}:generateContent?key={_apiKey}";
 
             var response = await _httpClientService.PostAsync(url, JsonSerializer.Serialize(geminiRequest));
-            if(string.IsNullOrWhiteSpace(response))
+            _logger.LogInformation("Gemini OCR response: {Response}", response);
+            if (string.IsNullOrWhiteSpace(response))
             {
                 throw new InvalidOperationException(MessageKeys.GEMINI_OCR_SERVICE_IS_UNAVAILABLE);
             }
