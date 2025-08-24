@@ -162,5 +162,14 @@ namespace SAPLSServer.Controllers
                     new { message = MessageKeys.UNEXPECTED_ERROR });
             }
         }
+        [HttpGet("for-owner/{parkingLotId}")]
+        [Authorize(Policy = Accessibility.ADMIN_PARKINGLOT_OWNER_ACCESS)]
+        public async Task<IActionResult> GetDetailsForOwner(string parkingLotId)
+        {
+            var result = await _parkingLotService.GetParkingLotDetailsForOwner(parkingLotId);
+            if (result == null)
+                return NotFound(new { message = MessageKeys.PARKING_LOT_NOT_FOUND });
+            return Ok(result);
+        }
     }
 }

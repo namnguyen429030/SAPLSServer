@@ -98,7 +98,13 @@ namespace SAPLSServer.Services.Implementations
                 return null;
             return new ParkingLotDetailsDto(parkingLot);
         }
-
+        public async Task<ParkingLotDetailsForOwner?> GetParkingLotDetailsForOwner(string parkingLotId)
+        {
+            var parkingLot = await _parkingLotRepository.FindIncludingParkingLotOwnerReadOnly(parkingLotId);
+            if (parkingLot == null)
+                return null;
+            return new ParkingLotDetailsForOwner(parkingLot);
+        }
         public async Task<PageResult<ParkingLotSummaryDto>> GetParkingLotsPage(PageRequest pageRequest,
             GetParkingLotListRequest request)
         {

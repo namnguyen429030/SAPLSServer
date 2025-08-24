@@ -41,6 +41,7 @@ namespace SAPLSServer.Services.Interfaces
         /// <param name="parkingLotId">The unique identifier of the parking lot.</param>
         /// <returns>The parking lot details, or null if not found.</returns>
         Task<ParkingLotDetailsDto?> GetParkingLotDetails(string parkingLotId);
+        Task<ParkingLotDetailsForOwner?> GetParkingLotDetailsForOwner(string parkingLotId);
 
         /// <summary>
         /// Retrieves a paginated list of parking lots based on the provided page request and filter criteria.
