@@ -3,8 +3,10 @@ using Microsoft.AspNetCore.Mvc;
 using SAPLSServer.Constants;
 using SAPLSServer.DTOs.Base;
 using SAPLSServer.DTOs.Concrete.ParkingLotDtos;
+using SAPLSServer.DTOs.Concrete.PaymentDtos;
 using SAPLSServer.DTOs.PaginationDto;
 using SAPLSServer.Exceptions;
+using SAPLSServer.Services.Implementations;
 using SAPLSServer.Services.Interfaces;
 using System.Security.Claims;
 using System.Threading.Tasks;
@@ -127,6 +129,27 @@ namespace SAPLSServer.Controllers
 
             await _parkingLotService.DeleteParkingLot(request);
             return Ok(new { message = MessageKeys.PARKING_LOT_DELETED_SUCCESSFULLY });
+        }
+        [HttpPost("complete-payment")]
+        [AllowAnonymous]
+        public async Task<IActionResult> CompletePayment([FromBody] PaymentWebHookRequest paymentWebHookRequest)
+        {
+            try
+            {
+                await _parkingLotService.ConfirmTransaction(paymentWebHookRequest);
+                return Ok(new
+                {
+                    message = MessageKeys.PAYMENT_COMPLETED_SUCCESSFULLY
+                });
+            }
+            catch (InvalidInformationException ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, new { error = MessageKeys.UNEXPECTED_ERROR });
+            }
         }
     }
 }

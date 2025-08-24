@@ -5,6 +5,7 @@ using SAPLSServer.DTOs.Concrete.ParkingSessionDtos;
 using SAPLSServer.DTOs.Concrete.PaymentDtos;
 using SAPLSServer.DTOs.PaginationDto;
 using SAPLSServer.Exceptions;
+using SAPLSServer.Helpers;
 using SAPLSServer.Models;
 using SAPLSServer.Repositories.Interfaces;
 using SAPLSServer.Services.Interfaces;
@@ -473,7 +474,7 @@ namespace SAPLSServer.Services.Implementations
             );
         }
 
-        public async Task<long?> GetSessionTransactionId(string sessionId)
+        public async Task<int?> GetSessionTransactionId(string sessionId)
         {
             var session = await _parkingSessionRepository.Find(sessionId);
             if(session == null)
@@ -497,9 +498,27 @@ namespace SAPLSServer.Services.Implementations
             return JsonSerializer.Deserialize<PaymentResponseDto>(session.PaymentInformation);
         }
 
-        public Task CancelTransaction()
+        public async Task ConfirmTransaction(PaymentWebHookRequest request)
         {
-            throw new NotImplementedException();
+            var session = await _parkingSessionRepository.Find([p => p.TransactionId == request.Data.OrderCode]);
+            if (session == null)
+            {
+                throw new InvalidInformationException(MessageKeys.PARKING_SESSION_NOT_FOUND);
+            }
+            if (string.IsNullOrWhiteSpace(session.PaymentInformation))
+            {
+                throw new InvalidInformationException(MessageKeys.PARKING_SESSION_PAYMENT_INFO_NOT_FOUND);
+            }
+            var signature = _paymentService.GenerateSignature(PayOutDataToStringConverter.ConvertToSignatureString(request.Data),
+                await _parkingLotService.GetParkingLotCheckSumKey(session.ParkingLotId));
+            if (signature != request.Signature)
+            {
+                throw new InvalidInformationException(MessageKeys.PAYMENT_SIGNATURE_MISMATCH);
+            }
+            //session.PaymentStatus = ParkingSessionPayStatus.Paid.ToString();
+            //_parkingSessionRepository.Update(session);
+            //await _parkingSessionRepository.SaveChangesAsync();
         }
+
     }
 }

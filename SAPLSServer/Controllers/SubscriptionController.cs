@@ -56,7 +56,7 @@ namespace SAPLSServer.Controllers
         /// CheckIn a new subscription.
         /// </summary>
         [HttpPost]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Policy = Accessibility.ADMIN_ACCESS)]
         public async Task<IActionResult> Create([FromBody] CreateSubscriptionRequest request)
         {
             var adminId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -72,7 +72,7 @@ namespace SAPLSServer.Controllers
         /// Update the status of a subscription.
         /// </summary>
         [HttpPut("status")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Policy = Accessibility.ADMIN_ACCESS)]
         public async Task<IActionResult> UpdateStatus([FromBody] UpdateSubscriptionStatusRequest request)
         {
             var adminId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;

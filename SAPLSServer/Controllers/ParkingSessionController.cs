@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SAPLSServer.Constants;
 using SAPLSServer.DTOs.Concrete.ParkingSessionDtos;
+using SAPLSServer.DTOs.Concrete.PaymentDtos;
 using SAPLSServer.DTOs.PaginationDto;
 using SAPLSServer.Exceptions;
 using SAPLSServer.Services.Interfaces;
@@ -430,6 +431,27 @@ namespace SAPLSServer.Controllers
                     message = MessageKeys.GET_PARKING_SESSION_DETAILS_SUCCESSFULLY,
                     data = result
                 });
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, new { error = MessageKeys.UNEXPECTED_ERROR });
+            }
+        }
+        [HttpPost("complete-payment")]
+        [AllowAnonymous]
+        public async Task<IActionResult> CompletePayment([FromBody] PaymentWebHookRequest paymentWebHookRequest)
+        {
+            try
+            {
+                await _parkingSessionService.ConfirmTransaction(paymentWebHookRequest);
+                return Ok(new
+                {
+                    message = MessageKeys.PAYMENT_COMPLETED_SUCCESSFULLY
+                });
+            }
+            catch (InvalidInformationException ex)
+            {
+                return BadRequest(new { error = ex.Message });
             }
             catch (Exception)
             {
