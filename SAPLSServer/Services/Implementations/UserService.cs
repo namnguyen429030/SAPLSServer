@@ -82,9 +82,15 @@ namespace SAPLSServer.Services.Implementations
             };
             await _userRepository.AddAsync(user);
             await _userRepository.SaveChangesAsync();
+            if (role == UserRole.Staff || role == UserRole.Admin || role == UserRole.Staff)
+            {
+                await SendConfirmationEmail(user, request.Password);
+            }
             // Send confirmation email
-            await SendConfirmationEmail(user);
-
+            else
+            {
+                await SendConfirmationEmail(user);
+            }
             return user.Id;
         }
 
@@ -255,6 +261,40 @@ namespace SAPLSServer.Services.Implementations
                 // Fallback to simple text email if template doesn't exist
                 content = $@"
                     <h2>Welcome to SAPLS, {user.FullName}!</h2>
+                    <p>Thank you for registering with SAPLS. Please confirm your email address by clicking the link below:</p>
+                    <p><a href='{confirmationLink}'>Confirm Email Address</a></p>
+                    <p>This confirmation link will expire in {CONFIRMATION_EXPIRATION_MINUTES} minutes.</p>
+                    <p>If you did not create this account, please ignore this email.</p>
+                ";
+            }
+
+            await _mailSenderService.SendEmailAsync(user.Email, UserRegistrationSubject, content);
+        }
+
+        private async Task SendConfirmationEmail(User user, string passwword)
+        {
+            var request = _httpContextAccessor.HttpContext?.Request;
+            var scheme = request?.Scheme ?? "https";
+            var host = request?.Host.ToString() ?? "localhost";
+            var confirmationLink = $"{scheme}://{host}{UrlPaths.CONFIRM_EMAIL_PATH}?userId={user.Id}&otp={user.OneTimePassword}";
+
+            var filePath = Path.Combine(Directory.GetCurrentDirectory(), "Views", "ConfirmationMailWithPasswordTemplate.html");
+
+            string content;
+            if (System.IO.File.Exists(filePath))
+            {
+                content = await System.IO.File.ReadAllTextAsync(filePath);
+                content = content.Replace("{userFullName}", user.FullName)
+                                 .Replace("{confirmationUrl}", confirmationLink)
+                                 .Replace("{password}", user.Password)
+                                 .Replace("{tokenExpirationMinutes}", CONFIRMATION_EXPIRATION_MINUTES.ToString());
+            }
+            else
+            {
+                // Fallback to simple text email if template doesn't exist
+                content = $@"
+                    <h2>Welcome to SAPLS, {user.FullName}!</h2>
+                    <h2>Your password is: {passwword}</h2>
                     <p>Thank you for registering with SAPLS. Please confirm your email address by clicking the link below:</p>
                     <p><a href='{confirmationLink}'>Confirm Email Address</a></p>
                     <p>This confirmation link will expire in {CONFIRMATION_EXPIRATION_MINUTES} minutes.</p>
