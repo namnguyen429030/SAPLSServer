@@ -508,7 +508,6 @@ namespace SAPLSServer.Services.Implementations
                 if (signature == request.Signature)
                 {
                     session.PaymentStatus = ParkingSessionPayStatus.Paid.ToString();
-                    session.
                     _parkingSessionRepository.Update(session);
                     await _parkingSessionRepository.SaveChangesAsync();
                 }
