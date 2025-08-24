@@ -269,6 +269,14 @@ namespace SAPLSServer.Services.Implementations
                                     _paymentSettings.PaymentGatewayCheckSumKey);
                 if (signature == request.Signature)
                 {
+                    if (parkingLot.TempSubscriptionId != null)
+                    {
+                        parkingLot.SubscriptionId = parkingLot.TempSubscriptionId;
+                        parkingLot.ExpiredAt = DateTime.UtcNow.AddMilliseconds(
+                            await _subscriptionService.GetDurationOfSubscription(parkingLot.TempSubscriptionId));
+                        _parkingLotRepository.Update(parkingLot);
+                        await _parkingLotRepository.SaveChangesAsync();
+                    }
                 }
             }
 

@@ -507,10 +507,11 @@ namespace SAPLSServer.Services.Implementations
                     await _parkingLotService.GetParkingLotCheckSumKey(session.ParkingLotId));
                 if (signature == request.Signature)
                 {
+                    session.PaymentStatus = ParkingSessionPayStatus.Paid.ToString();
+                    session.
+                    _parkingSessionRepository.Update(session);
+                    await _parkingSessionRepository.SaveChangesAsync();
                 }
-                //session.PaymentStatus = ParkingSessionPayStatus.Paid.ToString();
-                //_parkingSessionRepository.Update(session);
-                //await _parkingSessionRepository.SaveChangesAsync();
 
             }
 
