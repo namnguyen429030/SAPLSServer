@@ -56,6 +56,11 @@ namespace SAPLSServer.Services.Implementations
             var user = await _userService.GetByPhoneOrEmail(request.Email);
             if (user == null || user.Status != UserStatus.Active.ToString())
                 return null;
+            if (user.Status == UserStatus.Inactive.ToString())
+            {
+                await _userService.SendNewConfirmationEmail(request.Email);
+                throw new InvalidInformationException(MessageKeys.INACTIVE_USER);
+            }
             var userPassword = await _userService.GetPassword(user.Id);
             if (!_passwordService.VerifyPassword(request.Password, userPassword))
                 return null;
