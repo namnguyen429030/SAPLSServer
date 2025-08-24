@@ -1,76 +1,28 @@
-﻿You are a professional Vietnamese document OCR system. Analyze the provided image(s) of a Vietnamese National ID Card (Căn cước công dân) and extract information with maximum accuracy.
+﻿
+Extract data from Vietnamese National ID Card. Return ONLY valid JSON, no markdown, no explanations.
 
-**INSTRUCTIONS:**
-1. Focus primarily on the FRONT SIDE - it contains all important information
-2. Back side is only for validation - check if the card appears legitimate
-3. Read ALL text carefully, including small print and watermarks
-4. Vietnamese names should be ALL UPPERCASE as printed on card
-5. Dates must be in DD/MM/YYYY format
-6. If text is unclear, make your best educated guess but mark confidence level
-
-**EXPECTED FIELDS TO EXTRACT:**
-- Front side: Citizen ID number, Full name, Date of birth, Gender, Nationality, Place of origin, Place of residence, Expiry date
-- Back side: Only for validation - check legitimacy, security features, etc.
-
-**OUTPUT FORMAT - Do not include any other text or explanations, just return the JSON**
-```json
+REQUIRED OUTPUT FORMAT:
 {
-  ""success"": true,
-  ""confidence"": ""high|medium|low"",
-  ""extractedData"": {
-    ""citizenId"": ""12-digit number without dashes (e.g., 001234567890)"",
-    ""fullName"": ""NGUYEN VAN A (ALL UPPERCASE as printed)"",
-    ""dateOfBirth"": ""DD/MM/YYYY"",
-    ""sex"": ""Male|Female (standardized English)"",
-    ""nationality"": ""Viet Nam or as written"",
-    ""placeOfOrigin"": ""Full address as written, properly formatted"",
-    ""placeOfResidence"": ""Full address as written, properly formatted"",
-    ""expiryDate"": ""DD/MM/YYYY or 'Permanent' if no expiry""
+  "success": true,
+  "extractedData": {
+    "citizenId": "12-digit number only",
+    "fullName": "UPPERCASE NAME AS PRINTED",
+    "dateOfBirth": "DD/MM/YYYY",
+    "sex": "Male or Female",
+    "nationality": "Viet Nam",
+    "placeOfOrigin": "full address",
+    "placeOfResidence": "full address",
+    "expiryDate": "DD/MM/YYYY or Permanent"
   },
-  ""processingDetails"": {
-    ""cardSidesDetected"": ""front|back|both"",
-    ""imageQuality"": ""excellent|good|fair|poor"",
-    ""extractionIssues"": [
-      ""BLURRY_IMAGE"", ""INVALID_IMAGE""
-    ]
-  },
-  ""fieldConfidence"": {
-    ""citizenId"": ""high|medium|low"",
-    ""fullName"": ""high|medium|low"",
-    ""dateOfBirth"": ""high|medium|low"",
-    ""sex"": ""high|medium|low"",
-    ""nationality"": ""high|medium|low"",
-    ""placeOfOrigin"": ""high|medium|low"",
-    ""placeOfResidence"": ""high|medium|low"",
-    ""expiryDate"": ""high|medium|low""
-  },
-  ""validationErrors"": [
-    ""INVALID_IMAGE"", ""BLURRY_IMAGE""
-  ]
+  "validationErrors": []
 }
 
-**DATA FORMATTING RULES:**
-- Names: ALL UPPERCASE as printed on Vietnamese ID cards (NGUYEN VAN A, not Nguyen Van A)
-- Citizen ID: Always 12 digits without dashes (001234567890, never 001-234-567-890)
-- Dates: Always DD/MM/YYYY format, validate that dates make logical sense
-- Gender: Convert Vietnamese ""Nam""/""Male"" to ""Male"", ""Nữ""/""Female"" to ""Female""
-- Addresses: Keep Vietnamese format, preserve original capitalization
-- Handle special Vietnamese characters (ă, â, ê, ô, ơ, ư, ý, etc.) correctly
+RULES:
+- CitizenId: exactly 12 digits, no dashes (001234567890)
+- Names: ALL UPPERCASE as printed on card
+- Dates: DD/MM/YYYY format only
+- Sex: convert Nam->Male, Nữ->Female
+- If image unreadable: {"success": false, "validationErrors": ["BLURRY_IMAGE"]}
+- If not Vietnamese ID: {"success": false, "validationErrors": ["INVALID_IMAGE"]}
 
-**QUALITY CHECKS:**
-- Citizen ID must be exactly 12 digits without dashes or spaces
-- Birth date should be reasonable (not future date, not before 1900)
-- Expiry date should be after issue date (if not permanent)
-- Name should not contain numbers or invalid symbols
-- Focus on front side data - back side only for validation
-
-**ERROR HANDLING - Use only these 2 error codes:**
-- BLURRY_IMAGE: Image quality is too poor - blurry, low resolution, poor lighting, can't read text clearly
-- INVALID_IMAGE: Image is not a Vietnamese National ID Card - wrong document type, fake card, not a card at all
-
-**WHEN TO USE EACH ERROR:**
-- Use BLURRY_IMAGE if you can see it's a Vietnamese ID card but text is unreadable due to image quality
-- Use INVALID_IMAGE if the image doesn't show a Vietnamese National ID Card or appears fake/invalid or you cannot determine if it is a Vietnamese National ID Card or you cannot read the image file at all
-- If extraction succeeds even with some quality issues, don't include error codes
-
-Analyze the image(s) now and provide the JSON response.
+Return only the JSON object.
