@@ -96,6 +96,23 @@ namespace SAPLSServer.Repositories.Interfaces
         /// object with its associated <see cref="ParkingFeeSchedule"/> if found; otherwise, <see langword="null"/>.
         /// </returns>
         Task<ParkingSession?> FindInlcudingParkingFeeScheduleReadOnly(string id);
+        /// <summary>
+        /// Retrieves the most recent parking session for a specific vehicle in a specific parking lot.
+        /// </summary>
+        /// <param name="vehicleId">The unique identifier of the vehicle.</param>
+        /// <param name="parkingLotId">The unique identifier of the parking lot.</param>
+        /// <returns>
+        /// A task that represents the asynchronous operation. The task result contains the latest <see cref="ParkingSession"/>
+        /// for the specified vehicle and parking lot if found; otherwise, <see langword="null"/>.
+        /// </returns>
         Task<ParkingSession?> FindLatest(string vehicleId, string parkingLotId);
+
+        /// <summary>
+        /// Counts the total number of parking session transactions in the system.
+        /// </summary>
+        /// <returns>
+        /// A task that represents the asynchronous operation. The task result contains the total number of parking session transactions.
+        /// </returns>
+        Task<int> CountTransactions();
     }
 }

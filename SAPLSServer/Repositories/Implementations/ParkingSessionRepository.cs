@@ -87,5 +87,11 @@ namespace SAPLSServer.Repositories.Implementations
                 .OrderByDescending(ps => ps.EntryDateTime)
                 .FirstOrDefaultAsync();
         }
+
+        public async Task<int> CountTransactions()
+        {
+            // Sum the TransactionCount property for all sessions, treating null as 0
+            return await _dbSet.SumAsync(ps => ps.TransactionCount ?? 0);
+        }
     }
 }

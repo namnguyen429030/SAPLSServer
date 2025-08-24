@@ -101,8 +101,15 @@ namespace SAPLSServer.Services.Interfaces
         Task<PageResult<ParkingSessionSummaryForClientDto>> GetPageByOwnedSessions(PageRequest request,
             GetOwnedParkingSessionListRequest listRequest, string clientId);
 
-        Task<long?> GetSessionTransactionId(string sessionId);
+        Task<int?> GetSessionTransactionId(string sessionId);
 
         Task<PaymentResponseDto?> GetSessionPaymentInfo(string sessionId);
+
+        /// <summary>
+        /// Confirms a transaction for a parking session based on the provided payment webhook request.
+        /// </summary>
+        /// <param name="request">The payment webhook request containing transaction details.</param>
+        /// <returns>A task representing the asynchronous operation.</returns>
+        Task ConfirmTransaction(PaymentWebHookRequest request);
     }
 }

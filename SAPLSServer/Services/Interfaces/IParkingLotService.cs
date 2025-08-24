@@ -121,6 +121,7 @@ namespace SAPLSServer.Services.Interfaces
         /// <param name="parkingLotId">The unique identifier of the parking lot.</param>
         /// <returns>The checksum key as a string.</returns>
         Task<string> GetParkingLotCheckSumKey(string parkingLotId);
+        Task ConfirmTransaction(PaymentWebHookRequest request);
     }
 }
 

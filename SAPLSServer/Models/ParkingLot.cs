@@ -27,6 +27,12 @@ public partial class ParkingLot
 
     public string SubscriptionId { get; set; } = null!;
 
+    public string? TempSubscriptionId { get; set; }
+
+    public int? SubscriptionTransactionId { get; set; }
+
+    public string? SubscriptionTransactionInformation { get; set; }
+
     public DateTime ExpiredAt { get; set; }
 
     public string CreatedBy { get; set; } = null!;

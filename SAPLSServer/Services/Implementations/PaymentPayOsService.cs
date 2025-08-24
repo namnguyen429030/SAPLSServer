@@ -77,9 +77,7 @@ namespace SAPLSServer.Services.Implementations
                     HeaderKeys.PAYOS_API_KEY_HEADER, apiKey
                 }
             };
-            string data = $"amount={request.Amount}&cancelUrl={request.CancelUrl}&description={request.Description}&orderCode={request.OrderCode}&returnUrl={request.ReturnUrl}";
-            var checkSum = GenerateSignature(data, checkSumKey);
-            request.Signature = checkSum;
+            
             var requestBody = JsonSerializer.Serialize(request);
             var response = await _clientService.PostAsync(postPaymentStatusUrl, requestBody, headers);
             if (string.IsNullOrWhiteSpace(response))
