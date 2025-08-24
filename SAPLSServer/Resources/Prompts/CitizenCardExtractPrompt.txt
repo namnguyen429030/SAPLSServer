@@ -12,7 +12,7 @@
 - Front side: Citizen ID number, Full name, Date of birth, Gender, Nationality, Place of origin, Place of residence, Expiry date
 - Back side: Only for validation - check legitimacy, security features, etc.
 
-**OUTPUT FORMAT - Return ONLY valid JSON:**
+**OUTPUT FORMAT - Do not include any other text or explanations, just return the JSON**
 ```json
 {
   ""success"": true,

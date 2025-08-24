@@ -13,7 +13,7 @@
 - Front side: License plate, Brand, Model, Engine number, Chassis number, Color, Owner name, Registration date
 - Back side: Vehicle type classification (Motorbike, Car, etc.)
 
-**OUTPUT FORMAT - Return ONLY valid JSON:**
+**OUTPUT FORMAT - Do not include any other text or explanations, just return the JSON**
 ```json
 {
   ""success"": true,
