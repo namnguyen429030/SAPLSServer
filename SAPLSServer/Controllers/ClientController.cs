@@ -314,5 +314,20 @@ namespace SAPLSServer.Controllers
                     new { message = MessageKeys.UNEXPECTED_ERROR });
             }
         }
+        [HttpGet]
+        [Authorize(Policy = Accessibility.ADMIN_ACCESS)]
+        public async Task<ActionResult<List<ClientProfileSummaryDto>>> GetListClients([FromQuery] GetClientListRequest request)
+        {
+            try
+            {
+                var result = await _clientService.GetClientProfiles(request);
+                return Ok(result);
+            }
+            catch (Exception)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    new { message = MessageKeys.UNEXPECTED_ERROR });
+            }
+        }
     }
 }

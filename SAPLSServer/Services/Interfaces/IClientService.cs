@@ -80,5 +80,6 @@ namespace SAPLSServer.Services.Interfaces
         /// <param name="userId">The user ID of the client.</param>
         /// <returns>A task that returns true if the client is verified at level two, otherwise false.</returns>
         Task<bool> IsVerifyLevelTwo(string userId);
+        Task<List<ClientProfileSummaryDto>> GetClientProfiles(GetClientListRequest request);
     }
 }

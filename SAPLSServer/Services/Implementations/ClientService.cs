@@ -257,5 +257,33 @@ namespace SAPLSServer.Services.Implementations
 
             return hasAllInfo;
         }
+
+        public async Task<List<ClientProfileSummaryDto>> GetClientProfiles(GetClientListRequest request)
+        {
+            var criterias = new List<Expression<Func<ClientProfile, bool>>>();
+
+            if (!string.IsNullOrWhiteSpace(request.Status))
+            {
+                criterias.Add(cp => cp.User.Status == request.Status);
+            }
+            if (!string.IsNullOrWhiteSpace(request.SearchCriteria))
+            {
+                criterias.Add(cp => cp.User.FullName.Contains(request.SearchCriteria) ||
+                        cp.User.Email.Contains(request.SearchCriteria) ||
+                        cp.User.Phone.Contains(request.SearchCriteria) ||
+                        cp.CitizenId.Contains(request.SearchCriteria));
+            }
+            var criteriasArray = criterias.ToArray();
+            var clients = await _clientProfileRepository.GetAllAsync(criteriasArray, null, request.Order == OrderType.Asc.ToString());
+            var items = new List<ClientProfileSummaryDto>();
+            foreach (var client in clients)
+            {
+                var clientIncludingUser = await _clientProfileRepository.FindIncludingUserReadOnly(client.UserId);
+                if (clientIncludingUser == null)
+                    continue; // Skip if client profile is not found
+                items.Add(new ClientProfileSummaryDto(clientIncludingUser));
+            }
+            return items;
+        }
     }
 }
