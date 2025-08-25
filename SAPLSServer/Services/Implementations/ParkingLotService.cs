@@ -58,6 +58,7 @@ namespace SAPLSServer.Services.Implementations
                 .GetDurationOfSubscription(request.SubscriptionId)),
                 CreatedBy = performerAdminId,
                 UpdatedBy = performerAdminId,
+                Settings = string.Empty,
             };
             await _parkingLotRepository.AddAsync(entity);
             await _parkingLotRepository.SaveChangesAsync();
