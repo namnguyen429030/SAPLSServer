@@ -78,18 +78,21 @@ namespace SAPLSServer.Services.Implementations
         public async Task<PageResult<ParkingLotOwnerProfileSummaryDto>> GetParkingLotOwnerProfilesPage(
             PageRequest pageRequest, GetParkingLotOwnerListRequest request)
         {
-            var criterias = new Expression<Func<ParkingLotOwnerProfile, bool>>[]
+            var criterias = new List<Expression<Func<ParkingLotOwnerProfile, bool>>>();
+            if (!string.IsNullOrWhiteSpace(request.Status))
             {
-                plo => !string.IsNullOrWhiteSpace(request.Status) && plo.User.Status == request.Status,
-                plo => !string.IsNullOrWhiteSpace(request.SearchCriteria) && (
-                        plo.User.FullName.Contains(request.SearchCriteria) ||
+                criterias.Add(plo => plo.User.Status == request.Status);
+            }
+            if (!string.IsNullOrWhiteSpace(request.SearchCriteria)) 
+            {
+                criterias.Add(plo => plo.User.FullName.Contains(request.SearchCriteria) ||
                         plo.User.Email.Contains(request.SearchCriteria) ||
-                        plo.User.Phone.Contains(request.SearchCriteria)
-                    )
-            };
-            var totalCount = await _parkingLotOwnerProfileRepository.CountAsync(criterias);
+                        plo.User.Phone.Contains(request.SearchCriteria));
+            }
+            var criteriaArray = criterias.ToArray();
+            var totalCount = await _parkingLotOwnerProfileRepository.CountAsync(criteriaArray);
             var owners = await _parkingLotOwnerProfileRepository.GetPageAsync(
-                                        pageRequest.PageNumber, pageRequest.PageSize, criterias, 
+                                        pageRequest.PageNumber, pageRequest.PageSize, criteriaArray, 
                                         null, request.Order == OrderType.Asc.ToString());
             var items = new List<ParkingLotOwnerProfileSummaryDto>();
             foreach (var owner in owners)

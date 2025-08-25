@@ -119,7 +119,7 @@ namespace SAPLSServer.Services.Implementations
             _subscriptionRepository.Update(subscription);
             await _subscriptionRepository.SaveChangesAsync();
         }
-        public async Task<int> GetDurationOfSubscription(string subscriptionId)
+        public async Task<long> GetDurationOfSubscription(string subscriptionId)
         {
             var subscription = await _subscriptionRepository.Find(subscriptionId);
             if (subscription == null)

@@ -6,7 +6,7 @@ namespace SAPLSServer.DTOs.Concrete.SubscriptionDtos
     {
         public string Id { get; set; } = null!;
         public string Name { get; set; } = null!;
-        public int Duration { get; set; }
+        public long Duration { get; set; }
         public double Price { get; set; }
         public string Status { get; set; } = null!;
         public string? UpdatedBy { get; set; }
