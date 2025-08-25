@@ -93,7 +93,7 @@ namespace SAPLSServer.Services.Implementations
                 Id = Guid.NewGuid().ToString(),
                 Name = request.Name,
                 Description = request.Note,
-                Duration = (int)TimeSpan.FromDays(request.Duration).TotalMilliseconds,
+                Duration = (long)TimeSpan.FromDays(request.Duration).TotalMilliseconds,
                 Price = request.Price,
                 Status = request.Status,
                 CreatedAt = DateTime.UtcNow,
@@ -143,7 +143,7 @@ namespace SAPLSServer.Services.Implementations
             subscription.Status = request.Status;
             subscription.Name = request.Name;
             subscription.Description = request.Note;
-            subscription.Duration = (int)TimeSpan.FromDays(request.Duration).TotalMilliseconds;
+            subscription.Duration = (long)TimeSpan.FromDays(request.Duration).TotalMilliseconds;
             subscription.Price = request.Price;
             subscription.UpdatedAt = DateTime.UtcNow;
             subscription.UpdateById = adminId;
