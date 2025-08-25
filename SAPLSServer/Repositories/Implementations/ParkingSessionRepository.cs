@@ -85,6 +85,9 @@ namespace SAPLSServer.Repositories.Implementations
         {
             return _dbSet.Where(ps => ps.VehicleId == vehicleId && ps.ParkingLotId == parkingLotId)
                 .OrderByDescending(ps => ps.EntryDateTime)
+                .Include(ps => ps.Vehicle)
+                .ThenInclude(v => v.Owner)
+                .ThenInclude(o => o.User)
                 .FirstOrDefaultAsync();
         }
 

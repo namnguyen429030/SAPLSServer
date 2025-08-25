@@ -515,5 +515,15 @@ namespace SAPLSServer.Services.Implementations
             }
 
         }
+
+        public async Task<ParkingSessionDetailsForParkingLotDto> GetByLicensePlateNumber(string licennsePlateNumber, string parkingLotId)
+        {
+            var session = await _parkingSessionRepository.FindLatest(licennsePlateNumber, parkingLotId);
+            if(session == null)
+            {
+                throw new InvalidInformationException(MessageKeys.PARKING_SESSION_NOT_FOUND);
+            }
+            return new ParkingSessionDetailsForParkingLotDto(session);
+        }
     }
 }

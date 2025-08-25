@@ -448,5 +448,26 @@ namespace SAPLSServer.Controllers
             await _parkingSessionService.ConfirmTransaction(paymentWebHookRequest);
             return Ok();
         }
+        [HttpGet("license-plaete/{parkingLotId}/{licensePlate}")]
+        public async Task<IActionResult> GetActiveSessionByLicensePlate(string parkingLotId, string licensePlate)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(licensePlate))
+                    return BadRequest(new { error = MessageKeys.LICENSE_PLATE_REQUIRED });
+                var result = await _parkingSessionService.GetByLicensePlateNumber(licensePlate, parkingLotId);
+                if (result == null)
+                    return NotFound(new { error = MessageKeys.PARKING_SESSION_NOT_FOUND });
+                return Ok(new
+                {
+                    message = MessageKeys.GET_PARKING_SESSION_DETAILS_SUCCESSFULLY,
+                    data = result
+                });
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, new { error = MessageKeys.UNEXPECTED_ERROR });
+            }
+        }
     }
 }
