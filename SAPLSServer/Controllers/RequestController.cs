@@ -88,9 +88,9 @@ namespace SAPLSServer.Controllers
         /// </summary>
         /// <param name="request">The filter criteria for requests.</param>
         /// <returns>List of request summaries.</returns>
-        [HttpPost("list")]
+        [HttpGet("list")]
         [Authorize]
-        public async Task<IActionResult> GetRequestList([FromBody] GetRequestListByUserIdRequest request)
+        public async Task<IActionResult> GetRequestList([FromQuery] GetRequestListByUserIdRequest request)
         {
             try
             {
@@ -120,9 +120,9 @@ namespace SAPLSServer.Controllers
         /// <param name="pageRequest">The pagination request.</param>
         /// <param name="listRequest">The filter criteria for requests.</param>
         /// <returns>Paged result of request summaries.</returns>
-        [HttpPost("page")]
+        [HttpGet("page")]
         [Authorize]
-        public async Task<IActionResult> GetRequestPage([FromBody] PageRequest pageRequest, [FromQuery] GetRequestListByUserIdRequest listRequest)
+        public async Task<IActionResult> GetRequestPage([FromQuery] PageRequest pageRequest, [FromQuery] GetRequestListByUserIdRequest listRequest)
         {
             try
             {
@@ -238,10 +238,10 @@ namespace SAPLSServer.Controllers
         /// <param name="endDate">Optional end date filter.</param>
         /// <param name="searchCriteria">Optional search criteria.</param>
         /// <returns>Paged result of user's request summaries.</returns>
-        [HttpPost("my-requests/page")]
+        [HttpGet("my-requests/page")]
         [Authorize]
         public async Task<IActionResult> GetMyRequestsPage(
-            [FromBody] PageRequest pageRequest,
+            [FromQuery] PageRequest pageRequest,
             [FromQuery] string? status = null,
             [FromQuery] DateOnly? startDate = null,
             [FromQuery] DateOnly? endDate = null,
@@ -338,10 +338,10 @@ namespace SAPLSServer.Controllers
         /// <param name="endDate">Optional end date filter.</param>
         /// <param name="searchCriteria">Optional search criteria.</param>
         /// <returns>Paged result of all request summaries.</returns>
-        [HttpPost("admin/page")]
+        [HttpGet("admin/page")]
         [Authorize(Policy = Accessibility.ADMIN_ACCESS)]
         public async Task<IActionResult> GetAllRequestsPageForAdmin(
-            [FromBody] PageRequest pageRequest,
+            [FromQuery] PageRequest pageRequest,
             [FromQuery] string? userId = null,
             [FromQuery] string? status = null,
             [FromQuery] DateOnly? startDate = null,
