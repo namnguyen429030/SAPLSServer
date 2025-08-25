@@ -134,8 +134,9 @@ namespace SAPLSServer.Services.Implementations
             var request = await _requestRepository.FindIncludingSenderAndLastUpdaterReadOnly(requestId);
             if (request == null)
                 return null;
-
+            
             var attachments = await _requestAttachedFileService.GetAttachedFilesByRequestId(requestId);
+
             return new RequestDetailsDto(request, attachments?.ToArray());
         }
 
