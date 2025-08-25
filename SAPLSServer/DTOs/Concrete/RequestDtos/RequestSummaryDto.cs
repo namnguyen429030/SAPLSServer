@@ -12,6 +12,8 @@ namespace SAPLSServer.DTOs.Concrete.RequestDtos
         public DateTime SubmittedAt { get; set; }
 
         public DateTime UpdatedAt { get; set; }
+        public string SenderId { get; set; }
+        public string SenderFullName { get; set; }
         public RequestSummaryDto(Request request)
         {
             Id = request.Id;
@@ -19,6 +21,8 @@ namespace SAPLSServer.DTOs.Concrete.RequestDtos
             Status = request.Status;
             SubmittedAt = request.SubmittedAt;
             UpdatedAt = request.UpdatedAt;
+            SenderId = request.SenderId ?? string.Empty;
+            SenderFullName = request.Sender?.FullName ?? string.Empty;
         }
     }
 }

@@ -6,8 +6,7 @@ namespace SAPLSServer.DTOs.Concrete.RequestDtos
 {
     public class RequestDetailsDto : RequestSummaryDto
     {
-        public string Email { get; set; }
-        public string FullName { get; set; }
+        public string SenderEmail { get; set; }
         public string Description { get; set; }
         public string? InternalNote { get; set; }
         public string? ResponseMessage { get; set; }
@@ -17,8 +16,7 @@ namespace SAPLSServer.DTOs.Concrete.RequestDtos
 
         public RequestDetailsDto(Request request, GetAttachedFileDto[]? attachments = null) : base(request)
         {
-            Email = request.Sender?.Email ?? string.Empty;
-            FullName = request.Sender?.FullName ?? string.Empty;
+            SenderEmail = request.Sender?.Email ?? string.Empty;
             Description = request.Description;
             InternalNote = request.InternalNote;
             ResponseMessage = request.ResponseMessage;

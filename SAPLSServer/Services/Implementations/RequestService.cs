@@ -70,7 +70,9 @@ namespace SAPLSServer.Services.Implementations
             
             foreach (var requestItem in requests)
             {
-                result.Add(new RequestSummaryDto(requestItem));
+                var requestWithDependencies = await _requestRepository.FindIncludingSenderReadOnly(requestItem.Id);
+                if(requestWithDependencies != null)
+                    result.Add(new RequestSummaryDto(requestWithDependencies));
             }
             
             return result;
@@ -93,7 +95,9 @@ namespace SAPLSServer.Services.Implementations
             var items = new List<RequestSummaryDto>();
             foreach (var requestItem in page)
             {
-                items.Add(new RequestSummaryDto(requestItem));
+                var requestWithDependencies = await _requestRepository.FindIncludingSenderReadOnly(requestItem.Id);
+                if (requestWithDependencies != null)
+                    items.Add(new RequestSummaryDto(requestWithDependencies));
             }
 
             return new PageResult<RequestSummaryDto>
