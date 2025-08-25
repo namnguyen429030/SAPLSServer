@@ -7,11 +7,13 @@ namespace SAPLSServer.DTOs.Concrete.ParkingLotDtos
     {
         public string Name { get; set; }
         public string Address { get; set; }
+        public bool IsExpired { get; set; }
         public ParkingLotSummaryDto(ParkingLot parkingLot)
         {
             Id = parkingLot.Id;
             Name = parkingLot.Name;
             Address = parkingLot.Address;
+            IsExpired = parkingLot.ExpiredAt <= DateTime.UtcNow;
         }
     }
 }
