@@ -219,7 +219,7 @@ namespace SAPLSServer.Controllers
             try
             {
                 // Sign out from all authentication schemes
-                await HttpContext.SignOutAsync(GoogleDefaults.AuthenticationScheme);
+                //await HttpContext.SignOutAsync(GoogleDefaults.AuthenticationScheme);
                 await HttpContext.SignOutAsync();
                 
                 // Clear auth cookies if using them
