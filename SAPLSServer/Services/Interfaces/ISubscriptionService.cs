@@ -47,7 +47,7 @@ namespace SAPLSServer.Services.Interfaces
         /// </summary>
         /// <param name="subscriptionId">The unique identifier of the subscription.</param>
         /// <returns>The duration value of the subscription.</returns>
-        Task<int> GetDurationOfSubscription(string subscriptionId);
+        Task<long> GetDurationOfSubscription(string subscriptionId);
         Task<double> GetCostOfSubscription(string subscriptionId);
     }
 }
