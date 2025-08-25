@@ -138,7 +138,7 @@ namespace SAPLSServer.Services.Implementations
                 Notes = shift.Note,
                 CreatedAt = shift.CreatedAt,
                 UpdatedAt = shift.UpdatedAt,
-                StaffIds = shift.StaffUsers.Select(s => s.UserId).ToList(),
+                StaffIds = shift.StaffUsers.Select(s => s.StaffId).ToList(),
             };
         }
     }
