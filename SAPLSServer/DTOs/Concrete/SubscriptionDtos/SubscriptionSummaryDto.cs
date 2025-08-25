@@ -9,6 +9,7 @@ namespace SAPLSServer.DTOs.Concrete.SubscriptionDtos
         public int Duration { get; set; }
         public double Price { get; set; }
         public string Status { get; set; } = null!;
+        public string? UpdatedBy { get; set; }
         public SubscriptionSummaryDto(Subscription model)
         {
             Id = model.Id;
@@ -16,6 +17,7 @@ namespace SAPLSServer.DTOs.Concrete.SubscriptionDtos
             Duration = model.Duration;
             Price = model.Price;
             Status = model.Status;
+            UpdatedBy = model.UpdateBy?.User.FullName;
         }
     }
 }

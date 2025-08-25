@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using SAPLSServer.Models;
 using SAPLSServer.Repositories.Interfaces;
 using System.Linq.Expressions;
@@ -8,6 +9,18 @@ namespace SAPLSServer.Repositories.Implementations
     {
         public SubscriptionRepository(SaplsContext context) : base(context)
         {
+        }
+
+        public async Task<Subscription?> FindIncludUpdatedBy(string id)
+        {
+            return await _dbSet.Include(s => s.UpdateBy).ThenInclude(u => u.User)
+                               .FirstOrDefaultAsync(CreateIdPredicate(id));
+        }
+
+        public async Task<Subscription?> FindIncludUpdatedByReadOnly(string id)
+        {
+            return await _dbSet.Include(s => s.UpdateBy).ThenInclude(u => u.User)
+                .AsNoTracking().FirstOrDefaultAsync(CreateIdPredicate(id));
         }
 
         protected override Expression<Func<Subscription, bool>> CreateIdPredicate(string id)

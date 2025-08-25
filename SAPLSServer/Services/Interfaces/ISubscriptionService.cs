@@ -35,7 +35,7 @@ namespace SAPLSServer.Services.Interfaces
         /// <param name="request">The subscription creation data.</param>
         /// <param name="adminId">The ID of the admin performing the operation.</param>
         Task CreateAsync(CreateSubscriptionRequest request, string adminId);
-
+        Task UpdateAsync(UpdateSubscriptionRequest request, string adminId);
         /// <summary>
         /// Updates the status of an existing subscription.
         /// </summary>

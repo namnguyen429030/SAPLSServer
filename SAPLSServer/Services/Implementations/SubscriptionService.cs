@@ -26,7 +26,17 @@ namespace SAPLSServer.Services.Implementations
                 criterias.Add(s => s.Status == request.Status);
             }
             var subscriptions = await _subscriptionRepository.GetAllAsync(criterias.ToArray());
-            return subscriptions.Select(s => new SubscriptionSummaryDto(s)).ToList();
+            var items = new List<SubscriptionSummaryDto>();
+            foreach (var subscription in subscriptions)
+            {
+                var subscriptionIncludedUpdatedBy = await _subscriptionRepository.FindIncludUpdatedBy(subscription.Id);
+                if(subscriptionIncludedUpdatedBy == null)
+                {
+                    continue;
+                }
+                items.Add(new SubscriptionSummaryDto(subscriptionIncludedUpdatedBy));
+            }
+            return items;
         }
 
         public async Task<PageResult<SubscriptionSummaryDto>> GetPageAsync(PageRequest pageRequest, GetSubscriptionListRequest request)
@@ -47,7 +57,16 @@ namespace SAPLSServer.Services.Implementations
                 request.Order == OrderType.Asc.ToString()
             );
 
-            var items = subscriptions.Select(s => new SubscriptionSummaryDto(s)).ToList();
+            var items = new List<SubscriptionSummaryDto>();
+            foreach (var subscription in subscriptions)
+            {
+                var subscriptionIncludedUpdatedBy = await _subscriptionRepository.FindIncludUpdatedBy(subscription.Id);
+                if (subscriptionIncludedUpdatedBy == null)
+                {
+                    continue;
+                }
+                items.Add(new SubscriptionSummaryDto(subscriptionIncludedUpdatedBy));
+            }
             return new PageResult<SubscriptionSummaryDto>
             {
                 Items = items,
@@ -114,6 +133,22 @@ namespace SAPLSServer.Services.Implementations
             if (subscription == null)
                 throw new InvalidInformationException(MessageKeys.SUBSCRIPTION_NOT_FOUND);
             return subscription.Price;
+        }
+
+        public async Task UpdateAsync(UpdateSubscriptionRequest request, string adminId)
+        {
+            var subscription = await _subscriptionRepository.Find(request.Id);
+            if (subscription == null)
+                throw new InvalidInformationException(MessageKeys.SUBSCRIPTION_NOT_FOUND);
+            subscription.Status = request.Status;
+            subscription.Name = request.Name;
+            subscription.Description = request.Note;
+            subscription.Duration = (int)TimeSpan.FromDays(request.Duration).TotalMilliseconds;
+            subscription.Price = request.Price;
+            subscription.UpdatedAt = DateTime.UtcNow;
+            subscription.UpdateById = adminId;
+            _subscriptionRepository.Update(subscription);
+            await _subscriptionRepository.SaveChangesAsync();
         }
     }
 }

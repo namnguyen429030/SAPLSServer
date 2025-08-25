@@ -83,5 +83,30 @@ namespace SAPLSServer.Controllers
             await _subscriptionService.UpdateStatusAsync(request, adminId);
             return NoContent();
         }
+        [HttpPut]
+        [Authorize(Policy = Accessibility.ADMIN_ACCESS)]
+        public async Task<IActionResult> Update([FromBody] UpdateSubscriptionRequest request)
+        {
+            try
+            {
+                var adminId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (adminId == null)
+                {
+                    return Unauthorized(new { message = MessageKeys.UNAUTHORIZED_ACCESS });
+                }
+                await _subscriptionService.UpdateAsync(request, adminId);
+                return Ok();
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    new { message = MessageKeys.UNEXPECTED_ERROR });
+
+            }
+        }
     }
 }
