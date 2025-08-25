@@ -94,7 +94,18 @@ namespace SAPLSServer.Services.Implementations
 
             var entities = await _whiteListRepository.GetAllAsync(criterias.ToArray(), 
                 null, request.Order == OrderType.Asc.ToString());
-            return entities.Select(wl => new WhiteListAttendantDto(wl)).ToList();
+            var items = new List<WhiteListAttendantDto>();
+            foreach (var entity in entities)
+            {
+                var whitlistAttendantIncluded = await _whiteListRepository.FindIncludingClientReadOnly(new WhiteListKey
+                {
+                    ClientId = entity.ClientId,
+                    ParkingLotId = entity.ParkingLotId
+                });
+                if (whitlistAttendantIncluded != null)
+                    items.Add(new WhiteListAttendantDto(whitlistAttendantIncluded));
+            }
+            return items;
         }
 
         public async Task<PageResult<WhiteListAttendantDto>> GetWhiteListPageAsync(PageRequest pageRequest, GetWhiteListAttendantListRequest request)
@@ -117,7 +128,17 @@ namespace SAPLSServer.Services.Implementations
                 request.Order == OrderType.Asc.ToString()
             );
 
-            var items = entities.Select(wl => new WhiteListAttendantDto(wl)).ToList();
+            var items = new List<WhiteListAttendantDto>();
+            foreach ( var entity in entities )
+            {
+                var whitlistAttendantIncluded = await _whiteListRepository.FindIncludingClientReadOnly(new WhiteListKey
+                {
+                    ClientId = entity.ClientId,
+                    ParkingLotId = entity.ParkingLotId
+                });
+                if(whitlistAttendantIncluded != null)
+                    items.Add(new WhiteListAttendantDto(whitlistAttendantIncluded));
+            }
             return new PageResult<WhiteListAttendantDto>
             {
                 Items = items,
