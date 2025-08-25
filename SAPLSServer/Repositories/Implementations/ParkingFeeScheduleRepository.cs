@@ -11,7 +11,7 @@ namespace SAPLSServer.Repositories.Implementations
         }
         protected override Expression<Func<ParkingFeeSchedule, bool>> CreateIdPredicate(string id)
         {
-            return pfs => pfs.ParkingLotId == id;
+            return pfs => pfs.Id == id;
         }
     }
 }
