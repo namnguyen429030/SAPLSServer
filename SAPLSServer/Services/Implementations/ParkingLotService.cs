@@ -71,7 +71,6 @@ namespace SAPLSServer.Services.Implementations
             entity.TotalParkingSlot = request.TotalParkingSlot;
             entity.Settings = request.Settings;
             entity.Status = request.Status;
-            entity.UpdatedBy = performerId;
             entity.UpdatedAt = DateTime.UtcNow;
             _parkingLotRepository.Update(entity);
             await _parkingLotRepository.SaveChangesAsync();
