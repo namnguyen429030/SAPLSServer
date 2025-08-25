@@ -129,7 +129,7 @@ namespace SAPLSServer.Controllers
         /// <param name="request">The request containing parking lot and filter information.</param>
         /// <returns>List of parking session summaries for the parking lot.</returns>
         [HttpGet("by-lot")]
-        public async Task<IActionResult> GetSessionsByParkingLot([FromBody] GetParkingSessionListByParkingLotIdRequest request)
+        public async Task<IActionResult> GetSessionsByParkingLot([FromQuery] GetParkingSessionListByParkingLotIdRequest request)
         {
             try
             {
@@ -191,7 +191,7 @@ namespace SAPLSServer.Controllers
         /// <param name="listRequest">The filter criteria.</param>
         /// <returns>Paged result of parking session summaries.</returns>
         [HttpGet("page/by-client")]
-        public async Task<IActionResult> GetPageByClient([FromBody] PageRequest pageRequest, [FromQuery] GetParkingSessionListByClientIdRequest listRequest)
+        public async Task<IActionResult> GetPageByClient([FromQuery] PageRequest pageRequest, [FromQuery] GetParkingSessionListByClientIdRequest listRequest)
         {
             try
             {
@@ -222,7 +222,7 @@ namespace SAPLSServer.Controllers
         /// <param name="listRequest">The filter criteria.</param>
         /// <returns>Paged result of parking session summaries.</returns>
         [HttpGet("page/by-lot")]
-        public async Task<IActionResult> GetPageByParkingLot([FromBody] PageRequest pageRequest, [FromQuery] GetParkingSessionListByParkingLotIdRequest listRequest)
+        public async Task<IActionResult> GetPageByParkingLot([FromQuery] PageRequest pageRequest, [FromQuery] GetParkingSessionListByParkingLotIdRequest listRequest)
         {
             try
             {
@@ -254,7 +254,7 @@ namespace SAPLSServer.Controllers
         /// <param name="clientId">The ID of the client who owns the sessions.</param>
         /// <returns>Paged result of owned parking session summaries.</returns>
         [HttpGet("page/owned/{clientId}")]
-        public async Task<IActionResult> GetPageByOwnedSessions([FromBody] PageRequest pageRequest, [FromQuery] GetOwnedParkingSessionListRequest listRequest, string clientId)
+        public async Task<IActionResult> GetPageByOwnedSessions([FromQuery] PageRequest pageRequest, [FromQuery] GetOwnedParkingSessionListRequest listRequest, string clientId)
         {
             try
             {
