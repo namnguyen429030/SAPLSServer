@@ -61,7 +61,7 @@ namespace SAPLSServer.Services.Implementations
             {
                 foreach (var staffId in request.StaffIds)
                 {
-                    var staffProfile = await _staffProfileRepository.Find(staffId);
+                    var staffProfile = await _staffProfileRepository.Find([s => s.StaffId == staffId]);
                     if (staffProfile != null)
                     {
                         shift.StaffUsers.Add(staffProfile);
