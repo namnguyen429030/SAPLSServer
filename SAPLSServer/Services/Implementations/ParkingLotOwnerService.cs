@@ -148,7 +148,7 @@ namespace SAPLSServer.Services.Implementations
         public async Task<ParkingLotOwnerProfileDetailsDto?> GetByParkingLotOwnerId(string parkingLotOwnerId)
         {
             var ownerProfile = await _parkingLotOwnerProfileRepository
-                .FindIncludingUserReadOnly(parkingLotOwnerId)
+                .FindIncludingUserReadOnly([plo => plo.ParkingLotOwnerId == parkingLotOwnerId])
                 ?? throw new InvalidInformationException(MessageKeys.PARKING_LOT_OWNER_PROFILE_NOT_FOUND);
             return new ParkingLotOwnerProfileDetailsDto(ownerProfile);
         }

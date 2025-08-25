@@ -129,7 +129,7 @@ namespace SAPLSServer.Services.Implementations
 
         public async Task<StaffProfileDetailsDto?> FindByStaffId(string staffId)
         {
-            var staffProfile = await _staffProfileRepository.FindIncludingUserReadOnly(staffId)
+            var staffProfile = await _staffProfileRepository.FindIncludingUserReadOnly([s => s.StaffId == staffId])
                 ?? throw new InvalidInformationException(MessageKeys.STAFF_PROFILE_NOT_FOUND);
             return new StaffProfileDetailsDto(staffProfile);
         }

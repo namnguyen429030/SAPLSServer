@@ -22,21 +22,27 @@ namespace SAPLSServer.Services.Implementations
         private readonly IStaffService _staffService;
         private readonly IPaymentService _paymentService;
         private readonly IPaymentSettings _paymentSettings;
+        private readonly IParkingLotOwnerService _parkingLotOwnerService;
         public ParkingLotService(IParkingLotRepository parkingLotRepository,
             ISubscriptionService subscriptionService,
             IStaffService staffService,
             IPaymentService paymentService,
-            IPaymentSettings paymentSettings)
+            IPaymentSettings paymentSettings,
+            IParkingLotOwnerService parkingLotOwnerService)
         {
             _paymentSettings = paymentSettings;
             _parkingLotRepository = parkingLotRepository;
             _subscriptionService = subscriptionService;
             _staffService = staffService;
             _paymentService = paymentService;
+            _parkingLotOwnerService = parkingLotOwnerService;
         }
 
         public async Task CreateParkingLot(CreateParkingLotRequest request, string performerAdminId)
         {
+            var parkignLotOwnerUid = await _parkingLotOwnerService.GetByParkingLotOwnerId(request.ParkingLotOwnerId);
+            if(parkignLotOwnerUid == null)
+                throw new InvalidInformationException(MessageKeys.PARKING_LOT_OWNER_NOT_FOUND);
             var entity = new ParkingLot
             {
                 Id = Guid.NewGuid().ToString(),
@@ -44,7 +50,7 @@ namespace SAPLSServer.Services.Implementations
                 Description = request.Description,
                 Address = request.Address,
                 TotalParkingSlot = request.TotalParkingSlot,
-                ParkingLotOwnerId = request.ParkingLotOwnerId,
+                ParkingLotOwnerId = parkignLotOwnerUid.Id,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow,
                 SubscriptionId = request.SubscriptionId,

@@ -37,7 +37,7 @@ namespace SAPLSServer.Services.Implementations
 
         public async Task CreateIncidentReport(CreateIncidentReportRequest request, string reporterId)
         {
-            var reporter = await _staffService.FindByStaffId(reporterId);
+            var reporter = await _staffService.FindByUserId(reporterId);
             if (reporter == null)
             {
                 throw new InvalidInformationException(MessageKeys.STAFF_PROFILE_NOT_FOUND);

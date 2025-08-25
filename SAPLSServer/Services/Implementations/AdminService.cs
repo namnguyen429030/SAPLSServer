@@ -32,7 +32,8 @@ namespace SAPLSServer.Services.Implementations
                 throw new InvalidInformationException(MessageKeys.ADMIN_ID_ALREADY_EXISTS);
             request.Password = _passwordService.RandomizePassword();
             var userId = await _userService.Create(request, UserRole.Admin);
-
+            if(userId == null)
+                throw new InvalidOperationException(MessageKeys.USER_CREATION_FAILED);
             var adminProfile = new AdminProfile
             {
                 UserId = userId,
@@ -132,7 +133,7 @@ namespace SAPLSServer.Services.Implementations
 
         public async Task<AdminProfileDetailsDto?> GetByAdminIdAsync(string adminId)
         {
-            var adminProfile = await _adminProfileRepository.FindIncludingUserReadOnly(adminId) ?? 
+            var adminProfile = await _adminProfileRepository.FindIncludingUserReadOnly([a => a.AdminId == adminId]) ?? 
                 throw new InvalidInformationException(MessageKeys.ADMIN_PROFILE_NOT_FOUND);
             return new AdminProfileDetailsDto(adminProfile);
         }
