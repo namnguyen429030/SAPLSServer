@@ -232,7 +232,7 @@ namespace SAPLSServer.Services.Implementations
             //parkingLot.UpdatedBy = performerId;
             _parkingLotRepository.Update(parkingLot);
             await _parkingLotRepository.SaveChangesAsync();
-            return paymentRequest.OrderCode.ToString();
+            return paymentRequest.OrderCode;
         }
 
         public Task<bool> IsParkingLotValid(string parkingLotId)
