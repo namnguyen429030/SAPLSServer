@@ -129,7 +129,6 @@ namespace SAPLSServer.Controllers
         /// <param name="id">Vehicle ID</param>
         /// <returns>Vehicle details</returns>
         [HttpGet("{id}")]
-        [Authorize]
         public async Task<ActionResult<VehicleDetailsDto>> GetVehicleById(string id)
         {
             try
@@ -155,7 +154,6 @@ namespace SAPLSServer.Controllers
         /// <param name="licensePlate">Vehicle license plate</param>
         /// <returns>Vehicle details</returns>
         [HttpGet("license-plate/{licensePlate}")]
-        [Authorize(Policy = Accessibility.ADMIN_PARKINGLOT_OWNER_ACCESS)]
         public async Task<ActionResult<VehicleDetailsDto>> GetVehicleByLicensePlate(string licensePlate)
         {
             try
@@ -182,7 +180,6 @@ namespace SAPLSServer.Controllers
         /// <param name="request">Filter criteria (OwnerId required)</param>
         /// <returns>Paginated vehicle list</returns>
         [HttpGet("page")]
-        [Authorize]
         public async Task<ActionResult<PageResult<VehicleSummaryDto>>> GetVehiclesPage([FromQuery] PageRequest pageRequest, [FromQuery] GetVehicleListRequest request)
         {
             try
@@ -203,7 +200,6 @@ namespace SAPLSServer.Controllers
         /// <param name="request">Filter criteria (OwnerId required)</param>
         /// <returns>List of vehicles</returns>
         [HttpGet]
-        [Authorize]
         public async Task<ActionResult<List<VehicleSummaryDto>>> GetVehiclesList([FromQuery] GetVehicleListRequest request)
         {
             try
