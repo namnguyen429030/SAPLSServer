@@ -174,7 +174,7 @@ namespace SAPLSServer.Services.Implementations
             foreach (var shift in staffProfile.ParkingLotShifts)
             {
                 // Check status
-                if (shift.Status != ParkingLotShiftStatus.Active.ToString())
+                if (shift.Status.Trim() != ParkingLotShiftStatus.Active.ToString())
                     continue;
 
                 // Check if today is in DayOfWeeks
