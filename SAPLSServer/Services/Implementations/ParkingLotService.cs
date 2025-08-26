@@ -58,7 +58,7 @@ namespace SAPLSServer.Services.Implementations
                 .GetDurationOfSubscription(request.SubscriptionId)),
                 CreatedBy = performerAdminId,
                 UpdatedBy = performerAdminId,
-                Settings = string.Empty,
+                Settings = JsonSerializer.Serialize(new ParkingLotSettings()),
             };
             await _parkingLotRepository.AddAsync(entity);
             await _parkingLotRepository.SaveChangesAsync();
@@ -78,6 +78,7 @@ namespace SAPLSServer.Services.Implementations
             entity.TotalParkingSlot = request.TotalParkingSlot;
             entity.Settings = request.Settings;
             entity.Status = request.Status;
+            entity.Settings = request.Settings;
             entity.UpdatedAt = DateTime.UtcNow;
             _parkingLotRepository.Update(entity);
             await _parkingLotRepository.SaveChangesAsync();
@@ -317,6 +318,15 @@ namespace SAPLSServer.Services.Implementations
             if (paymentInfo == null)
                 throw new InvalidInformationException(MessageKeys.PARKING_LOT_SUBSCSRIPTION_PAYMENT_INFO_NOT_FOUND);
             return paymentInfo;
+        }
+
+        public async Task<bool> IsParkingLotUsingWhiteList(string parkingLotId)
+        {
+            var parkingLot = await _parkingLotRepository.Find(parkingLotId);
+            if (parkingLot == null)
+                throw new InvalidInformationException(MessageKeys.PARKING_LOT_NOT_FOUND);
+            var settings = JsonSerializer.Deserialize<ParkingLotSettings>(parkingLot.Settings);
+            return settings?.UseWhiteList ?? false;
         }
     }
 }

@@ -126,6 +126,7 @@ namespace SAPLSServer.Services.Interfaces
         Task ConfirmTransaction(PaymentWebHookRequest request);
         Task<SubscriptionDetailsDto?> GetSubscriptionByParkingLotId(string parkingLotId);
         Task<PaymentResponseDto?> GetLatestPaymentByParkingLotId(string parkingLotId);
+        Task<bool> IsParkingLotUsingWhiteList(string parkingLotId);
     }
 }
 
