@@ -166,19 +166,43 @@ namespace SAPLSServer.Controllers
         [Authorize(Policy = Accessibility.ADMIN_PARKINGLOT_OWNER_ACCESS)]
         public async Task<IActionResult> GetDetailsForOwner(string parkingLotId)
         {
-            var result = await _parkingLotService.GetParkingLotDetailsForOwner(parkingLotId);
-            if (result == null)
-                return NotFound(new { message = MessageKeys.PARKING_LOT_NOT_FOUND });
-            return Ok(result);
+            try
+            {
+                var result = await _parkingLotService.GetParkingLotDetailsForOwner(parkingLotId);
+                if (result == null)
+                    return NotFound(new { message = MessageKeys.PARKING_LOT_NOT_FOUND });
+                return Ok(result);
+            }
+            catch (InvalidInformationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    new { message = MessageKeys.UNEXPECTED_ERROR });
+            }
         }
         [HttpGet("latest-payment/{parkingLotId}")]
         [Authorize(Policy = Accessibility.ADMIN_PARKINGLOT_OWNER_ACCESS)]
         public async Task<IActionResult> GetLatestPaymentByParkingLotId(string parkingLotId)
         {
-            var result = await _parkingLotService.GetLatestPaymentByParkingLotId(parkingLotId);
-            if (result == null)
-                return NotFound(new { message = MessageKeys.PARKING_LOT_NOT_FOUND });
-            return Ok(new { transactionId = result });
+            try
+            {
+                var result = await _parkingLotService.GetLatestPaymentByParkingLotId(parkingLotId);
+                if (result == null)
+                    return NotFound(new { message = MessageKeys.PARKING_LOT_NOT_FOUND });
+                return Ok(new { transactionId = result });
+            }
+            catch (InvalidInformationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    new { message = MessageKeys.UNEXPECTED_ERROR });
+            }
         }
     }
 }
