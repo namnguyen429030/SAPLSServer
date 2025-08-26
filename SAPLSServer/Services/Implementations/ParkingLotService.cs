@@ -197,7 +197,7 @@ namespace SAPLSServer.Services.Implementations
             var apiKey =  _paymentSettings.PaymentGatewayApiKey;
             var clientKey = _paymentSettings.PaymentGatewayClientKey;
             var checkSumKey = _paymentSettings.PaymentGatewayCheckSumKey;
-            string data = $"amount={(int)cost}&cancelUrl={""}&description={$"{request.Id} Subscription {request.SubscriptionId}"}" +
+            string data = $"amount={(int)cost}&cancelUrl={""}&description=SUB{transactionId}" +
                 $"&orderCode={transactionId}&returnUrl={""}";
             var signature = _paymentService.GenerateSignature(data, checkSumKey);
             // Prepare payment request

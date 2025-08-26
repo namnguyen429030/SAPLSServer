@@ -203,7 +203,7 @@ namespace SAPLSServer.Services.Implementations
                 var apiKey = await _parkingLotService.GetParkingLotApiKey(session.ParkingLotId);
                 var clientKey = await _parkingLotService.GetParkingLotClientKey(session.ParkingLotId);
                 var checkSumKey = await _parkingLotService.GetParkingLotCheckSumKey(session.ParkingLotId);
-                string data = $"amount={(int)session.Cost}&cancelUrl={""}&description={session.Id}&orderCode={transactionId}&returnUrl={""}";
+                string data = $"amount={(int)session.Cost}&cancelUrl={""}&description=SESS{transactionId}&orderCode={transactionId}&returnUrl={""}";
                 var signature = _paymentService.GenerateSignature(data, checkSumKey);
                 // Prepare payment request
                 var paymentRequest = new PaymentRequestDto
