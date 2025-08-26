@@ -205,7 +205,7 @@ namespace SAPLSServer.Services.Implementations
             {
                 OrderCode = transactionId,
                 Amount = (int)cost,
-                Description = $"{request.Id}{request.SubscriptionId}",
+                Description = $"{request.SubscriptionId}",
                 CancelUrl = "",
                 ReturnUrl = "",
                 Signature = signature,
