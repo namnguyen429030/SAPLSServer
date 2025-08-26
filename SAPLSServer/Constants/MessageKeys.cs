@@ -283,5 +283,6 @@ namespace SAPLSServer.Constants
         public const string INVALID_SUBSCRIPTION_PRICE = "INVALID_SUBSCRIPTION_PRICE";
         public const string USER_CREATION_FAILED = "USER_CREATION_FAILED";
         public const string PARKING_LOT_OWNER_NOT_FOUND = "PARKING_LOT_OWNER_NOT_FOUND";
+        public const string PARKING_SESSION_NOT_CHECKED_OUT = "PARKING_SESSION_NOT_CHECKED_OUT";
     }
 }
