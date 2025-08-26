@@ -171,5 +171,14 @@ namespace SAPLSServer.Controllers
                 return NotFound(new { message = MessageKeys.PARKING_LOT_NOT_FOUND });
             return Ok(result);
         }
+        [HttpGet("latest-payment/{parkingLotId}")]
+        [Authorize(Policy = Accessibility.ADMIN_PARKINGLOT_OWNER_ACCESS)]
+        public async Task<IActionResult> GetLatestPaymentByParkingLotId(string parkingLotId)
+        {
+            var result = await _parkingLotService.GetLatestPaymentByParkingLotId(parkingLotId);
+            if (result == null)
+                return NotFound(new { message = MessageKeys.PARKING_LOT_NOT_FOUND });
+            return Ok(new { transactionId = result });
+        }
     }
 }

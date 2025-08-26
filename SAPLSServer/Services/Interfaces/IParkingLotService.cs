@@ -125,6 +125,7 @@ namespace SAPLSServer.Services.Interfaces
         Task<string> GetParkingLotCheckSumKey(string parkingLotId);
         Task ConfirmTransaction(PaymentWebHookRequest request);
         Task<SubscriptionDetailsDto?> GetSubscriptionByParkingLotId(string parkingLotId);
+        Task<PaymentResponseDto?> GetLatestPaymentByParkingLotId(string parkingLotId);
     }
 }
 

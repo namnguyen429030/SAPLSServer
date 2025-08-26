@@ -224,9 +224,9 @@ namespace SAPLSServer.Services.Implementations
                         }
                     },
             };
-            await _paymentService.SendPaymentRequest(paymentRequest, apiKey, clientKey, checkSumKey);
+            var paymentResponse = await _paymentService.SendPaymentRequest(paymentRequest, apiKey, clientKey, checkSumKey);
             parkingLot.TempSubscriptionId = request.SubscriptionId;
-            parkingLot.SubscriptionTransactionInformation = JsonSerializer.Serialize(paymentRequest);
+            parkingLot.SubscriptionTransactionInformation = JsonSerializer.Serialize(paymentResponse);
             //parkingLot.ExpiredAt = DateTime.UtcNow.AddMilliseconds(subscriptionDuration);
             //parkingLot.UpdatedAt = DateTime.UtcNow;
             //parkingLot.UpdatedBy = performerId;
@@ -302,6 +302,21 @@ namespace SAPLSServer.Services.Implementations
             if (parkingLot == null)
                 throw new InvalidInformationException(MessageKeys.PARKING_LOT_NOT_FOUND);
             return await _subscriptionService.GetDetailsAsync(parkingLot.SubscriptionId);
+        }
+
+        public async Task<PaymentResponseDto?> GetLatestPaymentByParkingLotId(string parkingLotId)
+        {
+            var parkingLot = await _parkingLotRepository.Find(parkingLotId);
+            if (parkingLot == null)
+                throw new InvalidInformationException(MessageKeys.PARKING_LOT_NOT_FOUND);
+            if (string.IsNullOrWhiteSpace(parkingLot.SubscriptionTransactionInformation))
+            {
+                throw new InvalidInformationException(MessageKeys.PARKING_LOT_SUBSCSRIPTION_PAYMENT_INFO_NOT_FOUND);
+            }
+            var paymentInfo = JsonSerializer.Deserialize<PaymentResponseDto>(parkingLot.SubscriptionTransactionInformation);
+            if (paymentInfo == null)
+                throw new InvalidInformationException(MessageKeys.PARKING_LOT_SUBSCSRIPTION_PAYMENT_INFO_NOT_FOUND);
+            return paymentInfo;
         }
     }
 }
