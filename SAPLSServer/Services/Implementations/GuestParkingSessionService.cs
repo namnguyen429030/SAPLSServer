@@ -147,6 +147,7 @@ namespace SAPLSServer.Services.Implementations
                 EntryBackCaptureUrl = backCaptureResult.CloudUrl,
                 Status = GuestParkingSessionStatus.Parking.ToString(),
                 PaymentStatus = ParkingSessionPayStatus.NotPaid.ToString(),
+                PaymentMethod = PaymentMethod.Cash.ToString(),
                 Cost = 0,
                 CheckInStaffId = staffId,
                 ParkingFeeSchedule = await _parkingFeeScheduleService.GetParkingLotCurrentFeeSchedule(request.ParkingLotId),

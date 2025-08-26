@@ -163,6 +163,7 @@ namespace SAPLSServer.Services.Implementations
                     EntryBackCaptureUrl = backCaptureResult.CloudUrl,
                     Status = ParkingSessionStatus.Parking.ToString(),
                     PaymentStatus = ParkingSessionPayStatus.NotPaid.ToString(),
+                    PaymentMethod = PaymentMethod.Cash.ToString(),
                     Cost = 0,
                     TransactionCount = 0,
                     DriverId = driverId,
