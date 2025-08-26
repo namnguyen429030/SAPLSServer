@@ -11,6 +11,10 @@ public partial class StaffProfile
 
     public string ParkingLotId { get; set; } = null!;
 
+    public virtual ICollection<GuestParkingSession> GuestParkingSessionCheckInStaffs { get; set; } = new List<GuestParkingSession>();
+
+    public virtual ICollection<GuestParkingSession> GuestParkingSessionCheckOutStaffs { get; set; } = new List<GuestParkingSession>();
+
     public virtual ICollection<IncidenceReport> IncidenceReports { get; set; } = new List<IncidenceReport>();
 
     public virtual ParkingLot ParkingLot { get; set; } = null!;

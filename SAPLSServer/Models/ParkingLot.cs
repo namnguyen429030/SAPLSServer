@@ -41,6 +41,8 @@ public partial class ParkingLot
 
     public virtual AdminProfile CreatedByNavigation { get; set; } = null!;
 
+    public virtual ICollection<GuestParkingSession> GuestParkingSessions { get; set; } = new List<GuestParkingSession>();
+
     public virtual ICollection<IncidenceReport> IncidenceReports { get; set; } = new List<IncidenceReport>();
 
     public virtual ICollection<ParkingFeeSchedule> ParkingFeeSchedules { get; set; } = new List<ParkingFeeSchedule>();

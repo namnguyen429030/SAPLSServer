@@ -149,10 +149,9 @@ public partial class SaplsContext : DbContext
 
         modelBuilder.Entity<GuestParkingSession>(entity =>
         {
-            entity
-                .HasNoKey()
-                .ToTable("GuestParkingSession");
+            entity.ToTable("GuestParkingSession");
 
+            entity.Property(e => e.Id).HasMaxLength(36);
             entity.Property(e => e.CheckInStaffId).HasMaxLength(36);
             entity.Property(e => e.CheckOutStaffId).HasMaxLength(36);
             entity.Property(e => e.Cost).HasColumnType("decimal(10, 2)");
@@ -160,7 +159,6 @@ public partial class SaplsContext : DbContext
             entity.Property(e => e.EntryFrontCaptureUrl).HasMaxLength(500);
             entity.Property(e => e.ExitBackCaptureUrl).HasMaxLength(500);
             entity.Property(e => e.ExitFrontCaptureUrl).HasMaxLength(500);
-            entity.Property(e => e.Id).HasMaxLength(36);
             entity.Property(e => e.ParkingFeeSchedule).HasMaxLength(36);
             entity.Property(e => e.ParkingLotId).HasMaxLength(36);
             entity.Property(e => e.PaymentMethod).HasMaxLength(20);
@@ -173,21 +171,21 @@ public partial class SaplsContext : DbContext
             entity.Property(e => e.TransactionId).HasMaxLength(36);
             entity.Property(e => e.VehicleLicensePlate).HasMaxLength(20);
 
-            entity.HasOne(d => d.CheckInStaff).WithMany()
+            entity.HasOne(d => d.CheckInStaff).WithMany(p => p.GuestParkingSessionCheckInStaffs)
                 .HasForeignKey(d => d.CheckInStaffId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_GuestParkingSession_CheckInStaff");
 
-            entity.HasOne(d => d.CheckOutStaff).WithMany()
+            entity.HasOne(d => d.CheckOutStaff).WithMany(p => p.GuestParkingSessionCheckOutStaffs)
                 .HasForeignKey(d => d.CheckOutStaffId)
                 .HasConstraintName("FK_GuestParkingSession_CheckOutStaff");
 
-            entity.HasOne(d => d.ParkingFeeScheduleNavigation).WithMany()
+            entity.HasOne(d => d.ParkingFeeScheduleNavigation).WithMany(p => p.GuestParkingSessions)
                 .HasForeignKey(d => d.ParkingFeeSchedule)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_GuestParkingSession_ParkingFeeSchedule");
 
-            entity.HasOne(d => d.ParkingLot).WithMany()
+            entity.HasOne(d => d.ParkingLot).WithMany(p => p.GuestParkingSessions)
                 .HasForeignKey(d => d.ParkingLotId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_GuestParkingSession_ParkingLot");
@@ -625,11 +623,9 @@ public partial class SaplsContext : DbContext
                     "StaffShift",
                     r => r.HasOne<ParkingLotShift>().WithMany()
                         .HasForeignKey("ParkingLotShiftId")
-                        .OnDelete(DeleteBehavior.ClientSetNull)
                         .HasConstraintName("FK_StaffShift_ParkingLotShiftId_fk2"),
                     l => l.HasOne<StaffProfile>().WithMany()
                         .HasForeignKey("StaffUserId")
-                        .OnDelete(DeleteBehavior.ClientSetNull)
                         .HasConstraintName("FK_StaffShift_Staff_fk1"),
                     j =>
                     {
