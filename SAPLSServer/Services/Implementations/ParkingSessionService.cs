@@ -210,7 +210,7 @@ namespace SAPLSServer.Services.Implementations
                 {
                     OrderCode = transactionId,
                     Amount = (int)session.Cost,
-                    Description = $"{session.Id}",
+                    Description = $"SESS{transactionId}",
                     CancelUrl = "",
                     ReturnUrl = "",
                     Signature = signature,
