@@ -192,7 +192,7 @@ namespace SAPLSServer.Controllers
                 var result = await _parkingLotService.GetLatestPaymentByParkingLotId(parkingLotId);
                 if (result == null)
                     return NotFound(new { message = MessageKeys.PARKING_LOT_NOT_FOUND });
-                return Ok(new { transactionId = result });
+                return Ok(result);
             }
             catch (InvalidInformationException ex)
             {
