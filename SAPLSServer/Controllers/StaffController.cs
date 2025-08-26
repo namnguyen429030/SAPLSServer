@@ -87,7 +87,7 @@ namespace SAPLSServer.Controllers
         /// <param name="staffId">Staff ID</param>
         /// <returns>Staff profile details</returns>
         [HttpGet("{staffId}")]
-        [Authorize(Policy = Accessibility.STAFF_ACCESS)]
+        [Authorize(Policy = Accessibility.PARKING_LOT_OWNER_OR_STAFF_ACCESS)]
         public async Task<ActionResult<StaffProfileDetailsDto>> GetByStaffId(string staffId)
         {
             try
