@@ -83,8 +83,8 @@ namespace SAPLSServer.Controllers
                 return BadRequest(ModelState);
 
             var performerId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
-            await _parkingLotService.UpdateParkingLotSubscription(request, performerId);
-            return Ok(new { message = MessageKeys.PARKING_LOT_BASIC_INFO_UPDATED_SUCCESSFULLY });
+            var transactionId = await _parkingLotService.UpdateParkingLotSubscription(request, performerId);
+            return Ok(new { message = MessageKeys.PARKING_LOT_BASIC_INFO_UPDATED_SUCCESSFULLY, transactionId });
         }
 
         /// <summary>

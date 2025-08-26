@@ -101,7 +101,7 @@ namespace SAPLSServer.Services.Interfaces
         /// <param name="request">The request containing the new subscription details.</param>
         /// <param name="performerId">The unique identifier of the user performing the update.</param>
         /// <returns>A task representing the asynchronous operation.</returns>
-        Task UpdateParkingLotSubscription(UpdateParkingLotSubscriptionRequest request, string performerId);
+        Task<int> UpdateParkingLotSubscription(UpdateParkingLotSubscriptionRequest request, string performerId);
 
         /// <summary>
         /// Retrieves the API key for the specified parking lot.

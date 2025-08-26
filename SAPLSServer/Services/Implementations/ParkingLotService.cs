@@ -181,7 +181,7 @@ namespace SAPLSServer.Services.Implementations
             return parkingLot.ExpiredAt < DateTime.UtcNow;
         }
 
-        public async Task UpdateParkingLotSubscription(UpdateParkingLotSubscriptionRequest request,
+        public async Task<int> UpdateParkingLotSubscription(UpdateParkingLotSubscriptionRequest request,
                                                         string performerId)
         {
             var subscriptionDuration = await _subscriptionService.GetDurationOfSubscription(request.SubscriptionId);
@@ -226,11 +226,13 @@ namespace SAPLSServer.Services.Implementations
             };
             await _paymentService.SendPaymentRequest(paymentRequest, apiKey, clientKey, checkSumKey);
             parkingLot.TempSubscriptionId = request.SubscriptionId;
+            parkingLot.SubscriptionTransactionInformation = JsonSerializer.Serialize(paymentRequest);
             //parkingLot.ExpiredAt = DateTime.UtcNow.AddMilliseconds(subscriptionDuration);
             //parkingLot.UpdatedAt = DateTime.UtcNow;
             //parkingLot.UpdatedBy = performerId;
             _parkingLotRepository.Update(parkingLot);
             await _parkingLotRepository.SaveChangesAsync();
+            return paymentRequest.OrderCode.ToString();
         }
 
         public Task<bool> IsParkingLotValid(string parkingLotId)
