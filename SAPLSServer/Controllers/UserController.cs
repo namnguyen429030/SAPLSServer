@@ -118,7 +118,7 @@ namespace SAPLSServer.Controllers
         /// <param name="request">Status update request</param>
         /// <returns>Success response</returns>
         [HttpPut("status")]
-        [Authorize(Policy = Accessibility.ADMIN_PARKINGLOT_OWNER_ACCESS)]
+        [Authorize(Policy = Accessibility.HEAD_ADMIN_ACCESS)]
         public async Task<IActionResult> UpdateUserStatus([FromBody] UpdateUserStatusRequest request)
         {
             try
