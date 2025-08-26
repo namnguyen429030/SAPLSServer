@@ -76,7 +76,7 @@ namespace SAPLSServer.Services.Implementations
 
         public async Task<bool> UpdateShiftAsync(UpdateParkingLotShiftRequest request, string performerId)
         {
-            var shift = await _shiftRepository.Find(request.Id);
+            var shift = await _shiftRepository.FindWithStaffAsync(request.Id);
             if (shift == null)
                 throw new InvalidInformationException("Shift not found.");
 
