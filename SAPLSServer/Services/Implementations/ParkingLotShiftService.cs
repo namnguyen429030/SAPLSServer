@@ -96,6 +96,7 @@ namespace SAPLSServer.Services.Implementations
             if (request.StaffIds != null)
             {
                 shift.StaffUsers.Clear();
+                await _shiftRepository.SaveChangesAsync();
                 foreach (var staffId in request.StaffIds)
                 {
                     var staffProfile = await _staffProfileRepository.Find([s => s.StaffId == staffId && s.ParkingLotId == shift.ParkingLotId]);
