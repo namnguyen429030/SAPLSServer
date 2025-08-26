@@ -197,7 +197,7 @@ namespace SAPLSServer.Services.Implementations
 
             if (request.PaymentMethod == PaymentMethod.Bank.ToString())
             {
-                int transactionId = await _parkingSessionRepository.CountTransactions() + 1;
+                int transactionId = new Random().Next(1, int.MaxValue);
                 session.TransactionId = transactionId;
                 session.TransactionCount++;
                 var apiKey = await _parkingLotService.GetParkingLotApiKey(session.ParkingLotId);
