@@ -231,5 +231,47 @@ namespace SAPLSServer.Services.Implementations
                 criterias.Add(s => s.VehicleLicensePlate.Contains(request.SearchCriteria));
             return criterias;
         }
+
+        public async Task<ParkingSessionDetailsForParkingLotDto?> GetByLicensePlateNumber(string licennsePlateNumber, string parkingLotId)
+        {
+            var criterias = new Expression<Func<GuestParkingSession, bool>>[]
+{
+                s => s.VehicleLicensePlate == licennsePlateNumber &&
+                     s.ParkingLotId == parkingLotId &&
+                     s.Status == GuestParkingSessionStatus.Parking.ToString()
+};
+            var sessions = await _guestParkingSessionRepository.GetAllAsync(criterias);
+            var session = sessions.OrderByDescending(s => s.EntryDateTime).FirstOrDefault();
+            if(session == null)
+            {
+                return null;
+            }
+            var parkingSession = new ParkingSession()
+            {
+                Id = session.Id,
+                VehicleId = string.Empty, // GuestParkingSession doesn't have VehicleId
+                DriverId = string.Empty, // GuestParkingSession doesn't have DriverId
+                CheckInStaffId = session.CheckInStaffId,
+                CheckOutStaffId = session.CheckOutStaffId,
+                ParkingLotId = session.ParkingLotId,
+                EntryDateTime = session.EntryDateTime,
+                ExitDateTime = session.ExitDateTime,
+                CheckOutDateTime = session.CheckOutDateTime,
+                EntryFrontCaptureUrl = session.EntryFrontCaptureUrl,
+                EntryBackCaptureUrl = session.EntryBackCaptureUrl,
+                ExitFrontCaptureUrl = session.ExitFrontCaptureUrl,
+                ExitBackCaptureUrl = session.ExitBackCaptureUrl,
+                TransactionId = session.TransactionId != null ? int.Parse(session.TransactionId) : null,
+                TransactionCount = null, // GuestParkingSession doesn't have TransactionCount
+                PaymentInformation = null, // GuestParkingSession doesn't have PaymentInformation
+                PaymentMethod = session.PaymentMethod,
+                Cost = session.Cost,
+                Status = session.Status,
+                PaymentStatus = session.PaymentStatus,
+                ParkingFeeSchedule = session.ParkingFeeSchedule
+
+            };
+            return new ParkingSessionDetailsForParkingLotDto(parkingSession);
+        }
     }
 }

@@ -292,13 +292,59 @@ namespace SAPLSServer.Services.Implementations
                 _parkingSessionRepository.Update(session);
                 await _parkingSessionRepository.SaveChangesAsync();
             }
+            throw new InvalidInformationException(MessageKeys.PARKING_SESSION_NOT_FOUND);
+        }
+        public async Task ForceFinish(FinishParkingSessionRequest request, string staffId)
+        {
+            var vehicle = await _vehicleService.GetByLicensePlate(request.VehicleLicensePlate);
+            if (vehicle != null)
+            {
+                var session = await _parkingSessionRepository.FindLatest(request.VehicleLicensePlate, request.ParkingLotId);
+                if (session == null)
+                    throw new InvalidInformationException(MessageKeys.PARKING_SESSION_NOT_FOUND);
+                var frontCaptureUploadRequest = new FileUploadRequest
+                {
+                    File = request.ExitFrontCapture!,
+                    Container = "parking-session-captures",
+                    SubFolder = $"vehicle-{request.VehicleLicensePlate}",
+                    GenerateUniqueFileName = true,
+                    Metadata = new Dictionary<string, string>
+                    {
+                        { "VehicleId", session.VehicleId },
+                        { "CaptureType", "ExitFront" }
+                    }
+                };
+                var frontCaptureResult = await _fileService.UploadFileAsync(frontCaptureUploadRequest);
+
+                var backCaptureUploadRequest = new FileUploadRequest
+                {
+                    File = request.ExitBackCapture!,
+                    Container = "parking-session-captures",
+                    SubFolder = $"vehicle-{request.VehicleLicensePlate}",
+                    GenerateUniqueFileName = true,
+                    Metadata = new Dictionary<string, string>
+                    {
+                        { "VehicleId", session.VehicleId },
+                        { "CaptureType", "ExitBack" }
+                    }
+                };
+                var backCaptureResult = await _fileService.UploadFileAsync(backCaptureUploadRequest);
+
+                session.Status = ParkingSessionStatus.Finished.ToString();
+                session.ExitFrontCaptureUrl = frontCaptureResult.CloudUrl;
+                session.ExitBackCaptureUrl = backCaptureResult.CloudUrl;
+                session.CheckOutStaffId = staffId;
+                session.PaymentStatus = ParkingSessionPayStatus.Paid.ToString();
+                session.ExitDateTime = DateTime.UtcNow;
+                _parkingSessionRepository.Update(session);
+                await _parkingSessionRepository.SaveChangesAsync();
+            }
             else
             {
                 // Delegate guest sessionDto finish to the guest service
                 await _guestParkingSessionService.Finish(request, staffId);
             }
         }
-
         public async Task<List<ParkingSessionSummaryForClientDto>> GetOwnedSessions(
             GetOwnedParkingSessionListRequest request, string clientId)
         {
@@ -517,12 +563,17 @@ namespace SAPLSServer.Services.Implementations
 
         }
 
-        public async Task<ParkingSessionDetailsForParkingLotDto> GetByLicensePlateNumber(string licennsePlateNumber, string parkingLotId)
+        public async Task<ParkingSessionDetailsForParkingLotDto?> GetByLicensePlateNumber(string licensePlateNumber, string parkingLotId)
         {
-            var session = await _parkingSessionRepository.FindLatest(licennsePlateNumber, parkingLotId);
+
+            if(await _vehicleService.GetByLicensePlate(licensePlateNumber) == null)
+            {
+                return await _guestParkingSessionService.GetByLicensePlateNumber(licensePlateNumber, parkingLotId);
+            }
+            var session = await _parkingSessionRepository.FindLatest(licensePlateNumber, parkingLotId);
             if(session == null)
             {
-                throw new InvalidInformationException(MessageKeys.PARKING_SESSION_NOT_FOUND);
+                return null;
             }
             return new ParkingSessionDetailsForParkingLotDto(session);
         }

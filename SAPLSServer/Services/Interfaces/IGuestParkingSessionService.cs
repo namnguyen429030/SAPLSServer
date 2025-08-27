@@ -49,5 +49,6 @@ namespace SAPLSServer.Services.Interfaces
         /// <returns>Paged result of guest parking session summaries for the parking lot.</returns>
         Task<PageResult<GuestParkingSessionSummaryForParkingLotDto>> GetPageByParkingLot(PageRequest request,
             GetGuestParkingSessionListByParkingLotIdRequest listRequest);
+        Task<ParkingSessionDetailsForParkingLotDto?> GetByLicensePlateNumber(string licennsePlateNumber, string parkingLotId);
     }
 }

@@ -7,8 +7,8 @@ namespace SAPLSServer.DTOs.Concrete.ParkingSessionDtos
 {
     public class ParkingSessionDetailsForParkingLotDto : GetResult
     {
-        public VehicleSummaryDto Vehicle { get; set; }
-        public UserSummaryDto Owner { get; set; }
+        public VehicleSummaryDto? Vehicle { get; set; }
+        public UserSummaryDto? Owner { get; set; }
         public DateTime EntryDateTime { get; set; }
 
         public DateTime? ExitDateTime { get; set; }
@@ -29,8 +29,11 @@ namespace SAPLSServer.DTOs.Concrete.ParkingSessionDtos
         public ParkingSessionDetailsForParkingLotDto(ParkingSession session)
         {
             Id = session.Id;
-            Vehicle = new VehicleSummaryDto(session.Vehicle);
-            Owner = new UserSummaryDto(session.Vehicle.Owner.User);
+            if (session.Vehicle != null)
+            {
+                Vehicle = new VehicleSummaryDto(session.Vehicle);
+                Owner = new UserSummaryDto(session.Vehicle.Owner.User);
+            }
             EntryDateTime = session.EntryDateTime;
             ExitDateTime = session.ExitDateTime;
             CheckOutDateTime = session.CheckOutDateTime;

@@ -85,7 +85,7 @@ namespace SAPLSServer.Services.Implementations
                 AccessToken = accessToken,
                 RefreshToken = refreshToken,
                 TokenType = "Bearer",
-                ExpiresAt = DateTime.UtcNow.AddMinutes(5)
+                ExpiresAt = DateTime.UtcNow.AddMinutes(90)
             };
         }
 

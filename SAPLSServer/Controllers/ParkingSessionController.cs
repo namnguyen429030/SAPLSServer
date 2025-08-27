@@ -306,7 +306,7 @@ namespace SAPLSServer.Controllers
             {
                 return StatusCode(403, new { error = ex.Message });
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 return StatusCode(500, new { error = MessageKeys.UNEXPECTED_ERROR });
             }
@@ -415,6 +415,44 @@ namespace SAPLSServer.Controllers
             }
         }
         /// <summary>
+        /// Forces the finish of a parking session by uploading exit captures, bypassing normal checkout process.
+        /// </summary>
+        /// <param name="request">The finish request details, including exit capture files.</param>
+        /// <returns>Success response.</returns>
+        [HttpPost("force-finish")]
+        [Authorize(Policy = Accessibility.STAFF_ACCESS)]
+        public async Task<IActionResult> ForceFinish([FromForm] FinishParkingSessionRequest request)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                    return BadRequest(ModelState);
+
+                var staffId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (string.IsNullOrEmpty(staffId))
+                    return Unauthorized(new { error = MessageKeys.STAFF_PROFILE_ID_REQUIRED });
+
+                await _parkingSessionService.ForceFinish(request, staffId);
+                return Ok(new { message = "Parking session force finished successfully." });
+            }
+            catch (InvalidInformationException ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return StatusCode(403, new { error = ex.Message });
+            }
+            catch (ParkingSessionException ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, new { error = MessageKeys.UNEXPECTED_ERROR });
+            }
+        }
+        /// <summary>
         /// 
         /// </summary>
         /// <param name="sessionId"></param>
@@ -448,7 +486,7 @@ namespace SAPLSServer.Controllers
             await _parkingSessionService.ConfirmTransaction(paymentWebHookRequest);
             return Ok();
         }
-        [HttpGet("license-plaete/{parkingLotId}/{licensePlate}")]
+        [HttpGet("license-plate/{parkingLotId}/{licensePlate}")]
         public async Task<IActionResult> GetActiveSessionByLicensePlate(string parkingLotId, string licensePlate)
         {
             try

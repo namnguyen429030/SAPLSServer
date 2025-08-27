@@ -111,6 +111,7 @@ namespace SAPLSServer.Services.Interfaces
         /// <param name="request">The payment webhook request containing transaction details.</param>
         /// <returns>A task representing the asynchronous operation.</returns>
         Task ConfirmTransaction(PaymentWebHookRequest request);
-        Task<ParkingSessionDetailsForParkingLotDto> GetByLicensePlateNumber(string licennsePlateNumber, string parkingLotId);
+        Task<ParkingSessionDetailsForParkingLotDto?> GetByLicensePlateNumber(string licennsePlateNumber, string parkingLotId);
+        Task ForceFinish(FinishParkingSessionRequest request, string staffId);
     }
 }
