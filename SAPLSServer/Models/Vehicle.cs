@@ -39,7 +39,7 @@ public partial class Vehicle
 
     public string? BackVehicleRegistrationCertificateUrl { get; set; }
 
-    public string UpdatedBy { get; set; } = null!;
+    public string? UpdatedBy { get; set; }
 
     public virtual ClientProfile? CurrentHolder { get; set; }
 
@@ -49,5 +49,5 @@ public partial class Vehicle
 
     public virtual ICollection<SharedVehicle> SharedVehicles { get; set; } = new List<SharedVehicle>();
 
-    public virtual AdminProfile UpdatedByNavigation { get; set; } = null!;
+    public virtual AdminProfile? UpdatedByNavigation { get; set; }
 }

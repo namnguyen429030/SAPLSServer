@@ -755,7 +755,6 @@ public partial class SaplsContext : DbContext
 
             entity.HasOne(d => d.UpdatedByNavigation).WithMany(p => p.Vehicles)
                 .HasForeignKey(d => d.UpdatedBy)
-                .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Vehicle_UpdatedBy");
         });
 
