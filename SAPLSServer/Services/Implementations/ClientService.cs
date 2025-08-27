@@ -108,7 +108,6 @@ namespace SAPLSServer.Services.Implementations
                 clientProfile.ShareCode = _vehicleShareCodeService.GenerateShareCode(VehicleShareCodeService.VEHICLE_SHARE_CODE_LENGTH);
             }
             clientProfile.User.UpdatedAt = DateTime.UtcNow;
-            clientProfile.UpdatedBy = updatePerformerId;
 
             _clientProfileRepository.Update(clientProfile);
             await _clientProfileRepository.SaveChangesAsync();
