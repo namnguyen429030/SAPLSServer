@@ -9,7 +9,7 @@ namespace SAPLSServer.DTOs.Concrete.UserDtos
         [Required(ErrorMessage = MessageKeys.FULL_NAME_REQUIRED)]
         public string FullName { get; set; } = null!;
         [Required(ErrorMessage = MessageKeys.PHONE_NUMBER_REQUIRED)]
-        [Length(minimumLength: 11, maximumLength: 15, ErrorMessage = MessageKeys.PHONE_NUMBER_LENGTH)]
+        [Length(minimumLength: 10, maximumLength: 15, ErrorMessage = MessageKeys.PHONE_NUMBER_LENGTH)]
         [RegularExpression(@"^\d+$", ErrorMessage = MessageKeys.PHONE_NUMBER_DIGITS_ONLY)]
         public string Phone { get; set; } = null!;
     }

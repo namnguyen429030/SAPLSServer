@@ -159,6 +159,58 @@ namespace SAPLSServer.Services.Implementations
             };
         }
 
+        public async Task<List<IncidentReportSummaryDto>> GetIncidentReportsList(GetIncidenReportListRequest request)
+        {
+            // Build filter criteria based on the request parameters (same logic as GetIncidentReportsPage)
+            var criterias = new List<Expression<Func<IncidenceReport, bool>>>();
+
+            // Filter by parking lot (required field)
+            if (!string.IsNullOrWhiteSpace(request.ParkingLotId))
+            {
+                criterias.Add(ir => ir.ParkingLotId == request.ParkingLotId);
+            }
+
+            // Filter by priority
+            if (!string.IsNullOrWhiteSpace(request.Priority))
+            {
+                criterias.Add(ir => ir.Priority == request.Priority);
+            }
+
+            // Filter by status
+            if (!string.IsNullOrWhiteSpace(request.Status))
+            {
+                criterias.Add(ir => ir.Status == request.Status);
+            }
+
+            // Filter by date range
+            if (request.StartDate.HasValue && request.EndDate.HasValue)
+            {
+                var startDateTime = request.StartDate.Value.ToDateTime(TimeOnly.MinValue);
+                criterias.Add(ir => ir.ReportedDate >= startDateTime);
+                var endDateTime = request.EndDate.Value.ToDateTime(TimeOnly.MaxValue);
+                criterias.Add(ir => ir.ReportedDate <= endDateTime);
+            }
+
+            // Filter by search criteria (search in header and description)
+            if (!string.IsNullOrWhiteSpace(request.SearchCriteria))
+            {
+                criterias.Add(ir => ir.Header.Contains(request.SearchCriteria) ||
+                                   ir.Description.Contains(request.SearchCriteria));
+            }
+
+            // Determine sort order (default to descending for dates)
+            bool isAscending = request.Order == OrderType.Asc.ToString();
+
+            // Get all results (no pagination)
+            var incidentReports = await _incidentReportRepository.GetAllAsync(
+                criterias.ToArray(),
+                null,
+                isAscending);
+
+            // Convert to DTOs
+            return incidentReports.Select(ir => new IncidentReportSummaryDto(ir)).ToList();
+        }
+
         private async Task ProcessEvidences(string incidentReportId, IFormFile[] evidences)
         {
             foreach (var evidence in evidences)

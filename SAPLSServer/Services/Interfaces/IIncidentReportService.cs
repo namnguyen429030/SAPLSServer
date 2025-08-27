@@ -29,12 +29,11 @@ namespace SAPLSServer.Services.Interfaces
         Task<IncidentReportDetailsDto?> GetIncidentReportDetails(GetDetailsRequest request);
 
         /// <summary>
-        /// Retrieves a paginated list of incident reports with optional filtering criteria.
+        /// Retrieves a list of incident reports with optional filtering criteria.
         /// Supports filtering by parking lot, staff, priority, status, date range, and search criteria.
         /// </summary>
-        /// <param name="pageRequest"></param>
-        /// <param name="request"></param>
-        /// <returns></returns>
-        Task<PageResult<IncidentReportSummaryDto>> GetIncidentReportsPage(PageRequest pageRequest, GetIncidenReportListRequest request);
+        /// <param name="request">The filter criteria for incident reports.</param>
+        /// <returns>A list of incident report summaries.</returns>
+        Task<List<IncidentReportSummaryDto>> GetIncidentReportsList(GetIncidenReportListRequest request);
     }
 }

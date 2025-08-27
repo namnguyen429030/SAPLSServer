@@ -147,7 +147,7 @@ namespace SAPLSServer.Controllers
             {
                 return BadRequest(new { error = ex.Message });
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 return StatusCode(500, new { error = MessageKeys.UNEXPECTED_ERROR });
             }

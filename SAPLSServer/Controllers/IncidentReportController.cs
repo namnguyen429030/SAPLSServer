@@ -66,13 +66,23 @@ namespace SAPLSServer.Controllers
         }
 
         /// <summary>
-        /// Gets a paginated list of incident reports.
+        /// Gets a list of incident reports.
         /// </summary>
-        [HttpGet("page")]
-        public async Task<IActionResult> GetPage([FromQuery] PageRequest pageRequest, [FromQuery] GetIncidenReportListRequest request)
+        /// <param name="request">The filter criteria for incident reports.</param>
+        /// <returns>A list of incident report summaries.</returns>
+        [HttpGet]
+        public async Task<IActionResult> GetList([FromQuery] GetIncidenReportListRequest request)
         {
-            var result = await _incidentReportService.GetIncidentReportsPage(pageRequest, request);
-            return Ok(result);
+            try
+            {
+                var result = await _incidentReportService.GetIncidentReportsList(request);
+                return Ok(result);
+            }
+            catch (Exception)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    new { message = MessageKeys.UNEXPECTED_ERROR });
+            }
         }
     }
 }
