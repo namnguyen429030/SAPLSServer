@@ -23,12 +23,14 @@ namespace SAPLSServer.Services.Implementations
         private readonly IPaymentService _paymentService;
         private readonly IPaymentSettings _paymentSettings;
         private readonly IParkingLotOwnerService _parkingLotOwnerService;
+        private readonly ILogger<ParkingLotService> _logger;
         public ParkingLotService(IParkingLotRepository parkingLotRepository,
             ISubscriptionService subscriptionService,
             IStaffService staffService,
             IPaymentService paymentService,
             IPaymentSettings paymentSettings,
-            IParkingLotOwnerService parkingLotOwnerService)
+            IParkingLotOwnerService parkingLotOwnerService,
+            ILogger<ParkingLotService> logger)
         {
             _paymentSettings = paymentSettings;
             _parkingLotRepository = parkingLotRepository;
@@ -36,6 +38,7 @@ namespace SAPLSServer.Services.Implementations
             _staffService = staffService;
             _paymentService = paymentService;
             _parkingLotOwnerService = parkingLotOwnerService;
+            _logger = logger;
         }
 
         public async Task CreateParkingLot(CreateParkingLotRequest request, string performerAdminId)
@@ -198,6 +201,8 @@ namespace SAPLSServer.Services.Implementations
             var apiKey =  _paymentSettings.PaymentGatewayApiKey;
             var clientKey = _paymentSettings.PaymentGatewayClientKey;
             var checkSumKey = _paymentSettings.PaymentGatewayCheckSumKey;
+            _logger.LogInformation($"ApiKey: {apiKey}, ClientKey: {clientKey}, CheckSumKey: {checkSumKey}");
+
             string data = $"amount={(int)cost}&cancelUrl={""}&description=SUB{transactionId}" +
                 $"&orderCode={transactionId}&returnUrl={""}";
             var signature = _paymentService.GenerateSignature(data, checkSumKey);
