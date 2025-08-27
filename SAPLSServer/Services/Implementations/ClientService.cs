@@ -103,6 +103,10 @@ namespace SAPLSServer.Services.Implementations
             clientProfile.PlaceOfResidence = request.PlaceOfResidence;
             clientProfile.FrontCitizenIdCardImageUrl = frontImageResult.CdnUrl;
             clientProfile.BackCitizenIdCardImageUrl = backImageResult.CdnUrl;
+            if (string.IsNullOrWhiteSpace(clientProfile.ShareCode))
+            {
+                clientProfile.ShareCode = _vehicleShareCodeService.GenerateShareCode(VehicleShareCodeService.VEHICLE_SHARE_CODE_LENGTH);
+            }
             clientProfile.User.UpdatedAt = DateTime.UtcNow;
             clientProfile.UpdatedBy = updatePerformerId;
 
