@@ -550,15 +550,9 @@ namespace SAPLSServer.Services.Implementations
             var session = await _parkingSessionRepository.Find([p => p.TransactionId == request.Data.OrderCode]);
             if (session != null)
             {
-                var signature = _paymentService.GenerateSignature(PayOutDataToStringConverter.ConvertToSignatureString(request.Data),
-                    await _parkingLotService.GetParkingLotCheckSumKey(session.ParkingLotId));
-                if (signature == request.Signature)
-                {
-                    session.PaymentStatus = ParkingSessionPayStatus.Paid.ToString();
-                    _parkingSessionRepository.Update(session);
-                    await _parkingSessionRepository.SaveChangesAsync();
-                }
-
+                session.PaymentStatus = ParkingSessionPayStatus.Paid.ToString();
+                _parkingSessionRepository.Update(session);
+                await _parkingSessionRepository.SaveChangesAsync();
             }
 
         }

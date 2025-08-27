@@ -286,18 +286,13 @@ namespace SAPLSServer.Services.Implementations
             var parkingLot = await _parkingLotRepository.Find([plo => plo.SubscriptionTransactionId == request.Data.OrderCode]);
             if (parkingLot != null)
             {
-                var signature = _paymentService.GenerateSignature(PayOutDataToStringConverter.ConvertToSignatureString(request.Data),
-                                    _paymentSettings.PaymentGatewayCheckSumKey);
-                if (signature == request.Signature)
+                if (parkingLot.TempSubscriptionId != null)
                 {
-                    if (parkingLot.TempSubscriptionId != null)
-                    {
-                        parkingLot.SubscriptionId = parkingLot.TempSubscriptionId;
-                        parkingLot.ExpiredAt = DateTime.UtcNow.AddMilliseconds(
-                            await _subscriptionService.GetDurationOfSubscription(parkingLot.TempSubscriptionId));
-                        _parkingLotRepository.Update(parkingLot);
-                        await _parkingLotRepository.SaveChangesAsync();
-                    }
+                    parkingLot.SubscriptionId = parkingLot.TempSubscriptionId;
+                    parkingLot.ExpiredAt = DateTime.UtcNow.AddMilliseconds(
+                        await _subscriptionService.GetDurationOfSubscription(parkingLot.TempSubscriptionId));
+                    _parkingLotRepository.Update(parkingLot);
+                    await _parkingLotRepository.SaveChangesAsync();
                 }
             }
         }
