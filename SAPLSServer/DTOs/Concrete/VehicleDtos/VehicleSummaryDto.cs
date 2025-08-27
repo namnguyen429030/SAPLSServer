@@ -11,6 +11,7 @@ namespace SAPLSServer.DTOs.Concrete.VehicleDtos
         public string Color { get; set; }
         public string Status { get; set; }
         public string SharingStatus { get; set; }
+        public string VehicleType { get; set; }
         public VehicleSummaryDto(Vehicle vehicle)
         {
             Id = vehicle.Id;
@@ -20,6 +21,7 @@ namespace SAPLSServer.DTOs.Concrete.VehicleDtos
             Color = vehicle.Color;
             Status = vehicle.Status;
             SharingStatus = vehicle.SharingStatus;
+            VehicleType = vehicle.VehicleType;
         }
     }
 }

@@ -6,6 +6,8 @@ namespace SAPLSServer.DTOs.Concrete.ParkingSessionDtos
 {
     public class CheckInParkingSessionRequest
     {
+        [EnumDataType(typeof(VehicleType), ErrorMessage = MessageKeys.INVALID_VEHICLE_TYPE)]
+        public string? VehicleType { get; set; }
         [Required(ErrorMessage = MessageKeys.VEHICLE_LICENSE_PLATE_REQUIRED)]
         public string VehicleLicensePlate { get; set; } = null!;
         [Required(ErrorMessage = MessageKeys.PARKING_LOT_ID_REQUIRED)]

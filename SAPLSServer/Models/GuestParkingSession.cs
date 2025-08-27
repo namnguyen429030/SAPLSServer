@@ -9,6 +9,8 @@ public partial class GuestParkingSession
 
     public string VehicleLicensePlate { get; set; } = null!;
 
+    public string? VehicleType { get; set; }
+
     public string CheckInStaffId { get; set; } = null!;
 
     public string? CheckOutStaffId { get; set; }

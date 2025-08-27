@@ -148,6 +148,7 @@ namespace SAPLSServer.Services.Implementations
                 Status = GuestParkingSessionStatus.Parking.ToString(),
                 PaymentStatus = ParkingSessionPayStatus.NotPaid.ToString(),
                 PaymentMethod = PaymentMethod.Cash.ToString(),
+                VehicleType = request.VehicleType,
                 Cost = 0,
                 CheckInStaffId = staffId,
                 ParkingFeeSchedule = await _parkingFeeScheduleService.GetParkingLotCurrentFeeSchedule(request.ParkingLotId),

@@ -512,13 +512,21 @@ namespace SAPLSServer.Services.Implementations
 
         private async Task<decimal> CalculateSessionFee(ParkingSession session)
         {
-            Enum.TryParse<VehicleType>(session.Vehicle.VehicleType, out var parsedVehicleType);
+            if (session.Vehicle != null)
+            {
+                Enum.TryParse<VehicleType>(session.Vehicle.VehicleType, out var parsedVehicleType);
+                return await _parkingFeeScheduleService.CalculateParkingSessionFee(
+                    session.ParkingFeeSchedule,
+                    session.EntryDateTime,
+                    DateTime.UtcNow,
+                    parsedVehicleType
+                );
+            }
             return await _parkingFeeScheduleService.CalculateParkingSessionFee(
-                session.ParkingFeeSchedule,
-                session.EntryDateTime,
-                DateTime.UtcNow,
-                parsedVehicleType
-            );
+                    session.ParkingFeeSchedule,
+                    session.EntryDateTime,
+                    DateTime.UtcNow,
+                    VehicleType.Motorbike);
         }
 
         public async Task<int?> GetSessionTransactionId(string sessionId)

@@ -54,7 +54,6 @@ public partial class SaplsContext : DbContext
     public virtual DbSet<Vehicle> Vehicles { get; set; }
 
     public virtual DbSet<WhiteList> WhiteLists { get; set; }
-
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<AdminProfile>(entity =>
@@ -170,6 +169,7 @@ public partial class SaplsContext : DbContext
                 .IsUnicode(false);
             entity.Property(e => e.TransactionId).HasMaxLength(36);
             entity.Property(e => e.VehicleLicensePlate).HasMaxLength(20);
+            entity.Property(e => e.VehicleType).HasMaxLength(50);
 
             entity.HasOne(d => d.CheckInStaff).WithMany(p => p.GuestParkingSessionCheckInStaffs)
                 .HasForeignKey(d => d.CheckInStaffId)
