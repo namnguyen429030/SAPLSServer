@@ -231,6 +231,7 @@ namespace SAPLSServer.Services.Implementations
             client.PlaceOfOrigin = request.PlaceOfOrigin;
             client.PlaceOfResidence = request.PlaceOfResidence;
             client.FrontCitizenIdCardImageUrl = frontImageResult.CdnUrl ?? frontImageResult.CloudUrl;
+            client.ShareCode = _vehicleShareCodeService.GenerateShareCode(VehicleShareCodeService.VEHICLE_SHARE_CODE_LENGTH);
             client.BackCitizenIdCardImageUrl = backImageResult.CdnUrl ?? backImageResult.CloudUrl;
             client.UpdatedBy = performerId;
             client.User.UpdatedAt = DateTime.UtcNow;
