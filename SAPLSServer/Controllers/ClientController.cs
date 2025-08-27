@@ -64,7 +64,7 @@ namespace SAPLSServer.Controllers
         /// <param name="request">Client profile update request</param>
         /// <returns>Success response</returns>
         [HttpPut]
-        [Authorize(Policy = Accessibility.ADMIN_ACCESS)]
+        [Authorize(Policy = Accessibility.CLIENT_ACCESS)]
         public async Task<IActionResult> UpdateClient([FromForm] UpdateClientProfileRequest request)
         {
             try

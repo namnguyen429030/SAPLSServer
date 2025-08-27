@@ -65,6 +65,35 @@ namespace SAPLSServer.Services.Implementations
             {
                 throw new UnauthorizedAccessException(MessageKeys.UNAUTHORIZED_ACCESS);
             }
+            // Upload front citizen card image
+            var frontImageUploadRequest = new FileUploadRequest
+            {
+                File = request.FrontCitizenCardImage,
+                Container = "citizen-id-cards",
+                SubFolder = $"client-{request.Id}",
+                GenerateUniqueFileName = true,
+                Metadata = new Dictionary<string, string>
+                {
+                    { "UserId", request.Id },
+                    { "ImageType", "FrontCitizenIdCard" }
+                }
+            };
+            var frontImageResult = await _fileService.UploadFileAsync(frontImageUploadRequest);
+
+            // Upload back citizen card image
+            var backImageUploadRequest = new FileUploadRequest
+            {
+                File = request.BackCitizenCardImage,
+                Container = "citizen-id-cards",
+                SubFolder = $"client-{request.Id}",
+                GenerateUniqueFileName = true,
+                Metadata = new Dictionary<string, string>
+                {
+                    { "UserId", request.Id },
+                    { "ImageType", "BackCitizenIdCard" }
+                }
+            };
+            var backImageResult = await _fileService.UploadFileAsync(backImageUploadRequest);
 
             clientProfile.CitizenId = request.CitizenId;
             clientProfile.DateOfBirth = request.DateOfBirth;
@@ -72,8 +101,8 @@ namespace SAPLSServer.Services.Implementations
             clientProfile.Nationality = request.Nationality;
             clientProfile.PlaceOfOrigin = request.PlaceOfOrigin;
             clientProfile.PlaceOfResidence = request.PlaceOfResidence;
-            clientProfile.FrontCitizenIdCardImageUrl = request.FrontIdCardImageUrl;
-            clientProfile.BackCitizenIdCardImageUrl = request.BackIdCardImageUrl;
+            clientProfile.FrontCitizenIdCardImageUrl = frontImageResult.CdnUrl;
+            clientProfile.BackCitizenIdCardImageUrl = backImageResult.CdnUrl;
             clientProfile.User.UpdatedAt = DateTime.UtcNow;
             clientProfile.UpdatedBy = updatePerformerId;
 
