@@ -243,6 +243,11 @@ namespace SAPLSServer.Services.Implementations
                 var parkingLotId = await _staffService.GetParkingLotId(user.Id);
                 claims.Add(new Claim("parking_lot_id", parkingLotId));
             }
+            else if(user.Role == UserRole.Client.ToString())
+            {
+                var clientProfile = await _clientService.GetByUserId(user.Id);
+                claims.Add(new Claim("share_code", clientProfile?.ShareCode ?? ""));
+            }
 
             var token = new JwtSecurityToken(
                 issuer: _issuer,

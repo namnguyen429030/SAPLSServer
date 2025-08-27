@@ -10,6 +10,7 @@ namespace SAPLSServer.DTOs.Concrete.UserDtos
         public string Nationality { get; set; }
         public string PlaceOfOrigin { get; set; }
         public string PlaceOfResidence { get; set; }
+        public string ShareCode { get; set; }
 
         public ClientProfileDetailsDto(ClientProfile model) : base(model.User)
         {
@@ -19,6 +20,7 @@ namespace SAPLSServer.DTOs.Concrete.UserDtos
             Nationality = model.Nationality;
             PlaceOfOrigin = model.PlaceOfOrigin;
             PlaceOfResidence = model.PlaceOfResidence;
+            ShareCode = model.ShareCode;
         }
     }
 }
