@@ -77,7 +77,7 @@ namespace SAPLSServer.Extensions
             {
                 services.AddDbContext<SaplsContext>(opt =>
                 {
-                    opt.UseSqlServer(configuration[ConfigurationConstants.AzureConnectionString]);
+                    opt.UseSqlServer(configuration[ConfigurationConstants.DefaultConnectionString]);
                 });
             }
             else
