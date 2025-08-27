@@ -17,11 +17,13 @@ namespace SAPLSServer.Controllers
     {
         private readonly IClientService _clientService;
         private readonly IFirebaseNotificationService _notificationService;
+        private readonly ILogger<ClientController> _logger;
 
-        public ClientController(IClientService clientService, IFirebaseNotificationService notificationService)
+        public ClientController(IClientService clientService, IFirebaseNotificationService notificationService, ILogger<ClientController> logger)
         {
             _clientService = clientService;
             _notificationService = notificationService;
+            _logger = logger;
         }
 
         /// <summary>
@@ -85,8 +87,9 @@ namespace SAPLSServer.Controllers
             {
                 return BadRequest(new { message = ex.Message });
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Error updating client profile");
                 return StatusCode(StatusCodes.Status500InternalServerError, 
                     new { message = MessageKeys.UNEXPECTED_ERROR });
             }
