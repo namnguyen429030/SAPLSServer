@@ -13,15 +13,18 @@ namespace SAPLSServer.Services.Implementations
         private readonly IUserRepository _userRepository;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IOtpService _otpService;
+        private readonly ILogger<PasswordService> _logger;
         public const string PasswordResetSubject = "Reset SAPLS account's password";
         public const int RESET_PASSWORD_EXPIRATION_MINUTES = 15;
 
-        public PasswordService(IHttpContextAccessor httpContextAccessor, IMailSenderService mailSenderService, IUserRepository userRepository, IOtpService otpService)
+        public PasswordService(IHttpContextAccessor httpContextAccessor, IMailSenderService mailSenderService, 
+            IUserRepository userRepository, IOtpService otpService, ILogger<PasswordService> logger)
         {
             _mailSenderService = mailSenderService;
             _userRepository = userRepository;
             _httpContextAccessor = httpContextAccessor;
             _otpService = otpService;
+            _logger = logger;
         }
 
         public async Task ResetPassword(ResetUserPasswordRequest request)
@@ -63,6 +66,7 @@ namespace SAPLSServer.Services.Implementations
             var link = $"{scheme}://{host}{UrlPaths.RESET_PASSWORD_PATH}?userId={user.Id}&otp={user.OneTimePassword}";
 
             var filePath = Path.Combine(Directory.GetCurrentDirectory(), "Views", "ResetPasswordMailTemplate.html");
+            _logger.LogInformation("Looking for email template at {FilePath}", filePath);
             if (!System.IO.File.Exists(filePath))
             {
                 throw new FileNotFoundException();

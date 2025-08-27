@@ -16,11 +16,13 @@ namespace SAPLSServer.Controllers
     public class PasswordController : ControllerBase
     {
         private readonly IPasswordService _passwordService;
+        private readonly ILogger<PasswordController> _logger;
         private readonly IOtpService _otpService;
-        public PasswordController(IPasswordService passwordService, IOtpService otpService)
+        public PasswordController(IPasswordService passwordService, IOtpService otpService, ILogger<PasswordController> logger)
         {
             _passwordService = passwordService;
             _otpService = otpService;
+            _logger = logger;
         }
         [HttpGet("reset")]
         public async Task<IActionResult> ShowResetPage([FromQuery] string userId, [FromQuery] string otp)
@@ -60,6 +62,7 @@ namespace SAPLSServer.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred while requesting password reset for user {UserId}", userId);
                 return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
             }
         }
