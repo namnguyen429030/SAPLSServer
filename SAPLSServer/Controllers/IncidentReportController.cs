@@ -17,10 +17,12 @@ namespace SAPLSServer.Controllers
     public class IncidentReportController : ControllerBase
     {
         private readonly IIncidentReportService _incidentReportService;
+        private readonly ILogger<IncidentReportController> _logger;
 
-        public IncidentReportController(IIncidentReportService incidentReportService)
+        public IncidentReportController(IIncidentReportService incidentReportService, ILogger<IncidentReportController> logger)
         {
             _incidentReportService = incidentReportService;
+            _logger = logger;
         }
 
         /// <summary>
@@ -32,10 +34,23 @@ namespace SAPLSServer.Controllers
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
-
-            var reporterId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
-            await _incidentReportService.CreateIncidentReport(request, reporterId);
-            return Ok(new { message = MessageKeys.SHIFT_DIARY_CREATED_SUCCESSFULLY });
+            try
+            {
+                var reporterId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
+                await _incidentReportService.CreateIncidentReport(request, reporterId);
+                return Ok(new { message = MessageKeys.SHIFT_DIARY_CREATED_SUCCESSFULLY });
+            }
+            catch (InvalidInformationException ex)
+            {
+                _logger.LogWarning(ex, "Invalid information provided while creating an incident report");
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while creating an incident report");
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    new { message = MessageKeys.UNEXPECTED_ERROR });
+            }
         }
 
         /// <summary>
@@ -47,10 +62,23 @@ namespace SAPLSServer.Controllers
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
-
-            var performerId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
-            await _incidentReportService.UpdateIncidentReportStatus(request, performerId);
-            return Ok(new { message = MessageKeys.SHARING_STATUS_UPDATED_SUCCESSFULLY });
+            try
+            {
+                var performerId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
+                await _incidentReportService.UpdateIncidentReportStatus(request, performerId);
+                return Ok(new { message = MessageKeys.SHARING_STATUS_UPDATED_SUCCESSFULLY });
+            }
+            catch (InvalidInformationException ex)
+            {
+                _logger.LogWarning(ex, "Invalid information provided while updating incident report status");
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while updating incident report status");
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    new { message = MessageKeys.UNEXPECTED_ERROR });
+            }
         }
 
         /// <summary>
@@ -59,10 +87,19 @@ namespace SAPLSServer.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> GetDetails(string id)
         {
-            var result = await _incidentReportService.GetIncidentReportDetails(new GetDetailsRequest { Id = id });
-            if (result == null)
-                return NotFound(new { message = MessageKeys.INCIDENT_REPORT_NOT_FOUND });
-            return Ok(result);
+            try
+            {
+                var result = await _incidentReportService.GetIncidentReportDetails(new GetDetailsRequest { Id = id });
+                if (result == null)
+                    return NotFound(new { message = MessageKeys.INCIDENT_REPORT_NOT_FOUND });
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while fetching incident report details for ID: {IncidentReportId}", id);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    new { message = MessageKeys.UNEXPECTED_ERROR });
+            }
         }
 
         /// <summary>
@@ -78,8 +115,9 @@ namespace SAPLSServer.Controllers
                 var result = await _incidentReportService.GetIncidentReportsList(request);
                 return Ok(result);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred while fetching incident reports list");
                 return StatusCode(StatusCodes.Status500InternalServerError,
                     new { message = MessageKeys.UNEXPECTED_ERROR });
             }

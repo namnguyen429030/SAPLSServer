@@ -12,10 +12,8 @@ namespace SAPLSServer.DTOs.Concrete.ParkingSessionDtos
         public string VehicleLicensePlate { get; set; } = null!;
         [Required(ErrorMessage = MessageKeys.PARKING_LOT_ID_REQUIRED)]
         public string ParkingLotId { get; set; } = null!;
-        [Required(ErrorMessage = MessageKeys.ENTRY_FRONT_CAPTURE_REQUIRED)]
         [DataType(DataType.Upload, ErrorMessage = MessageKeys.INVALID_FRONT_CAPTURE_IMAGE_UPLOADED)]
         public IFormFile? EntryFrontCapture { get; set; }
-        [Required(ErrorMessage = MessageKeys.ENTRY_BACK_CAPTURE_REQUIRED)]
         [DataType(DataType.Upload, ErrorMessage = MessageKeys.INVALID_BACK_CAPTURE_IMAGE_UPLOADED)]
         public IFormFile? EntryBackCapture { get; set; }
     }

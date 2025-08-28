@@ -16,10 +16,11 @@ namespace SAPLSServer.Controllers
     public class AdminController : ControllerBase
     {
         private readonly IAdminService _adminService;
-
-        public AdminController(IAdminService adminService)
+        private readonly ILogger<AdminController> _logger;
+        public AdminController(IAdminService adminService, ILogger<AdminController> logger)
         {
             _adminService = adminService;
+            _logger = logger;
         }
 
         /// <summary>
@@ -48,10 +49,12 @@ namespace SAPLSServer.Controllers
             }
             catch (InvalidInformationException ex)
             {
+                _logger.LogWarning(ex, "Invalid information provided while registering a new admin profile");
                 return BadRequest(new { message = ex.Message });
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred while registering a new admin profile");
                 return StatusCode(StatusCodes.Status500InternalServerError, 
                     new { message = MessageKeys.UNEXPECTED_ERROR });
             }
@@ -83,10 +86,12 @@ namespace SAPLSServer.Controllers
             }
             catch (InvalidInformationException ex)
             {
+                _logger.LogWarning(ex, "Invalid information provided while updating admin profile with AdminId: {AdminId}", request.AdminId);
                 return BadRequest(new { message = ex.Message });
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred while updating admin profile with AdminId: {AdminId}", request.AdminId);
                 return StatusCode(StatusCodes.Status500InternalServerError, 
                     new { message = MessageKeys.UNEXPECTED_ERROR });
             }
@@ -113,10 +118,12 @@ namespace SAPLSServer.Controllers
             }
             catch (InvalidInformationException ex)
             {
+                _logger.LogWarning(ex, "Invalid information provided while retrieving admin profile with AdminId: {AdminId}", adminId);
                 return BadRequest(new { message = ex.Message });
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred while retrieving admin profile with AdminId: {AdminId}", adminId);
                 return StatusCode(StatusCodes.Status500InternalServerError, 
                     new { message = MessageKeys.UNEXPECTED_ERROR });
             }
@@ -143,10 +150,12 @@ namespace SAPLSServer.Controllers
             }
             catch (InvalidInformationException ex)
             {
+                _logger.LogWarning(ex, "Invalid information provided while retrieving admin profile with UserId: {UserId}", userId);
                 return BadRequest(new { message = ex.Message });
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred while retrieving admin profile with UserId: {UserId}", userId);
                 return StatusCode(StatusCodes.Status500InternalServerError, 
                     new { message = MessageKeys.UNEXPECTED_ERROR });
             }
@@ -167,8 +176,9 @@ namespace SAPLSServer.Controllers
                 var result = await _adminService.GetAdminProfilesPage(pageRequest, request);
                 return Ok(result);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred while retrieving paginated admin profiles");
                 return StatusCode(StatusCodes.Status500InternalServerError, 
                     new { message = MessageKeys.UNEXPECTED_ERROR });
             }
@@ -188,8 +198,9 @@ namespace SAPLSServer.Controllers
                 var result = await _adminService.GetAdminProfiles(request);
                 return Ok(result);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred while retrieving admin profiles");
                 return StatusCode(StatusCodes.Status500InternalServerError, 
                     new { message = MessageKeys.UNEXPECTED_ERROR });
             }

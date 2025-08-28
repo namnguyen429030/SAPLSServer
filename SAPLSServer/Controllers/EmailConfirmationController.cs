@@ -11,11 +11,12 @@ namespace SAPLSServer.Controllers
     {
         private readonly IOtpService _otpService;
         private readonly IUserService _userService;
-
-        public EmailConfirmationController(IOtpService otpService, IUserService userService)
+        private readonly ILogger<EmailConfirmationController> _logger;
+        public EmailConfirmationController(IOtpService otpService, IUserService userService, ILogger<EmailConfirmationController> logger)
         {
             _otpService = otpService;
             _userService = userService;
+            _logger = logger;
         }
 
         [HttpGet("confirm-email")]
@@ -59,8 +60,9 @@ namespace SAPLSServer.Controllers
 
                 return await GetConfirmationSuccessResponse();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred while confirming email for user {UserId}", userId);
                 return await GetConfirmationFailureResponse();
             }
         }

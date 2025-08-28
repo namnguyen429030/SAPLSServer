@@ -13,10 +13,12 @@ namespace SAPLSServer.Controllers
     public class FileController : ControllerBase
     {
         private readonly IFileService _fileService;
+        private readonly ILogger<FileController> _logger;
 
-        public FileController(IFileService fileService)
+        public FileController(IFileService fileService, ILogger<FileController> logger)
         {
             _fileService = fileService;
+            _logger = logger;
         }
 
         /// <summary>
@@ -40,10 +42,12 @@ namespace SAPLSServer.Controllers
             }
             catch (InvalidInformationException ex)
             {
+                _logger.LogWarning(ex, "Invalid information provided in file upload request");
                 return BadRequest(new { message = ex.Message });
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred while uploading file");
                 return StatusCode(StatusCodes.Status500InternalServerError, 
                     new { message = MessageKeys.FILE_UPLOAD_FAILED });
             }
@@ -70,10 +74,12 @@ namespace SAPLSServer.Controllers
             }
             catch (InvalidInformationException ex)
             {
+                _logger.LogWarning(ex, "Invalid information provided in multiple file upload request");
                 return BadRequest(new { message = ex.Message });
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred while uploading multiple files");
                 return StatusCode(StatusCodes.Status500InternalServerError, 
                     new { message = MessageKeys.MULTIPLE_FILE_UPLOAD_FAILED });
             }
@@ -99,8 +105,9 @@ namespace SAPLSServer.Controllers
 
                 return File(result.FileStream, result.ContentType, result.FileName);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred while downloading file: {FileName}", fileName);
                 return StatusCode(StatusCodes.Status500InternalServerError, 
                     new { message = MessageKeys.FILE_DOWNLOAD_FAILED });
             }
@@ -126,8 +133,9 @@ namespace SAPLSServer.Controllers
 
                 return Ok(new { message = MessageKeys.FILE_DELETED_SUCCESSFULLY });
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred while deleting file: {FileName}", fileName);
                 return StatusCode(StatusCodes.Status500InternalServerError, 
                     new { message = MessageKeys.FILE_DELETION_FAILED });
             }
@@ -153,8 +161,9 @@ namespace SAPLSServer.Controllers
 
                 return Ok(result);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred while retrieving file information for: {FileName}", fileName);
                 return StatusCode(StatusCodes.Status500InternalServerError, 
                     new { message = MessageKeys.FAILED_TO_GET_FILE_INFORMATION });
             }
@@ -174,8 +183,9 @@ namespace SAPLSServer.Controllers
                 var results = await _fileService.ListFilesAsync(container, prefix);
                 return Ok(results);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred while listing files in container: {Container} with prefix: {Prefix}", container, prefix);
                 return StatusCode(StatusCodes.Status500InternalServerError, 
                     new { message = MessageKeys.FAILED_TO_LIST_FILES });
             }
@@ -204,10 +214,12 @@ namespace SAPLSServer.Controllers
             }
             catch (InvalidInformationException ex)
             {
+                _logger.LogWarning(ex, "Invalid information provided while generating secure URL for file: {FileName}", fileName);
                 return BadRequest(new { message = ex.Message });
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred while generating secure URL for file: {FileName}", fileName);
                 return StatusCode(StatusCodes.Status500InternalServerError, 
                     new { message = MessageKeys.FAILED_TO_GENERATE_SECURE_URL });
             }

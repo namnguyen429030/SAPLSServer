@@ -47,14 +47,19 @@ namespace SAPLSServer.Controllers
             }
             catch (InvalidInformationException ex)
             {
+                _logger.LogWarning(ex, "Invalid information provided while retrieving parking session details for client with SessionId: {SessionId}", 
+                    sessionId);
                 return BadRequest(new { error = ex.Message });
             }
             catch (UnauthorizedAccessException ex)
             {
+                _logger.LogWarning(ex, "Unauthorized access attempt while retrieving parking session details for client with SessionId: {SessionId}", 
+                    sessionId);
                 return StatusCode(403, new { error = ex.Message });
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred while retrieving parking session details for client with SessionId: {SessionId}", sessionId);
                 return StatusCode(500, new { error = MessageKeys.UNEXPECTED_ERROR });
             }
         }
@@ -81,14 +86,20 @@ namespace SAPLSServer.Controllers
             }
             catch (InvalidInformationException ex)
             {
+                _logger.LogWarning(ex, 
+                    "Invalid information provided while retrieving parking session details for parking lot with SessionId: {SessionId}", sessionId);
                 return BadRequest(new { error = ex.Message });
             }
             catch (UnauthorizedAccessException ex)
             {
+                _logger.LogWarning(ex, 
+                    "Unauthorized access attempt while retrieving parking session details for parking lot with SessionId: {SessionId}", sessionId);
                 return StatusCode(403, new { error = ex.Message });
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, 
+                    "Error occurred while retrieving parking session details for parking lot with SessionId: {SessionId}", sessionId);
                 return StatusCode(500, new { error = MessageKeys.UNEXPECTED_ERROR });
             }
         }
@@ -115,10 +126,13 @@ namespace SAPLSServer.Controllers
             }
             catch (InvalidInformationException ex)
             {
+                _logger.LogWarning(ex, "Invalid information provided while retrieving parking sessions for client with ClientId: {ClientId}", 
+                    request.ClientId);
                 return BadRequest(new { error = ex.Message });
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred while retrieving parking sessions for client with ClientId: {ClientId}", request.ClientId);
                 return StatusCode(500, new { error = MessageKeys.UNEXPECTED_ERROR });
             }
         }
@@ -145,10 +159,14 @@ namespace SAPLSServer.Controllers
             }
             catch (InvalidInformationException ex)
             {
+                _logger.LogWarning(ex, "Invalid information provided while retrieving parking sessions for parking lot with ParkingLotId: {ParkingLotId}", 
+                    request.ParkingLotId);
                 return BadRequest(new { error = ex.Message });
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred while retrieving parking sessions for parking lot with ParkingLotId: {ParkingLotId}", 
+                    request.ParkingLotId);
                 return StatusCode(500, new { error = MessageKeys.UNEXPECTED_ERROR });
             }
         }
@@ -176,10 +194,13 @@ namespace SAPLSServer.Controllers
             }
             catch (InvalidInformationException ex)
             {
+                _logger.LogWarning(ex, "Invalid information provided while retrieving owned parking sessions for client with ClientId: {ClientId}", 
+                    clientId);
                 return BadRequest(new { error = ex.Message });
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred while retrieving owned parking sessions for client with ClientId: {ClientId}", clientId);
                 return StatusCode(500, new { error = MessageKeys.UNEXPECTED_ERROR });
             }
         }
@@ -207,10 +228,14 @@ namespace SAPLSServer.Controllers
             }
             catch (InvalidInformationException ex)
             {
+                _logger.LogWarning(ex, "Invalid information provided while retrieving paged parking sessions for client with ClientId: {ClientId}", 
+                    listRequest.ClientId);
                 return BadRequest(new { error = ex.Message });
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred while retrieving paged parking sessions for client with ClientId: {ClientId}", 
+                    listRequest.ClientId);
                 return StatusCode(500, new { error = MessageKeys.UNEXPECTED_ERROR });
             }
         }
@@ -238,10 +263,14 @@ namespace SAPLSServer.Controllers
             }
             catch (InvalidInformationException ex)
             {
+                _logger.LogWarning(ex, "Invalid information provided while retrieving paged parking sessions for parking lot with ParkingLotId: {ParkingLotId}", 
+                    listRequest.ParkingLotId);
                 return BadRequest(new { error = ex.Message });
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred while retrieving paged parking sessions for parking lot with ParkingLotId: {ParkingLotId}", 
+                    listRequest.ParkingLotId);
                 return StatusCode(500, new { error = MessageKeys.UNEXPECTED_ERROR });
             }
         }
@@ -270,10 +299,13 @@ namespace SAPLSServer.Controllers
             }
             catch (InvalidInformationException ex)
             {
+                _logger.LogWarning(ex, "Invalid information provided while retrieving paged owned parking sessions for client with ClientId: {ClientId}", 
+                    clientId);
                 return BadRequest(new { error = ex.Message });
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred while retrieving paged owned parking sessions for client with ClientId: {ClientId}", clientId);
                 return StatusCode(500, new { error = MessageKeys.UNEXPECTED_ERROR });
             }
         }
@@ -300,14 +332,17 @@ namespace SAPLSServer.Controllers
             }
             catch (InvalidInformationException ex)
             {
+                _logger.LogWarning(ex, "Invalid information provided while checking in a parking session");
                 return BadRequest(new { error = ex.Message });
             }
             catch (UnauthorizedAccessException ex)
             {
+                _logger.LogWarning(ex, "Unauthorized access attempt while checking in a parking session");
                 return StatusCode(403, new { error = ex.Message });
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred while checking in a parking session");
                 return StatusCode(500, new { error = MessageKeys.UNEXPECTED_ERROR });
             }
         }
@@ -328,14 +363,17 @@ namespace SAPLSServer.Controllers
             }
             catch (InvalidInformationException ex)
             {
+                _logger.LogWarning(ex, "Invalid information provided while retrieving payment info for parking session with SessionId: {SessionId}", sessionId);
                 return BadRequest(new { error = ex.Message });
             }
             catch (UnauthorizedAccessException ex)
             {
+                _logger.LogWarning(ex, "Unauthorized access attempt while retrieving payment info for parking session with SessionId: {SessionId}", sessionId);
                 return StatusCode(403, new { error = ex.Message });
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred while retrieving payment info for parking session with SessionId: {SessionId}", sessionId);
                 return StatusCode(500, new { error = MessageKeys.UNEXPECTED_ERROR });
             }
         }
@@ -361,18 +399,22 @@ namespace SAPLSServer.Controllers
             }
             catch (InvalidInformationException ex)
             {
+                _logger.LogWarning(ex, "Invalid information provided while checking out a parking session");
                 return BadRequest(new { error = ex.Message });
             }
             catch (UnauthorizedAccessException ex)
             {
+                _logger.LogWarning(ex, "Unauthorized access attempt while checking out a parking session");
                 return StatusCode(403, new { error = ex.Message });
             }
             catch (ParkingSessionException ex)
             {
+                _logger.LogWarning(ex, "Parking session error occurred while checking out a parking session");
                 return BadRequest(new { error = ex.Message });
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred while checking out a parking session");
                 return StatusCode(500, new { error = MessageKeys.UNEXPECTED_ERROR });
             }
         }
@@ -399,18 +441,22 @@ namespace SAPLSServer.Controllers
             }
             catch (InvalidInformationException ex)
             {
+                _logger.LogWarning(ex, "Invalid information provided while finishing a parking session");
                 return BadRequest(new { error = ex.Message });
             }
             catch (UnauthorizedAccessException ex)
             {
+                _logger.LogWarning(ex, "Unauthorized access attempt while finishing a parking session");
                 return StatusCode(403, new { error = ex.Message });
             }
             catch (ParkingSessionException ex)
             {
+                _logger.LogWarning(ex, "Parking session error occurred while finishing a parking session");
                 return BadRequest(new { error = ex.Message });
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred while finishing a parking session");
                 return StatusCode(500, new { error = MessageKeys.UNEXPECTED_ERROR });
             }
         }
@@ -437,18 +483,22 @@ namespace SAPLSServer.Controllers
             }
             catch (InvalidInformationException ex)
             {
+                _logger.LogWarning(ex, "Invalid information provided while force finishing a parking session");
                 return BadRequest(new { error = ex.Message });
             }
             catch (UnauthorizedAccessException ex)
             {
+                _logger.LogWarning(ex, "Unauthorized access attempt while force finishing a parking session");
                 return StatusCode(403, new { error = ex.Message });
             }
             catch (ParkingSessionException ex)
             {
+                _logger.LogWarning(ex, "Parking session error occurred while force finishing a parking session");
                 return BadRequest(new { error = ex.Message });
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred while force finishing a parking session");
                 return StatusCode(500, new { error = MessageKeys.UNEXPECTED_ERROR });
             }
         }
@@ -473,8 +523,9 @@ namespace SAPLSServer.Controllers
                     data = result
                 });
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred while retrieving transaction ID for parking session with SessionId: {SessionId}", sessionId);
                 return StatusCode(500, new { error = MessageKeys.UNEXPECTED_ERROR });
             }
         }
@@ -502,8 +553,10 @@ namespace SAPLSServer.Controllers
                     data = result
                 });
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred while retrieving active parking session for license plate: {LicensePlate} in ParkingLotId: {ParkingLotId}", 
+                    licensePlate, parkingLotId);
                 return StatusCode(500, new { error = MessageKeys.UNEXPECTED_ERROR });
             }
         }

@@ -10,10 +10,11 @@ namespace SAPLSServer.Controllers
     public class CitizenCardOcrController : ControllerBase
     {
         private readonly ICitizenCardOcrService _ocrService;
-
-        public CitizenCardOcrController(ICitizenCardOcrService ocrService)
+        private readonly ILogger<CitizenCardOcrController> _logger;
+        public CitizenCardOcrController(ICitizenCardOcrService ocrService, ILogger<CitizenCardOcrController> logger)
         {
             _ocrService = ocrService;
+            _logger = logger;
         }
 
         [HttpPost("base64")]
@@ -26,10 +27,12 @@ namespace SAPLSServer.Controllers
             }
             catch (InvalidInformationException ex)
             {
+                _logger.LogWarning(ex, "Invalid information provided in OCR request");
                 return BadRequest(ex.Message);
             }
             catch (EmptyConfigurationValueException ex)
             {
+                _logger.LogError(ex, "OCR service configuration is missing or invalid");
                 return StatusCode(503, new
                 {
                     ErrorMessage = ex.Message,
@@ -37,6 +40,7 @@ namespace SAPLSServer.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Unexpected error occurred during OCR processing");
                 return StatusCode(500, new
                 {
                     ErrorMessage = ex.Message
@@ -55,10 +59,12 @@ namespace SAPLSServer.Controllers
             }
             catch (InvalidInformationException ex)
             {
+                _logger.LogWarning(ex, "Invalid information provided in OCR file request"); 
                 return BadRequest(ex.Message);
             }
             catch (EmptyConfigurationValueException ex)
             {
+                _logger.LogError(ex, "OCR service configuration is missing or invalid");
                 return StatusCode(503, new
                 {
                     ErrorMessage = ex.Message,
@@ -66,6 +72,7 @@ namespace SAPLSServer.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Unexpected error occurred during OCR file processing");
                 return StatusCode(500, new
                 {
                     ErrorMessage = ex.Message

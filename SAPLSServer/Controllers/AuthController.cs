@@ -17,11 +17,13 @@ namespace SAPLSServer.Controllers
     {
         private readonly IAuthService _authService;
         private readonly IConfiguration _configuration;
+        private readonly ILogger<AuthController> _logger;
 
-        public AuthController(IAuthService authService, IConfiguration configuration)
+        public AuthController(IAuthService authService, IConfiguration configuration, ILogger<AuthController> logger)
         {
             _authService = authService;
             _configuration = configuration;
+            _logger = logger;
         }
 
         /// <summary>
@@ -50,10 +52,12 @@ namespace SAPLSServer.Controllers
             }
             catch (InvalidInformationException ex)
             {
+                _logger.LogWarning(ex, "Invalid information provided during user authentication");
                 return BadRequest(new { message = ex.Message });
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred during user authentication");
                 return StatusCode(StatusCodes.Status500InternalServerError, new { message = MessageKeys.AUTHENTICATION_FAILED });
             }
         }
@@ -84,14 +88,17 @@ namespace SAPLSServer.Controllers
             }
             catch (InvalidCredentialException ex)
             {
+                _logger.LogWarning(ex, "Invalid credentials provided during client profile authentication");
                 return Unauthorized(new { message = ex.Message });
             }
             catch (InvalidInformationException ex)
             {
+                _logger.LogWarning(ex, "Invalid information provided during client profile authentication");
                 return BadRequest(new { message = ex.Message });
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred during client profile authentication");
                 return StatusCode(StatusCodes.Status500InternalServerError, new { message = MessageKeys.AUTHENTICATION_FAILED });
             }
         }
@@ -164,8 +171,9 @@ namespace SAPLSServer.Controllers
                 
                 return Redirect(redirectWithToken);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred during Google OAuth callback processing");
                 return RedirectToFrontend($"/login?error={MessageKeys.AUTHENTICATION_ERROR}");
             }
         }
@@ -201,35 +209,13 @@ namespace SAPLSServer.Controllers
             }
             catch (InvalidInformationException ex)
             {
+                _logger.LogWarning(ex, "Invalid information provided during Google token authentication");
                 return BadRequest(new { message = ex.Message });
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred during Google token authentication");
                 return StatusCode(500, new { message = MessageKeys.AUTHENTICATION_FAILED });
-            }
-        }
-
-        /// <summary>
-        /// Logs out the current user by clearing authentication cookies
-        /// </summary>
-        /// <returns>Success response</returns>
-        [HttpPost("logout")]
-        public async Task<IActionResult> Logout()
-        {
-            try
-            {
-                // Sign out from all authentication schemes
-                //await HttpContext.SignOutAsync(GoogleDefaults.AuthenticationScheme);
-                await HttpContext.SignOutAsync();
-                
-                // Clear auth cookies if using them
-                ClearAuthCookies();
-                
-                return Ok(new { message = MessageKeys.LOGGED_OUT_SUCCESSFULLY });
-            }
-            catch (Exception)
-            {
-                return StatusCode(500, new { message = MessageKeys.LOGOUT_FAILED });
             }
         }
 
@@ -251,8 +237,9 @@ namespace SAPLSServer.Controllers
                 
                 return Ok(new { message = MessageKeys.LOGGED_OUT_FROM_GOOGLE_SUCCESSFULLY });
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred during Google logout");
                 return StatusCode(500, new { message = MessageKeys.GOOGLE_LOGOUT_FAILED });
             }
         }
@@ -284,10 +271,12 @@ namespace SAPLSServer.Controllers
             }
             catch (InvalidInformationException ex)
             {
+                _logger.LogWarning(ex, "Invalid information provided during token refresh");
                 return BadRequest(new { message = ex.Message });
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred during token refresh");
                 return StatusCode(StatusCodes.Status500InternalServerError, new { message = MessageKeys.TOKEN_REFRESH_FAILED });
             }
         }

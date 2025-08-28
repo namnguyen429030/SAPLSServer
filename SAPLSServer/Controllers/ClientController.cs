@@ -47,14 +47,17 @@ namespace SAPLSServer.Controllers
             }
             catch (InvalidInformationException ex)
             {
+                _logger.LogWarning(ex, "Invalid information provided while registering a new client profile");
                 return BadRequest(new { message = ex.Message });
             }
             catch(UnauthorizedAccessException ex)
             {
+                _logger.LogWarning(ex, "Unauthorized access while registering a new client profile");
                 return Unauthorized(new { message = ex.Message });
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred while registering a new client profile");
                 return StatusCode(StatusCodes.Status500InternalServerError, 
                     new { message = MessageKeys.UNEXPECTED_ERROR });
             }
@@ -85,6 +88,7 @@ namespace SAPLSServer.Controllers
             }
             catch (InvalidInformationException ex)
             {
+                _logger.LogWarning(ex, "Invalid information provided while updating client profile");
                 return BadRequest(new { message = ex.Message });
             }
             catch (Exception ex)
@@ -123,10 +127,12 @@ namespace SAPLSServer.Controllers
             }
             catch (InvalidInformationException ex)
             {
+                _logger.LogWarning(ex, "Invalid information provided while retrieving client profile with UserId: {UserId}", userId);
                 return BadRequest(new { message = ex.Message });
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred while retrieving client profile with UserId: {UserId}", userId);
                 return StatusCode(StatusCodes.Status500InternalServerError, 
                     new { message = MessageKeys.UNEXPECTED_ERROR });
             }
@@ -147,8 +153,9 @@ namespace SAPLSServer.Controllers
                 var result = await _clientService.GetClientProfilesPage(pageRequest, request);
                 return Ok(result);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred while retrieving paginated client profiles");
                 return StatusCode(StatusCodes.Status500InternalServerError, 
                     new { message = MessageKeys.UNEXPECTED_ERROR });
             }
@@ -187,10 +194,12 @@ namespace SAPLSServer.Controllers
             }
             catch (InvalidInformationException ex)
             {
+                _logger.LogWarning(ex, "Invalid information provided while registering device token");
                 return BadRequest(new { message = ex.Message });
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred while registering device token");
                 return StatusCode(StatusCodes.Status500InternalServerError,
                     new { message = MessageKeys.UNEXPECTED_ERROR });
             }
@@ -218,10 +227,12 @@ namespace SAPLSServer.Controllers
             }
             catch (InvalidInformationException ex)
             {
+                _logger.LogWarning(ex, "Invalid information provided while unregistering device token");
                 return BadRequest(new { message = ex.Message });
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred while unregistering device token");
                 return StatusCode(StatusCodes.Status500InternalServerError,
                     new { message = MessageKeys.UNEXPECTED_ERROR });
             }
@@ -254,14 +265,17 @@ namespace SAPLSServer.Controllers
             }
             catch (InvalidInformationException ex)
             {
+                _logger.LogWarning(ex, "Invalid information provided while verifying client profile");
                 return BadRequest(new { message = ex.Message });
             }
             catch (UnauthorizedAccessException ex)
             {
+                _logger.LogWarning(ex, "Unauthorized access while verifying client profile");
                 return Unauthorized(new { message = ex.Message });
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred while verifying client profile");
                 return StatusCode(StatusCodes.Status500InternalServerError,
                     new { message = MessageKeys.UNEXPECTED_ERROR });
             }
@@ -286,8 +300,9 @@ namespace SAPLSServer.Controllers
                 var isVerified = await _clientService.IsVerifyLevelTwo(userId);
                 return Ok(new { isVerified });
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred while checking level two verification status");
                 return StatusCode(StatusCodes.Status500InternalServerError,
                     new { message = MessageKeys.UNEXPECTED_ERROR });
             }
@@ -309,10 +324,12 @@ namespace SAPLSServer.Controllers
             }
             catch (InvalidInformationException ex)
             {
+                _logger.LogWarning(ex, "Invalid share code provided: {ShareCode}", shareCode);
                 return NotFound(new { message = ex.Message });
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred while retrieving client profile by share code: {ShareCode}", shareCode);
                 return StatusCode(StatusCodes.Status500InternalServerError,
                     new { message = MessageKeys.UNEXPECTED_ERROR });
             }
@@ -326,8 +343,9 @@ namespace SAPLSServer.Controllers
                 var result = await _clientService.GetClientProfiles(request);
                 return Ok(result);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred while retrieving list of client profiles");
                 return StatusCode(StatusCodes.Status500InternalServerError,
                     new { message = MessageKeys.UNEXPECTED_ERROR });
             }
