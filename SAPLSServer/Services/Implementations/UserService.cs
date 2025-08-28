@@ -84,7 +84,7 @@ namespace SAPLSServer.Services.Implementations
             await _userRepository.SaveChangesAsync();
             try
             {
-                if (role == UserRole.Staff || role == UserRole.Admin || role == UserRole.Staff)
+                if (role == UserRole.Staff || role == UserRole.Admin || role == UserRole.ParkingLotOwner)
                 {
                     await SendConfirmationEmail(user, request.Password);
                 }
