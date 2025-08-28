@@ -179,38 +179,46 @@ namespace SAPLSServer.Services.Implementations
             var session = sessions.OrderByDescending(s => s.EntryDateTime).FirstOrDefault();
             if (session == null)
                 throw new InvalidInformationException(MessageKeys.PARKING_SESSION_NOT_FOUND);
-
-            var frontCaptureUploadRequest = new FileUploadRequest
+            var frontCaptureUrl = string.Empty;
+            var backCaptureUrl = string.Empty;
+            if (request.ExitFrontCapture != null)
             {
-                File = request.ExitFrontCapture!,
-                Container = "parking-session-captures",
-                SubFolder = $"guest-{request.VehicleLicensePlate}",
-                GenerateUniqueFileName = true,
-                Metadata = new Dictionary<string, string>
+                var frontCaptureUploadRequest = new FileUploadRequest
+                {
+                    File = request.ExitFrontCapture!,
+                    Container = "parking-session-captures",
+                    SubFolder = $"guest-{request.VehicleLicensePlate}",
+                    GenerateUniqueFileName = true,
+                    Metadata = new Dictionary<string, string>
                 {
                     { "LicensePlate", request.VehicleLicensePlate },
                     { "CaptureType", "ExitFront" }
                 }
-            };
-            var frontCaptureResult = await _fileService.UploadFileAsync(frontCaptureUploadRequest);
-
-            var backCaptureUploadRequest = new FileUploadRequest
+                };
+                var frontCaptureResult = await _fileService.UploadFileAsync(frontCaptureUploadRequest);
+                frontCaptureUrl = frontCaptureResult.CdnUrl;
+            }
+            if (request.ExitBackCapture != null)
             {
-                File = request.ExitBackCapture!,
-                Container = "parking-session-captures",
-                SubFolder = $"guest-{request.VehicleLicensePlate}",
-                GenerateUniqueFileName = true,
-                Metadata = new Dictionary<string, string>
+                var backCaptureUploadRequest = new FileUploadRequest
+                {
+                    File = request.ExitBackCapture!,
+                    Container = "parking-session-captures",
+                    SubFolder = $"guest-{request.VehicleLicensePlate}",
+                    GenerateUniqueFileName = true,
+                    Metadata = new Dictionary<string, string>
                 {
                     { "LicensePlate", request.VehicleLicensePlate },
                     { "CaptureType", "ExitBack" }
                 }
-            };
-            var backCaptureResult = await _fileService.UploadFileAsync(backCaptureUploadRequest);
+                };
+                var backCaptureResult = await _fileService.UploadFileAsync(backCaptureUploadRequest);
+                backCaptureUrl = backCaptureResult.CdnUrl;
+            }
 
             session.Status = GuestParkingSessionStatus.Finished.ToString();
-            session.ExitFrontCaptureUrl = frontCaptureResult.CloudUrl;
-            session.ExitBackCaptureUrl = backCaptureResult.CloudUrl;
+            session.ExitFrontCaptureUrl = frontCaptureUrl;
+            session.ExitBackCaptureUrl = backCaptureUrl;
             session.CheckOutStaffId = staffId;
             session.ExitDateTime = DateTime.UtcNow;
             _guestParkingSessionRepository.Update(session);
