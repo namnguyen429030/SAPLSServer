@@ -81,9 +81,9 @@ namespace SAPLSServer.Repositories.Implementations
                 .FirstOrDefaultAsync(CreateIdPredicate(id));
         }
 
-        public Task<ParkingSession?> FindLatest(string vehicleId, string parkingLotId)
+        public Task<ParkingSession?> FindLatest(string licensePlate, string parkingLotId)
         {
-            return _dbSet.Where(ps => ps.VehicleId == vehicleId && ps.ParkingLotId == parkingLotId)
+            return _dbSet.Where(ps => ps.Vehicle.LicensePlate == licensePlate && ps.ParkingLotId == parkingLotId)
                 .OrderByDescending(ps => ps.EntryDateTime)
                 .Include(ps => ps.Vehicle)
                 .ThenInclude(v => v.Owner)

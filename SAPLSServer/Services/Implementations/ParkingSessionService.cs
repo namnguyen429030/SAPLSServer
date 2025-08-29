@@ -119,34 +119,42 @@ namespace SAPLSServer.Services.Implementations
             var vehicle = await _vehicleService.GetByLicensePlate(request.VehicleLicensePlate);
             if (vehicle != null)
             {
-                var frontCaptureUploadRequest = new FileUploadRequest
+                var frontCaptureUrl = string.Empty;
+                var backCaptureUrl = string.Empty;
+                if (request.EntryFrontCapture != null)
                 {
-                    File = request.EntryFrontCapture!,
-                    Container = "parking-session-captures",
-                    SubFolder = $"vehicle-{request.VehicleLicensePlate}",
-                    GenerateUniqueFileName = true,
-                    Metadata = new Dictionary<string, string>
+                    var frontCaptureUploadRequest = new FileUploadRequest
+                    {
+                        File = request.EntryFrontCapture!,
+                        Container = "parking-session-captures",
+                        SubFolder = $"vehicle-{request.VehicleLicensePlate}",
+                        GenerateUniqueFileName = true,
+                        Metadata = new Dictionary<string, string>
                         {
                             { "LicenPlate", request.VehicleLicensePlate },
                             { "CaptureType", "EntryFront" }
                         }
-                };
-                var frontCaptureResult = await _fileService.UploadFileAsync(frontCaptureUploadRequest);
-
-                var backCaptureUploadRequest = new FileUploadRequest
+                    };
+                    var frontCaptureResult = await _fileService.UploadFileAsync(frontCaptureUploadRequest);
+                    frontCaptureUrl = frontCaptureResult.CdnUrl;
+                }
+                if (request.EntryBackCapture != null)
                 {
-                    File = request.EntryBackCapture!,
-                    Container = "parking-session-captures",
-                    SubFolder = $"vehicle-{request.VehicleLicensePlate}",
-                    GenerateUniqueFileName = true,
-                    Metadata = new Dictionary<string, string>
+                    var backCaptureUploadRequest = new FileUploadRequest
+                    {
+                        File = request.EntryBackCapture!,
+                        Container = "parking-session-captures",
+                        SubFolder = $"vehicle-{request.VehicleLicensePlate}",
+                        GenerateUniqueFileName = true,
+                        Metadata = new Dictionary<string, string>
                         {
                             { "LicenPlate", request.VehicleLicensePlate },
                             { "CaptureType", "EntryBack" }
                         }
-                };
-                var backCaptureResult = await _fileService.UploadFileAsync(backCaptureUploadRequest);
-
+                    };
+                    var backCaptureResult = await _fileService.UploadFileAsync(backCaptureUploadRequest);
+                    backCaptureUrl = backCaptureResult.CdnUrl;
+                }
                 string driverId = vehicle.OwnerId;
                 if (vehicle.SharingStatus == VehicleSharingStatus.Shared.ToString())
                 {
@@ -159,8 +167,8 @@ namespace SAPLSServer.Services.Implementations
                     VehicleId = vehicle.Id,
                     ParkingLotId = request.ParkingLotId,
                     EntryDateTime = DateTime.UtcNow,
-                    EntryFrontCaptureUrl = frontCaptureResult.CloudUrl,
-                    EntryBackCaptureUrl = backCaptureResult.CloudUrl,
+                    EntryFrontCaptureUrl = frontCaptureUrl,
+                    EntryBackCaptureUrl = backCaptureUrl,
                     Status = ParkingSessionStatus.Parking.ToString(),
                     PaymentStatus = ParkingSessionPayStatus.NotPaid.ToString(),
                     PaymentMethod = PaymentMethod.Cash.ToString(),
