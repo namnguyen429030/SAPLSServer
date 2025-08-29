@@ -38,7 +38,7 @@ namespace SAPLSServer.Services.Implementations
                 var clientProfile = new ClientProfile
                 {
                     UserId = userId,
-                    CitizenId = string.Empty,
+                    CitizenId = $"{UserStatus.Unverified.ToString()}_{userId}",
                     DateOfBirth = DateOnly.FromDateTime(DateTime.UtcNow),
                     Sex = true,
                     Nationality = string.Empty,
