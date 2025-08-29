@@ -85,7 +85,7 @@ namespace SAPLSServer.Controllers
         {
             try
             {
-                await _passwordService.RequestResetPassword(email);
+                await _passwordService.RequestResetPasswordByEmail(email);
                 return Ok(MessageKeys.RESET_PASSWORD_REQUEST_SENT_SUCCESSFULLY);
             }
             catch (InvalidInformationException ex)
