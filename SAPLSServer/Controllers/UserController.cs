@@ -14,10 +14,12 @@ namespace SAPLSServer.Controllers
     public class UserController : ControllerBase
     {
         private readonly IUserService _userService;
+        private readonly ILogger<UserController> _logger;
 
-        public UserController(IUserService userService)
+        public UserController(IUserService userService, ILogger<UserController> logger)
         {
             _userService = userService;
+            _logger = logger;
         }
 
         /// <summary>
@@ -34,13 +36,15 @@ namespace SAPLSServer.Controllers
                 var result = await _userService.GetById(userId);
                 if (result == null)
                 {
+                    _logger.LogInformation("User not found for UserId: {UserId}", userId);
                     return NotFound(new { message = MessageKeys.USER_NOT_FOUND });
                 }
 
                 return Ok(result);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred while retrieving user by UserId: {UserId}", userId);
                 return StatusCode(StatusCodes.Status500InternalServerError,
                     new { message = MessageKeys.UNEXPECTED_ERROR });
             }
@@ -60,13 +64,15 @@ namespace SAPLSServer.Controllers
                 var result = await _userService.GetByPhoneOrEmail(phoneOrEmail);
                 if (result == null)
                 {
+                    _logger.LogInformation("User not found for PhoneOrEmail: {PhoneOrEmail}", phoneOrEmail);
                     return NotFound(new { message = MessageKeys.USER_NOT_FOUND });
                 }
 
                 return Ok(result);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred while retrieving user by PhoneOrEmail: {PhoneOrEmail}", phoneOrEmail);
                 return StatusCode(StatusCodes.Status500InternalServerError,
                     new { message = MessageKeys.UNEXPECTED_ERROR });
             }
@@ -85,6 +91,7 @@ namespace SAPLSServer.Controllers
             {
                 if (!ModelState.IsValid)
                 {
+                    _logger.LogWarning("Invalid model state in UpdateProfileImage: {@ModelState}", ModelState);
                     return BadRequest(ModelState);
                 }
 
@@ -95,6 +102,7 @@ namespace SAPLSServer.Controllers
                 if (currentUserId != request.Id &&
                     userRole != UserRole.Admin.ToString())
                 {
+                    _logger.LogWarning("Unauthorized access attempt in UpdateProfileImage by UserId: {UserId}", currentUserId);
                     return StatusCode(403, new { message = MessageKeys.UNAUTHORIZED_ACCESS });
                 }
 
@@ -103,10 +111,12 @@ namespace SAPLSServer.Controllers
             }
             catch (InvalidInformationException ex)
             {
+                _logger.LogWarning(ex, "Invalid information provided while updating profile image for UserId: {UserId}", request.Id);
                 return BadRequest(new { message = ex.Message });
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred while updating profile image for UserId: {UserId}", request.Id);
                 return StatusCode(StatusCodes.Status500InternalServerError,
                     new { message = MessageKeys.UNEXPECTED_ERROR });
             }
@@ -125,6 +135,7 @@ namespace SAPLSServer.Controllers
             {
                 if (!ModelState.IsValid)
                 {
+                    _logger.LogWarning("Invalid model state in UpdateUserStatus: {@ModelState}", ModelState);
                     return BadRequest(ModelState);
                 }
 
@@ -133,10 +144,12 @@ namespace SAPLSServer.Controllers
             }
             catch (InvalidInformationException ex)
             {
+                _logger.LogWarning(ex, "Invalid information provided while updating user status for UserId: {UserId}", request.Id);
                 return BadRequest(new { message = ex.Message });
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred while updating user status for UserId: {UserId}", request.Id);
                 return StatusCode(StatusCodes.Status500InternalServerError,
                     new { message = MessageKeys.UNEXPECTED_ERROR });
             }

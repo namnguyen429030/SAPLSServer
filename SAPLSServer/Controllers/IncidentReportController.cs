@@ -33,7 +33,10 @@ namespace SAPLSServer.Controllers
         public async Task<IActionResult> Create([FromBody] CreateIncidentReportRequest request)
         {
             if (!ModelState.IsValid)
+            {
+                _logger.LogWarning("Invalid model state in Create: {@ModelState}", ModelState);
                 return BadRequest(ModelState);
+            }
             try
             {
                 var reporterId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
@@ -61,7 +64,10 @@ namespace SAPLSServer.Controllers
         public async Task<IActionResult> UpdateStatus([FromBody] UpdateIncidentReportStatusRequest request)
         {
             if (!ModelState.IsValid)
+            {
+                _logger.LogWarning("Invalid model state in UpdateStatus: {@ModelState}", ModelState);
                 return BadRequest(ModelState);
+            }
             try
             {
                 var performerId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
@@ -91,7 +97,10 @@ namespace SAPLSServer.Controllers
             {
                 var result = await _incidentReportService.GetIncidentReportDetails(new GetDetailsRequest { Id = id });
                 if (result == null)
+                {
+                    _logger.LogInformation("Incident report not found for ID: {IncidentReportId}", id);
                     return NotFound(new { message = MessageKeys.INCIDENT_REPORT_NOT_FOUND });
+                }
                 return Ok(result);
             }
             catch (Exception ex)

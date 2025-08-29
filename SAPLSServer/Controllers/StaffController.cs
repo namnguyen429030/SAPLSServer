@@ -15,10 +15,12 @@ namespace SAPLSServer.Controllers
     public class StaffController : ControllerBase
     {
         private readonly IStaffService _staffService;
+        private readonly ILogger<StaffController> _logger;
 
-        public StaffController(IStaffService staffService)
+        public StaffController(IStaffService staffService, ILogger<StaffController> logger)
         {
             _staffService = staffService;
+            _logger = logger;
         }
 
         /// <summary>
@@ -34,6 +36,7 @@ namespace SAPLSServer.Controllers
             {
                 if (!ModelState.IsValid)
                 {
+                    _logger.LogWarning("Invalid model state in RegisterStaff: {@ModelState}", ModelState);
                     return BadRequest(ModelState);
                 }
 
@@ -42,11 +45,13 @@ namespace SAPLSServer.Controllers
             }
             catch (InvalidInformationException ex)
             {
+                _logger.LogWarning(ex, "Invalid information provided while registering staff profile");
                 return BadRequest(new { message = ex.Message });
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, 
+                _logger.LogError(ex, "Error occurred while registering staff profile");
+                return StatusCode(StatusCodes.Status500InternalServerError,
                     new { message = MessageKeys.UNEXPECTED_ERROR });
             }
         }
@@ -64,6 +69,7 @@ namespace SAPLSServer.Controllers
             {
                 if (!ModelState.IsValid)
                 {
+                    _logger.LogWarning("Invalid model state in UpdateStaff: {@ModelState}", ModelState);
                     return BadRequest(ModelState);
                 }
 
@@ -72,11 +78,13 @@ namespace SAPLSServer.Controllers
             }
             catch (InvalidInformationException ex)
             {
+                _logger.LogWarning(ex, "Invalid information provided while updating staff profile");
                 return BadRequest(new { message = ex.Message });
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, 
+                _logger.LogError(ex, "Error occurred while updating staff profile");
+                return StatusCode(StatusCodes.Status500InternalServerError,
                     new { message = MessageKeys.UNEXPECTED_ERROR });
             }
         }
@@ -95,6 +103,7 @@ namespace SAPLSServer.Controllers
                 var result = await _staffService.FindByStaffId(staffId);
                 if (result == null)
                 {
+                    _logger.LogInformation("Staff profile not found for StaffId: {StaffId}", staffId);
                     return NotFound(new { message = MessageKeys.STAFF_PROFILE_NOT_FOUND });
                 }
 
@@ -102,11 +111,13 @@ namespace SAPLSServer.Controllers
             }
             catch (InvalidInformationException ex)
             {
+                _logger.LogWarning(ex, "Invalid information provided while retrieving staff profile with StaffId: {StaffId}", staffId);
                 return BadRequest(new { message = ex.Message });
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, 
+                _logger.LogError(ex, "Error occurred while retrieving staff profile with StaffId: {StaffId}", staffId);
+                return StatusCode(StatusCodes.Status500InternalServerError,
                     new { message = MessageKeys.UNEXPECTED_ERROR });
             }
         }
@@ -125,6 +136,7 @@ namespace SAPLSServer.Controllers
                 var result = await _staffService.FindByUserId(userId);
                 if (result == null)
                 {
+                    _logger.LogInformation("Staff profile not found for UserId: {UserId}", userId);
                     return NotFound(new { message = MessageKeys.STAFF_PROFILE_NOT_FOUND });
                 }
 
@@ -132,11 +144,13 @@ namespace SAPLSServer.Controllers
             }
             catch (InvalidInformationException ex)
             {
+                _logger.LogWarning(ex, "Invalid information provided while retrieving staff profile with UserId: {UserId}", userId);
                 return BadRequest(new { message = ex.Message });
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, 
+                _logger.LogError(ex, "Error occurred while retrieving staff profile with UserId: {UserId}", userId);
+                return StatusCode(StatusCodes.Status500InternalServerError,
                     new { message = MessageKeys.UNEXPECTED_ERROR });
             }
         }
@@ -156,9 +170,10 @@ namespace SAPLSServer.Controllers
                 var result = await _staffService.GetStaffProfilesPage(pageRequest, request);
                 return Ok(result);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, 
+                _logger.LogError(ex, "Error occurred while retrieving paginated staff profiles");
+                return StatusCode(StatusCodes.Status500InternalServerError,
                     new { message = MessageKeys.UNEXPECTED_ERROR });
             }
         }
@@ -177,9 +192,10 @@ namespace SAPLSServer.Controllers
                 var result = await _staffService.GetStaffProfiles(request);
                 return Ok(result);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, 
+                _logger.LogError(ex, "Error occurred while retrieving staff profiles list");
+                return StatusCode(StatusCodes.Status500InternalServerError,
                     new { message = MessageKeys.UNEXPECTED_ERROR });
             }
         }

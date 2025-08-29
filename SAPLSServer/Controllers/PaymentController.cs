@@ -16,19 +16,20 @@ namespace SAPLSServer.Controllers
         private readonly string _apiKey;
         private readonly string _clientKey;
         private readonly string _checkSumKey;
-        public PaymentController(IPaymentService paymentService, IPaymentSettings paymentSettings)
+        private readonly ILogger<PaymentController> _logger;
+
+        public PaymentController(IPaymentService paymentService, IPaymentSettings paymentSettings, ILogger<PaymentController> logger)
         {
             _paymentService = paymentService;
             _apiKey = paymentSettings.PaymentGatewayApiKey;
             _clientKey = paymentSettings.PaymentGatewayClientKey;
             _checkSumKey = paymentSettings.PaymentGatewayCheckSumKey;
+            _logger = logger;
         }
 
         /// <summary>
         /// Creates a new payment request
         /// </summary>
-        /// <param name="request">Payment request details</param>
-        /// <returns>Payment status response with payment information</returns>
         [HttpPost("request")]
         public async Task<ActionResult<PaymentStatusResponseDto>> CreatePaymentRequest([FromBody] PaymentRequestDto request)
         {
@@ -36,15 +37,16 @@ namespace SAPLSServer.Controllers
             {
                 if (!ModelState.IsValid)
                 {
+                    _logger.LogWarning("Invalid model state in CreatePaymentRequest: {@ModelState}", ModelState);
                     return BadRequest(ModelState);
                 }
 
-                var result = await _paymentService.SendPaymentRequest(request, _clientKey, 
-                    _apiKey, _checkSumKey);
-                
+                var result = await _paymentService.SendPaymentRequest(request, _clientKey, _apiKey, _checkSumKey);
+
                 if (result == null)
                 {
-                    return StatusCode(StatusCodes.Status500InternalServerError, 
+                    _logger.LogError("Payment service unavailable when creating payment request for OrderCode: {OrderCode}", request.OrderCode);
+                    return StatusCode(StatusCodes.Status500InternalServerError,
                         new { message = MessageKeys.PAYOS_SERVICE_UNAVAILABLE });
                 }
 
@@ -52,12 +54,14 @@ namespace SAPLSServer.Controllers
             }
             catch (InvalidOperationException ex)
             {
-                return StatusCode(StatusCodes.Status503ServiceUnavailable, 
+                _logger.LogWarning(ex, "Payment service unavailable (InvalidOperationException) in CreatePaymentRequest for OrderCode: {OrderCode}", request.OrderCode);
+                return StatusCode(StatusCodes.Status503ServiceUnavailable,
                     new { message = ex.Message });
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, 
+                _logger.LogError(ex, "Unexpected error in CreatePaymentRequest for OrderCode: {OrderCode}", request.OrderCode);
+                return StatusCode(StatusCodes.Status500InternalServerError,
                     new { message = MessageKeys.UNEXPECTED_ERROR });
             }
         }
@@ -65,8 +69,6 @@ namespace SAPLSServer.Controllers
         /// <summary>
         /// Gets the status of a specific payment
         /// </summary>
-        /// <param name="paymentId">The payment ID to check status for</param>
-        /// <returns>Payment status information</returns>
         [HttpGet("{paymentId}/status")]
         public async Task<ActionResult<PaymentStatusResponseDto>> GetPaymentStatus(int paymentId)
         {
@@ -74,13 +76,15 @@ namespace SAPLSServer.Controllers
             {
                 if (paymentId <= 0)
                 {
+                    _logger.LogWarning("Invalid paymentId in GetPaymentStatus: {PaymentId}", paymentId);
                     return BadRequest(new { message = "Invalid payment ID" });
                 }
 
                 var result = await _paymentService.GetPaymentStatus(paymentId, _clientKey, _apiKey);
-                
+
                 if (result == null)
                 {
+                    _logger.LogInformation("Payment not found in GetPaymentStatus: {PaymentId}", paymentId);
                     return NotFound(new { message = "Payment not found" });
                 }
 
@@ -88,21 +92,21 @@ namespace SAPLSServer.Controllers
             }
             catch (InvalidOperationException ex)
             {
-                return StatusCode(StatusCodes.Status503ServiceUnavailable, 
+                _logger.LogWarning(ex, "Payment service unavailable (InvalidOperationException) in GetPaymentStatus for PaymentId: {PaymentId}", paymentId);
+                return StatusCode(StatusCodes.Status503ServiceUnavailable,
                     new { message = ex.Message });
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, 
+                _logger.LogError(ex, "Unexpected error in GetPaymentStatus for PaymentId: {PaymentId}", paymentId);
+                return StatusCode(StatusCodes.Status500InternalServerError,
                     new { message = MessageKeys.UNEXPECTED_ERROR });
             }
         }
+
         /// <summary>
         /// Cancels a payment request
         /// </summary>
-        /// <param name="paymentId">The payment ID to cancel</param>
-        /// <param name="request">Cancellation request details</param>
-        /// <returns>Payment status response after cancellation</returns>
         [HttpPost("{paymentId}/cancel")]
         public async Task<ActionResult<PaymentStatusResponseDto>> CancelPayment(int paymentId, [FromBody] PaymentCancelRequestDto request)
         {
@@ -110,20 +114,22 @@ namespace SAPLSServer.Controllers
             {
                 if (paymentId <= 0)
                 {
+                    _logger.LogWarning("Invalid paymentId in CancelPayment: {PaymentId}", paymentId);
                     return BadRequest(new { message = "Invalid payment ID" });
                 }
 
                 if (!ModelState.IsValid)
                 {
+                    _logger.LogWarning("Invalid model state in CancelPayment: {@ModelState}", ModelState);
                     return BadRequest(ModelState);
                 }
 
-                var result = await _paymentService.SendCancelPaymentRequest(paymentId, _clientKey, 
-                    _apiKey, request);
-                
+                var result = await _paymentService.SendCancelPaymentRequest(paymentId, _clientKey, _apiKey, request);
+
                 if (result == null)
                 {
-                    return StatusCode(StatusCodes.Status500InternalServerError, 
+                    _logger.LogError("Payment service unavailable when cancelling payment for PaymentId: {PaymentId}", paymentId);
+                    return StatusCode(StatusCodes.Status500InternalServerError,
                         new { message = MessageKeys.PAYOS_SERVICE_UNAVAILABLE });
                 }
 
@@ -131,12 +137,14 @@ namespace SAPLSServer.Controllers
             }
             catch (InvalidOperationException ex)
             {
-                return StatusCode(StatusCodes.Status503ServiceUnavailable, 
+                _logger.LogWarning(ex, "Payment service unavailable (InvalidOperationException) in CancelPayment for PaymentId: {PaymentId}", paymentId);
+                return StatusCode(StatusCodes.Status503ServiceUnavailable,
                     new { message = ex.Message });
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, 
+                _logger.LogError(ex, "Unexpected error in CancelPayment for PaymentId: {PaymentId}", paymentId);
+                return StatusCode(StatusCodes.Status500InternalServerError,
                     new { message = MessageKeys.UNEXPECTED_ERROR });
             }
         }

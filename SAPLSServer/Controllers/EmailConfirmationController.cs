@@ -26,30 +26,30 @@ namespace SAPLSServer.Controllers
             {
                 if (string.IsNullOrWhiteSpace(userId) || string.IsNullOrWhiteSpace(otp))
                 {
+                    _logger.LogWarning("ConfirmEmail called with missing userId or otp. userId: {UserId}, otp: {Otp}", userId, otp);
                     return await GetConfirmationFailureResponse();
                 }
 
-                // Check if the user exists
                 var user = await _userService.GetById(userId);
                 if (user == null)
                 {
+                    _logger.LogInformation("User not found during email confirmation. userId: {UserId}", userId);
                     return await GetConfirmationFailureResponse();
                 }
 
-                // Check if the user is already active
                 if (user.Status == UserStatus.Active.ToString())
                 {
+                    _logger.LogInformation("User already active during email confirmation. userId: {UserId}", userId);
                     return await GetConfirmationSuccessResponse();
                 }
 
-                // Validate the OTP
                 bool isOtpValid = await _otpService.IsOtpValid(userId, otp);
                 if (!isOtpValid)
                 {
+                    _logger.LogWarning("Invalid OTP provided for userId: {UserId}", userId);
                     return await GetConfirmationFailureResponse();
                 }
 
-                // Update user status to Active
                 var updateStatusRequest = new UpdateUserStatusRequest
                 {
                     Id = userId,
@@ -57,6 +57,7 @@ namespace SAPLSServer.Controllers
                 };
 
                 await _userService.UpdateStatus(updateStatusRequest);
+                _logger.LogInformation("User status updated to Active during email confirmation. userId: {UserId}", userId);
 
                 return await GetConfirmationSuccessResponse();
             }
@@ -70,14 +71,13 @@ namespace SAPLSServer.Controllers
         private async Task<IActionResult> GetConfirmationSuccessResponse()
         {
             var filePath = Path.Combine(Directory.GetCurrentDirectory(), "Views", "ConfirmAccountSuccessfully.html");
-            
+
             if (System.IO.File.Exists(filePath))
             {
                 var content = await System.IO.File.ReadAllTextAsync(filePath);
                 return Content(content, "text/html");
             }
 
-            // Fallback content if file doesn't exist
             var fallbackContent = @"
                 <!DOCTYPE html>
                 <html>
@@ -101,14 +101,13 @@ namespace SAPLSServer.Controllers
         private async Task<IActionResult> GetConfirmationFailureResponse()
         {
             var filePath = Path.Combine(Directory.GetCurrentDirectory(), "Views", "ConfirmAccountUnsuccessfully.html");
-            
+
             if (System.IO.File.Exists(filePath))
             {
                 var content = await System.IO.File.ReadAllTextAsync(filePath);
                 return Content(content, "text/html");
             }
 
-            // Fallback content if file doesn't exist
             var fallbackContent = @"
                 <!DOCTYPE html>
                 <html>

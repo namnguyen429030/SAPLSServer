@@ -5,6 +5,7 @@ using SAPLSServer.DTOs.Concrete.ParkingLotShiftDtos;
 using SAPLSServer.Services.Interfaces;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 
 namespace SAPLSServer.Controllers
 {
@@ -14,10 +15,12 @@ namespace SAPLSServer.Controllers
     public class ParkingLotShiftController : ControllerBase
     {
         private readonly IParkingLotShiftService _shiftService;
+        private readonly ILogger<ParkingLotShiftController> _logger;
 
-        public ParkingLotShiftController(IParkingLotShiftService shiftService)
+        public ParkingLotShiftController(IParkingLotShiftService shiftService, ILogger<ParkingLotShiftController> logger)
         {
             _shiftService = shiftService;
+            _logger = logger;
         }
 
         /// <summary>
@@ -26,8 +29,16 @@ namespace SAPLSServer.Controllers
         [HttpGet("by-parking-lot/{parkingLotId}")]
         public async Task<IActionResult> GetByParkingLot(string parkingLotId)
         {
-            var result = await _shiftService.GetShiftsByParkingLotAsync(parkingLotId);
-            return Ok(result);
+            try
+            {
+                var result = await _shiftService.GetShiftsByParkingLotAsync(parkingLotId);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while getting shifts for ParkingLotId: {ParkingLotId}", parkingLotId);
+                return StatusCode(StatusCodes.Status500InternalServerError, new { message = MessageKeys.UNEXPECTED_ERROR });
+            }
         }
 
         /// <summary>
@@ -36,10 +47,21 @@ namespace SAPLSServer.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(string id)
         {
-            var result = await _shiftService.GetShiftByIdAsync(id);
-            if (result == null)
-                return NotFound(new { message = MessageKeys.SHIFT_NOT_FOUND });
-            return Ok(result);
+            try
+            {
+                var result = await _shiftService.GetShiftByIdAsync(id);
+                if (result == null)
+                {
+                    _logger.LogInformation("Shift not found for Id: {Id}", id);
+                    return NotFound(new { message = MessageKeys.SHIFT_NOT_FOUND });
+                }
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while getting shift by Id: {Id}", id);
+                return StatusCode(StatusCodes.Status500InternalServerError, new { message = MessageKeys.UNEXPECTED_ERROR });
+            }
         }
 
         /// <summary>
@@ -48,12 +70,23 @@ namespace SAPLSServer.Controllers
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CreateParkingLotShiftRequest request)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    _logger.LogWarning("Invalid model state in Create: {@ModelState}", ModelState);
+                    return BadRequest(ModelState);
+                }
 
-            var performerId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
-            var result = await _shiftService.CreateShiftAsync(request, performerId);
-            return Ok(result);
+                var performerId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
+                var result = await _shiftService.CreateShiftAsync(request, performerId);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while creating parking lot shift");
+                return StatusCode(StatusCodes.Status500InternalServerError, new { message = MessageKeys.UNEXPECTED_ERROR });
+            }
         }
 
         /// <summary>
@@ -62,14 +95,28 @@ namespace SAPLSServer.Controllers
         [HttpPut]
         public async Task<IActionResult> Update([FromBody] UpdateParkingLotShiftRequest request)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    _logger.LogWarning("Invalid model state in Update: {@ModelState}", ModelState);
+                    return BadRequest(ModelState);
+                }
 
-            var performerId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
-            var success = await _shiftService.UpdateShiftAsync(request, performerId);
-            if (!success)
-                return NotFound(new { message = MessageKeys.SHIFT_NOT_FOUND });
-            return Ok(new { message = MessageKeys.SHIFT_UPDATED_SUCCESSFULLY });
+                var performerId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
+                var success = await _shiftService.UpdateShiftAsync(request, performerId);
+                if (!success)
+                {
+                    _logger.LogInformation("Shift not found for update. Id: {Id}", request.Id);
+                    return NotFound(new { message = MessageKeys.SHIFT_NOT_FOUND });
+                }
+                return Ok(new { message = MessageKeys.SHIFT_UPDATED_SUCCESSFULLY });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while updating parking lot shift. Id: {Id}", request.Id);
+                return StatusCode(StatusCodes.Status500InternalServerError, new { message = MessageKeys.UNEXPECTED_ERROR });
+            }
         }
 
         /// <summary>
@@ -78,11 +125,22 @@ namespace SAPLSServer.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(string id)
         {
-            var performerId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
-            var success = await _shiftService.DeleteShiftAsync(id, performerId);
-            if (!success)
-                return NotFound(new { message = MessageKeys.SHIFT_NOT_FOUND });
-            return Ok(new { message = MessageKeys.SHIFT_DELETED_SUCCESSFULLY });
+            try
+            {
+                var performerId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
+                var success = await _shiftService.DeleteShiftAsync(id, performerId);
+                if (!success)
+                {
+                    _logger.LogInformation("Shift not found for delete. Id: {Id}", id);
+                    return NotFound(new { message = MessageKeys.SHIFT_NOT_FOUND });
+                }
+                return Ok(new { message = MessageKeys.SHIFT_DELETED_SUCCESSFULLY });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while deleting parking lot shift. Id: {Id}", id);
+                return StatusCode(StatusCodes.Status500InternalServerError, new { message = MessageKeys.UNEXPECTED_ERROR });
+            }
         }
     }
 }

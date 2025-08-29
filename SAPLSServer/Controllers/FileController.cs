@@ -34,6 +34,7 @@ namespace SAPLSServer.Controllers
             {
                 if (!ModelState.IsValid)
                 {
+                    _logger.LogWarning("Invalid model state in UploadFile: {@ModelState}", ModelState);
                     return BadRequest(ModelState);
                 }
 
@@ -66,6 +67,7 @@ namespace SAPLSServer.Controllers
             {
                 if (!ModelState.IsValid)
                 {
+                    _logger.LogWarning("Invalid model state in UploadMultipleFiles: {@ModelState}", ModelState);
                     return BadRequest(ModelState);
                 }
 
@@ -100,6 +102,7 @@ namespace SAPLSServer.Controllers
                 
                 if (result == null)
                 {
+                    _logger.LogInformation("File not found for download: {FileName}, Container: {Container}", fileName, container);
                     return NotFound(new { message = MessageKeys.FILE_NOT_FOUND });
                 }
 
@@ -128,6 +131,7 @@ namespace SAPLSServer.Controllers
                 
                 if (!success)
                 {
+                    _logger.LogInformation("File not found or could not be deleted: {FileName}, Container: {Container}", fileName, container);
                     return NotFound(new { message = MessageKeys.FILE_NOT_FOUND_OR_COULD_NOT_BE_DELETED });
                 }
 
@@ -156,6 +160,7 @@ namespace SAPLSServer.Controllers
                 
                 if (result == null)
                 {
+                    _logger.LogInformation("File info not found: {FileName}, Container: {Container}", fileName, container);
                     return NotFound(new { message = MessageKeys.FILE_NOT_FOUND });
                 }
 

@@ -25,11 +25,6 @@ namespace SAPLSServer.Controllers
             _logger = logger;
         }
 
-        /// <summary>
-        /// Gets detailed information about a parking session for a client.
-        /// </summary>
-        /// <param name="sessionId">The ID of the parking session.</param>
-        /// <returns>Parking session details for the client.</returns>
         [HttpGet("client/{sessionId}")]
         public async Task<IActionResult> GetSessionDetailsForClient(string sessionId)
         {
@@ -37,7 +32,10 @@ namespace SAPLSServer.Controllers
             {
                 var result = await _parkingSessionService.GetSessionDetailsForClient(sessionId);
                 if (result == null)
+                {
+                    _logger.LogInformation("Parking session not found for client. SessionId: {SessionId}", sessionId);
                     return NotFound(new { error = MessageKeys.PARKING_SESSION_NOT_FOUND });
+                }
 
                 return Ok(new
                 {
@@ -47,14 +45,12 @@ namespace SAPLSServer.Controllers
             }
             catch (InvalidInformationException ex)
             {
-                _logger.LogWarning(ex, "Invalid information provided while retrieving parking session details for client with SessionId: {SessionId}", 
-                    sessionId);
+                _logger.LogWarning(ex, "Invalid information provided while retrieving parking session details for client with SessionId: {SessionId}", sessionId);
                 return BadRequest(new { error = ex.Message });
             }
             catch (UnauthorizedAccessException ex)
             {
-                _logger.LogWarning(ex, "Unauthorized access attempt while retrieving parking session details for client with SessionId: {SessionId}", 
-                    sessionId);
+                _logger.LogWarning(ex, "Unauthorized access attempt while retrieving parking session details for client with SessionId: {SessionId}", sessionId);
                 return StatusCode(403, new { error = ex.Message });
             }
             catch (Exception ex)
@@ -64,11 +60,6 @@ namespace SAPLSServer.Controllers
             }
         }
 
-        /// <summary>
-        /// Gets detailed information about a parking session for a parking lot.
-        /// </summary>
-        /// <param name="sessionId">The ID of the parking session.</param>
-        /// <returns>Parking session details for the parking lot.</returns>
         [HttpGet("lot/{sessionId}")]
         public async Task<IActionResult> GetSessionDetailsForParkingLot(string sessionId)
         {
@@ -76,7 +67,10 @@ namespace SAPLSServer.Controllers
             {
                 var result = await _parkingSessionService.GetSessionDetailsForParkingLot(sessionId);
                 if (result == null)
+                {
+                    _logger.LogInformation("Parking session not found for parking lot. SessionId: {SessionId}", sessionId);
                     return NotFound(new { error = MessageKeys.PARKING_SESSION_NOT_FOUND });
+                }
 
                 return Ok(new
                 {
@@ -86,36 +80,31 @@ namespace SAPLSServer.Controllers
             }
             catch (InvalidInformationException ex)
             {
-                _logger.LogWarning(ex, 
-                    "Invalid information provided while retrieving parking session details for parking lot with SessionId: {SessionId}", sessionId);
+                _logger.LogWarning(ex, "Invalid information provided while retrieving parking session details for parking lot with SessionId: {SessionId}", sessionId);
                 return BadRequest(new { error = ex.Message });
             }
             catch (UnauthorizedAccessException ex)
             {
-                _logger.LogWarning(ex, 
-                    "Unauthorized access attempt while retrieving parking session details for parking lot with SessionId: {SessionId}", sessionId);
+                _logger.LogWarning(ex, "Unauthorized access attempt while retrieving parking session details for parking lot with SessionId: {SessionId}", sessionId);
                 return StatusCode(403, new { error = ex.Message });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, 
-                    "Error occurred while retrieving parking session details for parking lot with SessionId: {SessionId}", sessionId);
+                _logger.LogError(ex, "Error occurred while retrieving parking session details for parking lot with SessionId: {SessionId}", sessionId);
                 return StatusCode(500, new { error = MessageKeys.UNEXPECTED_ERROR });
             }
         }
 
-        /// <summary>
-        /// Retrieves parking session summaries for a specific client.
-        /// </summary>
-        /// <param name="request">The request containing client and filter information.</param>
-        /// <returns>List of parking session summaries for the client.</returns>
         [HttpGet("by-client")]
         public async Task<IActionResult> GetSessionsByClient([FromQuery] GetParkingSessionListByClientIdRequest request)
         {
             try
             {
                 if (!ModelState.IsValid)
+                {
+                    _logger.LogWarning("Invalid model state in GetSessionsByClient: {@ModelState}", ModelState);
                     return BadRequest(ModelState);
+                }
 
                 var result = await _parkingSessionService.GetSessionsByClient(request);
                 return Ok(new
@@ -126,8 +115,7 @@ namespace SAPLSServer.Controllers
             }
             catch (InvalidInformationException ex)
             {
-                _logger.LogWarning(ex, "Invalid information provided while retrieving parking sessions for client with ClientId: {ClientId}", 
-                    request.ClientId);
+                _logger.LogWarning(ex, "Invalid information provided while retrieving parking sessions for client with ClientId: {ClientId}", request.ClientId);
                 return BadRequest(new { error = ex.Message });
             }
             catch (Exception ex)
@@ -137,18 +125,16 @@ namespace SAPLSServer.Controllers
             }
         }
 
-        /// <summary>
-        /// Retrieves parking session summaries for a specific parking lot.
-        /// </summary>
-        /// <param name="request">The request containing parking lot and filter information.</param>
-        /// <returns>List of parking session summaries for the parking lot.</returns>
         [HttpGet("by-lot")]
         public async Task<IActionResult> GetSessionsByParkingLot([FromQuery] GetParkingSessionListByParkingLotIdRequest request)
         {
             try
             {
                 if (!ModelState.IsValid)
+                {
+                    _logger.LogWarning("Invalid model state in GetSessionsByParkingLot: {@ModelState}", ModelState);
                     return BadRequest(ModelState);
+                }
 
                 var result = await _parkingSessionService.GetSessionsByParkingLot(request);
                 return Ok(new
@@ -159,31 +145,26 @@ namespace SAPLSServer.Controllers
             }
             catch (InvalidInformationException ex)
             {
-                _logger.LogWarning(ex, "Invalid information provided while retrieving parking sessions for parking lot with ParkingLotId: {ParkingLotId}", 
-                    request.ParkingLotId);
+                _logger.LogWarning(ex, "Invalid information provided while retrieving parking sessions for parking lot with ParkingLotId: {ParkingLotId}", request.ParkingLotId);
                 return BadRequest(new { error = ex.Message });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error occurred while retrieving parking sessions for parking lot with ParkingLotId: {ParkingLotId}", 
-                    request.ParkingLotId);
+                _logger.LogError(ex, "Error occurred while retrieving parking sessions for parking lot with ParkingLotId: {ParkingLotId}", request.ParkingLotId);
                 return StatusCode(500, new { error = MessageKeys.UNEXPECTED_ERROR });
             }
         }
 
-        /// <summary>
-        /// Retrieves parking sessions owned by a specific client.
-        /// </summary>
-        /// <param name="request">The request containing ownership and filter information.</param>
-        /// <param name="clientId">The ID of the client who owns the sessions.</param>
-        /// <returns>List of owned parking session summaries.</returns>
         [HttpGet("owned/{clientId}")]
         public async Task<IActionResult> GetOwnedSessions([FromQuery] GetOwnedParkingSessionListRequest request, string clientId)
         {
             try
             {
                 if (!ModelState.IsValid)
+                {
+                    _logger.LogWarning("Invalid model state in GetOwnedSessions: {@ModelState}", ModelState);
                     return BadRequest(ModelState);
+                }
 
                 var result = await _parkingSessionService.GetOwnedSessions(request, clientId);
                 return Ok(new
@@ -194,8 +175,7 @@ namespace SAPLSServer.Controllers
             }
             catch (InvalidInformationException ex)
             {
-                _logger.LogWarning(ex, "Invalid information provided while retrieving owned parking sessions for client with ClientId: {ClientId}", 
-                    clientId);
+                _logger.LogWarning(ex, "Invalid information provided while retrieving owned parking sessions for client with ClientId: {ClientId}", clientId);
                 return BadRequest(new { error = ex.Message });
             }
             catch (Exception ex)
@@ -205,19 +185,16 @@ namespace SAPLSServer.Controllers
             }
         }
 
-        /// <summary>
-        /// Retrieves a paginated list of parking sessions for a specific client.
-        /// </summary>
-        /// <param name="pageRequest">The pagination request.</param>
-        /// <param name="listRequest">The filter criteria.</param>
-        /// <returns>Paged result of parking session summaries.</returns>
         [HttpGet("page/by-client")]
         public async Task<IActionResult> GetPageByClient([FromQuery] PageRequest pageRequest, [FromQuery] GetParkingSessionListByClientIdRequest listRequest)
         {
             try
             {
                 if (!ModelState.IsValid)
+                {
+                    _logger.LogWarning("Invalid model state in GetPageByClient: {@ModelState}", ModelState);
                     return BadRequest(ModelState);
+                }
 
                 var result = await _parkingSessionService.GetPageByClient(pageRequest, listRequest);
                 return Ok(new
@@ -228,31 +205,26 @@ namespace SAPLSServer.Controllers
             }
             catch (InvalidInformationException ex)
             {
-                _logger.LogWarning(ex, "Invalid information provided while retrieving paged parking sessions for client with ClientId: {ClientId}", 
-                    listRequest.ClientId);
+                _logger.LogWarning(ex, "Invalid information provided while retrieving paged parking sessions for client with ClientId: {ClientId}", listRequest.ClientId);
                 return BadRequest(new { error = ex.Message });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error occurred while retrieving paged parking sessions for client with ClientId: {ClientId}", 
-                    listRequest.ClientId);
+                _logger.LogError(ex, "Error occurred while retrieving paged parking sessions for client with ClientId: {ClientId}", listRequest.ClientId);
                 return StatusCode(500, new { error = MessageKeys.UNEXPECTED_ERROR });
             }
         }
 
-        /// <summary>
-        /// Retrieves a paginated list of parking sessions for a specific parking lot.
-        /// </summary>
-        /// <param name="pageRequest">The pagination request.</param>
-        /// <param name="listRequest">The filter criteria.</param>
-        /// <returns>Paged result of parking session summaries.</returns>
         [HttpGet("page/by-lot")]
         public async Task<IActionResult> GetPageByParkingLot([FromQuery] PageRequest pageRequest, [FromQuery] GetParkingSessionListByParkingLotIdRequest listRequest)
         {
             try
             {
                 if (!ModelState.IsValid)
+                {
+                    _logger.LogWarning("Invalid model state in GetPageByParkingLot: {@ModelState}", ModelState);
                     return BadRequest(ModelState);
+                }
 
                 var result = await _parkingSessionService.GetPageByParkingLot(pageRequest, listRequest);
                 return Ok(new
@@ -263,32 +235,26 @@ namespace SAPLSServer.Controllers
             }
             catch (InvalidInformationException ex)
             {
-                _logger.LogWarning(ex, "Invalid information provided while retrieving paged parking sessions for parking lot with ParkingLotId: {ParkingLotId}", 
-                    listRequest.ParkingLotId);
+                _logger.LogWarning(ex, "Invalid information provided while retrieving paged parking sessions for parking lot with ParkingLotId: {ParkingLotId}", listRequest.ParkingLotId);
                 return BadRequest(new { error = ex.Message });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error occurred while retrieving paged parking sessions for parking lot with ParkingLotId: {ParkingLotId}", 
-                    listRequest.ParkingLotId);
+                _logger.LogError(ex, "Error occurred while retrieving paged parking sessions for parking lot with ParkingLotId: {ParkingLotId}", listRequest.ParkingLotId);
                 return StatusCode(500, new { error = MessageKeys.UNEXPECTED_ERROR });
             }
         }
 
-        /// <summary>
-        /// Retrieves a paginated list of parking sessions owned by a specific client.
-        /// </summary>
-        /// <param name="pageRequest">The pagination request.</param>
-        /// <param name="listRequest">The filter criteria.</param>
-        /// <param name="clientId">The ID of the client who owns the sessions.</param>
-        /// <returns>Paged result of owned parking session summaries.</returns>
         [HttpGet("page/owned/{clientId}")]
         public async Task<IActionResult> GetPageByOwnedSessions([FromQuery] PageRequest pageRequest, [FromQuery] GetOwnedParkingSessionListRequest listRequest, string clientId)
         {
             try
             {
                 if (!ModelState.IsValid)
+                {
+                    _logger.LogWarning("Invalid model state in GetPageByOwnedSessions: {@ModelState}", ModelState);
                     return BadRequest(ModelState);
+                }
 
                 var result = await _parkingSessionService.GetPageByOwnedSessions(pageRequest, listRequest, clientId);
                 return Ok(new
@@ -299,8 +265,7 @@ namespace SAPLSServer.Controllers
             }
             catch (InvalidInformationException ex)
             {
-                _logger.LogWarning(ex, "Invalid information provided while retrieving paged owned parking sessions for client with ClientId: {ClientId}", 
-                    clientId);
+                _logger.LogWarning(ex, "Invalid information provided while retrieving paged owned parking sessions for client with ClientId: {ClientId}", clientId);
                 return BadRequest(new { error = ex.Message });
             }
             catch (Exception ex)
@@ -310,22 +275,23 @@ namespace SAPLSServer.Controllers
             }
         }
 
-        /// <summary>
-        /// Checks in a vehicle and creates a new parking session.
-        /// </summary>
-        /// <param name="request">The check-in request details, including entry capture files.</param>
-        /// <returns>Success response.</returns>
         [HttpPost("check-in")]
         public async Task<IActionResult> CheckIn([FromForm] CheckInParkingSessionRequest request)
         {
             try
             {
                 if (!ModelState.IsValid)
+                {
+                    _logger.LogWarning("Invalid model state in CheckIn: {@ModelState}", ModelState);
                     return BadRequest(ModelState);
+                }
 
                 var staffId = User.FindFirstValue(ClaimTypes.NameIdentifier);
                 if (string.IsNullOrEmpty(staffId))
+                {
+                    _logger.LogWarning("Unauthorized access attempt in CheckIn");
                     return Unauthorized(new { error = MessageKeys.STAFF_PROFILE_ID_REQUIRED });
+                }
 
                 await _parkingSessionService.CheckIn(request, staffId);
                 return Ok(new { message = MessageKeys.PARKING_SESSION_CREATED_SUCCESSFULLY });
@@ -346,16 +312,23 @@ namespace SAPLSServer.Controllers
                 return StatusCode(500, new { error = MessageKeys.UNEXPECTED_ERROR });
             }
         }
+
         [HttpGet("{sessionId}/payment-info")]
         public async Task<IActionResult> GetSessionPaymentInfo(string sessionId)
         {
             try
             {
                 if (string.IsNullOrWhiteSpace(sessionId))
+                {
+                    _logger.LogWarning("SessionId is required in GetSessionPaymentInfo");
                     return BadRequest(new { error = MessageKeys.PARKING_SESSION_ID_REQUIRED });
+                }
                 var result = await _parkingSessionService.GetSessionPaymentInfo(sessionId);
                 if (result == null)
+                {
+                    _logger.LogInformation("Payment info not found for parking session. SessionId: {SessionId}", sessionId);
                     return NotFound(new { error = MessageKeys.PARKING_SESSION_NOT_FOUND });
+                }
                 return Ok(new
                 {
                     data = result
@@ -377,22 +350,24 @@ namespace SAPLSServer.Controllers
                 return StatusCode(500, new { error = MessageKeys.UNEXPECTED_ERROR });
             }
         }
-        /// <summary>
-        /// Checks out a vehicle and updates the parking session.
-        /// </summary>
-        /// <param name="request">The check-out request details.</param>
-        /// <returns>Success response.</returns>
+
         [HttpPost("check-out")]
         public async Task<IActionResult> CheckOut([FromBody] CheckOutParkingSessionRequest request)
         {
             try
             {
                 if (!ModelState.IsValid)
+                {
+                    _logger.LogWarning("Invalid model state in CheckOut: {@ModelState}", ModelState);
                     return BadRequest(ModelState);
+                }
 
                 var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
                 if (string.IsNullOrEmpty(userId))
+                {
+                    _logger.LogWarning("Unauthorized access attempt in CheckOut");
                     return Unauthorized(new { error = MessageKeys.USER_ID_REQUIRED });
+                }
 
                 await _parkingSessionService.CheckOut(request, userId);
                 return Ok(new { message = MessageKeys.PARKING_SESSION_CHECKOUT_UPDATED_SUCCESSFULLY });
@@ -419,22 +394,23 @@ namespace SAPLSServer.Controllers
             }
         }
 
-        /// <summary>
-        /// Finishes a parking session by uploading exit captures.
-        /// </summary>
-        /// <param name="request">The finish request details, including exit capture files.</param>
-        /// <returns>Success response.</returns>
         [HttpPost("finish")]
         public async Task<IActionResult> Finish([FromForm] FinishParkingSessionRequest request)
         {
             try
             {
                 if (!ModelState.IsValid)
+                {
+                    _logger.LogWarning("Invalid model state in Finish: {@ModelState}", ModelState);
                     return BadRequest(ModelState);
+                }
 
                 var staffId = User.FindFirstValue(ClaimTypes.NameIdentifier);
                 if (string.IsNullOrEmpty(staffId))
+                {
+                    _logger.LogWarning("Unauthorized access attempt in Finish");
                     return Unauthorized(new { error = MessageKeys.STAFF_PROFILE_ID_REQUIRED });
+                }
 
                 await _parkingSessionService.Finish(request, staffId);
                 return Ok(new { message = MessageKeys.PARKING_SESSION_EXIT_UPDATED_SUCCESSFULLY });
@@ -460,11 +436,7 @@ namespace SAPLSServer.Controllers
                 return StatusCode(500, new { error = MessageKeys.UNEXPECTED_ERROR });
             }
         }
-        /// <summary>
-        /// Forces the finish of a parking session by uploading exit captures, bypassing normal checkout process.
-        /// </summary>
-        /// <param name="request">The finish request details, including exit capture files.</param>
-        /// <returns>Success response.</returns>
+
         [HttpPost("force-finish")]
         [Authorize(Policy = Accessibility.STAFF_ACCESS)]
         public async Task<IActionResult> ForceFinish([FromForm] FinishParkingSessionRequest request)
@@ -472,11 +444,17 @@ namespace SAPLSServer.Controllers
             try
             {
                 if (!ModelState.IsValid)
+                {
+                    _logger.LogWarning("Invalid model state in ForceFinish: {@ModelState}", ModelState);
                     return BadRequest(ModelState);
+                }
 
                 var staffId = User.FindFirstValue(ClaimTypes.NameIdentifier);
                 if (string.IsNullOrEmpty(staffId))
+                {
+                    _logger.LogWarning("Unauthorized access attempt in ForceFinish");
                     return Unauthorized(new { error = MessageKeys.STAFF_PROFILE_ID_REQUIRED });
+                }
 
                 await _parkingSessionService.ForceFinish(request, staffId);
                 return Ok(new { message = "Parking session force finished successfully." });
@@ -502,21 +480,23 @@ namespace SAPLSServer.Controllers
                 return StatusCode(500, new { error = MessageKeys.UNEXPECTED_ERROR });
             }
         }
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="sessionId"></param>
-        /// <returns></returns>
+
         [HttpGet("transaction-id/{sessionId}")]
         public async Task<IActionResult> GetSessionByTransactionId(string sessionId)
         {
             try
             {
                 if (string.IsNullOrWhiteSpace(sessionId))
+                {
+                    _logger.LogWarning("SessionId is required in GetSessionByTransactionId");
                     return BadRequest(new { error = MessageKeys.PARKING_SESSION_ID_REQUIRED });
+                }
                 var result = await _parkingSessionService.GetSessionTransactionId(sessionId);
                 if (result == null)
+                {
+                    _logger.LogInformation("Transaction ID not found for parking session. SessionId: {SessionId}", sessionId);
                     return NotFound(new { error = MessageKeys.TRANSACTION_ID_NOT_FOUND });
+                }
                 return Ok(new
                 {
                     message = MessageKeys.GET_PARKING_SESSION_DETAILS_SUCCESSFULLY,
@@ -529,24 +509,40 @@ namespace SAPLSServer.Controllers
                 return StatusCode(500, new { error = MessageKeys.UNEXPECTED_ERROR });
             }
         }
+
         [HttpPost("complete-payment")]
         [AllowAnonymous]
         public async Task<IActionResult> CompletePayment([FromBody] PaymentWebHookRequest paymentWebHookRequest)
         {
-            _logger.LogInformation("Received PaymentWebHookRequest: {Request}", JsonSerializer.Serialize(paymentWebHookRequest));
-            await _parkingSessionService.ConfirmTransaction(paymentWebHookRequest);
-            return Ok();
+            try
+            {
+                _logger.LogInformation("Received PaymentWebHookRequest: {Request}", JsonSerializer.Serialize(paymentWebHookRequest));
+                await _parkingSessionService.ConfirmTransaction(paymentWebHookRequest);
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while processing payment webhook");
+                return StatusCode(500, new { error = MessageKeys.UNEXPECTED_ERROR });
+            }
         }
+
         [HttpGet("license-plate/{parkingLotId}/{licensePlate}")]
         public async Task<IActionResult> GetActiveSessionByLicensePlate(string parkingLotId, string licensePlate)
         {
             try
             {
                 if (string.IsNullOrWhiteSpace(licensePlate))
+                {
+                    _logger.LogWarning("License plate is required in GetActiveSessionByLicensePlate");
                     return BadRequest(new { error = MessageKeys.LICENSE_PLATE_REQUIRED });
+                }
                 var result = await _parkingSessionService.GetByLicensePlateNumber(licensePlate, parkingLotId);
                 if (result == null)
+                {
+                    _logger.LogInformation("Active parking session not found for license plate: {LicensePlate} in ParkingLotId: {ParkingLotId}", licensePlate, parkingLotId);
                     return NotFound(new { error = MessageKeys.PARKING_SESSION_NOT_FOUND });
+                }
                 return Ok(new
                 {
                     message = MessageKeys.GET_PARKING_SESSION_DETAILS_SUCCESSFULLY,
@@ -555,8 +551,7 @@ namespace SAPLSServer.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error occurred while retrieving active parking session for license plate: {LicensePlate} in ParkingLotId: {ParkingLotId}", 
-                    licensePlate, parkingLotId);
+                _logger.LogError(ex, "Error occurred while retrieving active parking session for license plate: {LicensePlate} in ParkingLotId: {ParkingLotId}", licensePlate, parkingLotId);
                 return StatusCode(500, new { error = MessageKeys.UNEXPECTED_ERROR });
             }
         }

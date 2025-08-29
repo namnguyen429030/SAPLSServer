@@ -39,6 +39,7 @@ namespace SAPLSServer.Controllers
             {
                 if (!ModelState.IsValid)
                 {
+                    _logger.LogWarning("Invalid model state in RegisterClient: {@ModelState}", ModelState);
                     return BadRequest(ModelState);
                 }
 
@@ -50,7 +51,7 @@ namespace SAPLSServer.Controllers
                 _logger.LogWarning(ex, "Invalid information provided while registering a new client profile");
                 return BadRequest(new { message = ex.Message });
             }
-            catch(UnauthorizedAccessException ex)
+            catch (UnauthorizedAccessException ex)
             {
                 _logger.LogWarning(ex, "Unauthorized access while registering a new client profile");
                 return Unauthorized(new { message = ex.Message });
@@ -58,7 +59,7 @@ namespace SAPLSServer.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error occurred while registering a new client profile");
-                return StatusCode(StatusCodes.Status500InternalServerError, 
+                return StatusCode(StatusCodes.Status500InternalServerError,
                     new { message = MessageKeys.UNEXPECTED_ERROR });
             }
         }
@@ -76,11 +77,13 @@ namespace SAPLSServer.Controllers
             {
                 if (!ModelState.IsValid)
                 {
+                    _logger.LogWarning("Invalid model state in UpdateClient: {@ModelState}", ModelState);
                     return BadRequest(ModelState);
                 }
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                if(string.IsNullOrWhiteSpace(userId))
+                if (string.IsNullOrWhiteSpace(userId))
                 {
+                    _logger.LogWarning("Unauthorized access attempt in UpdateClient");
                     return Unauthorized(new { message = MessageKeys.UNAUTHORIZED_ACCESS });
                 }
                 await _clientService.Update(request, userId);
@@ -94,7 +97,7 @@ namespace SAPLSServer.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error updating client profile");
-                return StatusCode(StatusCodes.Status500InternalServerError, 
+                return StatusCode(StatusCodes.Status500InternalServerError,
                     new { message = MessageKeys.UNEXPECTED_ERROR });
             }
         }
@@ -115,11 +118,13 @@ namespace SAPLSServer.Controllers
                 //Check if the current user is an admin or the same user
                 if (role != UserRole.Admin.ToString() && currentUserId != userId)
                 {
-                    return Unauthorized(new { mssage = MessageKeys.UNAUTHORIZED_ACCESS});
+                    _logger.LogWarning("Unauthorized access attempt in GetByUserId for UserId: {UserId}", userId);
+                    return Unauthorized(new { message = MessageKeys.UNAUTHORIZED_ACCESS });
                 }
                 var result = await _clientService.GetByUserId(userId);
                 if (result == null)
                 {
+                    _logger.LogInformation("Client profile not found for UserId: {UserId}", userId);
                     return NotFound(new { message = MessageKeys.CLIENT_PROFILE_NOT_FOUND });
                 }
 
@@ -133,7 +138,7 @@ namespace SAPLSServer.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error occurred while retrieving client profile with UserId: {UserId}", userId);
-                return StatusCode(StatusCodes.Status500InternalServerError, 
+                return StatusCode(StatusCodes.Status500InternalServerError,
                     new { message = MessageKeys.UNEXPECTED_ERROR });
             }
         }
@@ -156,7 +161,7 @@ namespace SAPLSServer.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error occurred while retrieving paginated client profiles");
-                return StatusCode(StatusCodes.Status500InternalServerError, 
+                return StatusCode(StatusCodes.Status500InternalServerError,
                     new { message = MessageKeys.UNEXPECTED_ERROR });
             }
         }
@@ -174,17 +179,20 @@ namespace SAPLSServer.Controllers
             {
                 if (!ModelState.IsValid)
                 {
+                    _logger.LogWarning("Invalid model state in RegisterDeviceToken: {@ModelState}", ModelState);
                     return BadRequest(ModelState);
                 }
 
                 if (!_notificationService.ValidateDeviceToken(request.DeviceToken))
                 {
+                    _logger.LogWarning("Invalid device token format in RegisterDeviceToken: {DeviceToken}", request.DeviceToken);
                     return BadRequest(new { message = "Invalid device token format" });
                 }
 
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrWhiteSpace(userId))
                 {
+                    _logger.LogWarning("Unauthorized access attempt in RegisterDeviceToken");
                     return Unauthorized(new { message = "User ID not found in token" });
                 }
 
@@ -218,6 +226,7 @@ namespace SAPLSServer.Controllers
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrWhiteSpace(userId))
                 {
+                    _logger.LogWarning("Unauthorized access attempt in UnregisterDeviceToken");
                     return Unauthorized(new { message = "User ID not found in token" });
                 }
 
@@ -251,17 +260,19 @@ namespace SAPLSServer.Controllers
             {
                 if (!ModelState.IsValid)
                 {
+                    _logger.LogWarning("Invalid model state in VerifyClient: {@ModelState}", ModelState);
                     return BadRequest(ModelState);
                 }
 
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrWhiteSpace(userId))
                 {
+                    _logger.LogWarning("Unauthorized access attempt in VerifyClient");
                     return Unauthorized(new { message = MessageKeys.UNAUTHORIZED_ACCESS });
                 }
 
                 await _clientService.VerifyLevelTwo(request, userId);
-                return Ok(new { message = MessageKeys.CLIENT_VERIFIED_SUCCESSFULLY});
+                return Ok(new { message = MessageKeys.CLIENT_VERIFIED_SUCCESSFULLY });
             }
             catch (InvalidInformationException ex)
             {
@@ -294,6 +305,7 @@ namespace SAPLSServer.Controllers
                 var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrWhiteSpace(userId))
                 {
+                    _logger.LogWarning("Unauthorized access attempt in IsVerifyLevelTwo");
                     return Unauthorized(new { message = MessageKeys.UNAUTHORIZED_ACCESS });
                 }
 
@@ -334,6 +346,12 @@ namespace SAPLSServer.Controllers
                     new { message = MessageKeys.UNEXPECTED_ERROR });
             }
         }
+
+        /// <summary>
+        /// Retrieves a list of client profiles based on the provided request criteria.
+        /// </summary>
+        /// <param name="request">The request containing filter and pagination information.</param>
+        /// <returns>A list of client profiles that match the criteria.</returns>
         [HttpGet]
         [Authorize(Policy = Accessibility.ADMIN_ACCESS)]
         public async Task<ActionResult<List<ClientProfileSummaryDto>>> GetListClients([FromQuery] GetClientListRequest request)

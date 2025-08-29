@@ -16,10 +16,12 @@ namespace SAPLSServer.Controllers
     public class ParkingLotOwnerController : ControllerBase
     {
         private readonly IParkingLotOwnerService _parkingLotOwnerService;
+        private readonly ILogger<ParkingLotOwnerController> _logger;
 
-        public ParkingLotOwnerController(IParkingLotOwnerService parkingLotOwnerService)
+        public ParkingLotOwnerController(IParkingLotOwnerService parkingLotOwnerService, ILogger<ParkingLotOwnerController> logger)
         {
             _parkingLotOwnerService = parkingLotOwnerService;
+            _logger = logger;
         }
 
         /// <summary>
@@ -35,11 +37,13 @@ namespace SAPLSServer.Controllers
             {
                 if (!ModelState.IsValid)
                 {
+                    _logger.LogWarning("Invalid model state in RegisterParkingLotOwner: {@ModelState}", ModelState);
                     return BadRequest(ModelState);
                 }
                 var performedByAdminUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                if(string.IsNullOrWhiteSpace(performedByAdminUserId))
+                if (string.IsNullOrWhiteSpace(performedByAdminUserId))
                 {
+                    _logger.LogWarning("Unauthorized access attempt in RegisterParkingLotOwner");
                     return Unauthorized(new { message = MessageKeys.UNAUTHORIZED_ACCESS });
                 }
                 await _parkingLotOwnerService.Create(request, performedByAdminUserId);
@@ -47,11 +51,13 @@ namespace SAPLSServer.Controllers
             }
             catch (InvalidInformationException ex)
             {
+                _logger.LogWarning(ex, "Invalid information provided while registering parking lot owner profile");
                 return BadRequest(new { message = ex.Message });
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, 
+                _logger.LogError(ex, "Error occurred while registering parking lot owner profile");
+                return StatusCode(StatusCodes.Status500InternalServerError,
                     new { message = MessageKeys.UNEXPECTED_ERROR });
             }
         }
@@ -69,11 +75,13 @@ namespace SAPLSServer.Controllers
             {
                 if (!ModelState.IsValid)
                 {
+                    _logger.LogWarning("Invalid model state in UpdateParkingLotOwner: {@ModelState}", ModelState);
                     return BadRequest(ModelState);
                 }
                 var performedByAdminUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrWhiteSpace(performedByAdminUserId))
                 {
+                    _logger.LogWarning("Unauthorized access attempt in UpdateParkingLotOwner");
                     return Unauthorized(new { message = MessageKeys.UNAUTHORIZED_ACCESS });
                 }
                 await _parkingLotOwnerService.Update(request, performedByAdminUserId);
@@ -81,11 +89,13 @@ namespace SAPLSServer.Controllers
             }
             catch (InvalidInformationException ex)
             {
+                _logger.LogWarning(ex, "Invalid information provided while updating parking lot owner profile");
                 return BadRequest(new { message = ex.Message });
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, 
+                _logger.LogError(ex, "Error occurred while updating parking lot owner profile");
+                return StatusCode(StatusCodes.Status500InternalServerError,
                     new { message = MessageKeys.UNEXPECTED_ERROR });
             }
         }
@@ -104,6 +114,7 @@ namespace SAPLSServer.Controllers
                 var result = await _parkingLotOwnerService.GetByParkingLotOwnerId(ownerId);
                 if (result == null)
                 {
+                    _logger.LogInformation("Parking lot owner profile not found for OwnerId: {OwnerId}", ownerId);
                     return NotFound(new { message = MessageKeys.PARKING_LOT_OWNER_PROFILE_NOT_FOUND });
                 }
 
@@ -111,11 +122,13 @@ namespace SAPLSServer.Controllers
             }
             catch (InvalidInformationException ex)
             {
+                _logger.LogWarning(ex, "Invalid information provided while retrieving parking lot owner profile with OwnerId: {OwnerId}", ownerId);
                 return BadRequest(new { message = ex.Message });
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, 
+                _logger.LogError(ex, "Error occurred while retrieving parking lot owner profile with OwnerId: {OwnerId}", ownerId);
+                return StatusCode(StatusCodes.Status500InternalServerError,
                     new { message = MessageKeys.UNEXPECTED_ERROR });
             }
         }
@@ -137,10 +150,12 @@ namespace SAPLSServer.Controllers
                 // Check if the current user is an admin or the same user
                 if (role != UserRole.Admin.ToString() && currentUserId != userId)
                 {
+                    _logger.LogWarning("Unauthorized access attempt in GetByUserId for UserId: {UserId}", userId);
                     return Unauthorized(new { message = MessageKeys.UNAUTHORIZED_ACCESS });
                 }
                 if (result == null)
                 {
+                    _logger.LogInformation("Parking lot owner profile not found for UserId: {UserId}", userId);
                     return NotFound(new { message = MessageKeys.PARKING_LOT_OWNER_PROFILE_NOT_FOUND });
                 }
 
@@ -148,11 +163,13 @@ namespace SAPLSServer.Controllers
             }
             catch (InvalidInformationException ex)
             {
+                _logger.LogWarning(ex, "Invalid information provided while retrieving parking lot owner profile with UserId: {UserId}", userId);
                 return BadRequest(new { message = ex.Message });
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, 
+                _logger.LogError(ex, "Error occurred while retrieving parking lot owner profile with UserId: {UserId}", userId);
+                return StatusCode(StatusCodes.Status500InternalServerError,
                     new { message = MessageKeys.UNEXPECTED_ERROR });
             }
         }
@@ -172,9 +189,10 @@ namespace SAPLSServer.Controllers
                 var result = await _parkingLotOwnerService.GetParkingLotOwnerProfilesPage(pageRequest, request);
                 return Ok(result);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, 
+                _logger.LogError(ex, "Error occurred while retrieving paginated parking lot owner profiles");
+                return StatusCode(StatusCodes.Status500InternalServerError,
                     new { message = MessageKeys.UNEXPECTED_ERROR });
             }
         }
@@ -193,9 +211,10 @@ namespace SAPLSServer.Controllers
                 var result = await _parkingLotOwnerService.GetParkingLotOwnerProfiles(request);
                 return Ok(result);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, 
+                _logger.LogError(ex, "Error occurred while retrieving parking lot owner profiles");
+                return StatusCode(StatusCodes.Status500InternalServerError,
                     new { message = MessageKeys.UNEXPECTED_ERROR });
             }
         }

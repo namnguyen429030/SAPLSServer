@@ -34,12 +34,29 @@ namespace SAPLSServer.Controllers
         [Authorize(Policy = Accessibility.ADMIN_ACCESS)]
         public async Task<IActionResult> Create([FromBody] CreateParkingLotRequest request)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    _logger.LogWarning("Invalid model state in Create: {@ModelState}", ModelState);
+                    return BadRequest(ModelState);
+                }
 
-            var performerAdminId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
-            await _parkingLotService.CreateParkingLot(request, performerAdminId);
-            return Ok(new { message = MessageKeys.PARKING_LOT_CREATED_SUCCESSFULLY });
+                var performerAdminId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
+                await _parkingLotService.CreateParkingLot(request, performerAdminId);
+                return Ok(new { message = MessageKeys.PARKING_LOT_CREATED_SUCCESSFULLY });
+            }
+            catch (InvalidInformationException ex)
+            {
+                _logger.LogWarning(ex, "Invalid information provided while creating parking lot");
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while creating parking lot");
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    new { message = MessageKeys.UNEXPECTED_ERROR });
+            }
         }
 
         /// <summary>
@@ -49,12 +66,29 @@ namespace SAPLSServer.Controllers
         [Authorize(Policy = Accessibility.PARKING_LOT_OWNER_ACCESS)]
         public async Task<IActionResult> UpdateBasicInfo([FromBody] UpdateParkingLotBasicInformationRequest request)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    _logger.LogWarning("Invalid model state in UpdateBasicInfo: {@ModelState}", ModelState);
+                    return BadRequest(ModelState);
+                }
 
-            var performerId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
-            await _parkingLotService.UpdateParkingLotBasicInformation(request, performerId);
-            return Ok(new { message = MessageKeys.PARKING_LOT_BASIC_INFO_UPDATED_SUCCESSFULLY });
+                var performerId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
+                await _parkingLotService.UpdateParkingLotBasicInformation(request, performerId);
+                return Ok(new { message = MessageKeys.PARKING_LOT_BASIC_INFO_UPDATED_SUCCESSFULLY });
+            }
+            catch (InvalidInformationException ex)
+            {
+                _logger.LogWarning(ex, "Invalid information provided while updating parking lot basic info");
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while updating parking lot basic info");
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    new { message = MessageKeys.UNEXPECTED_ERROR });
+            }
         }
 
         /// <summary>
@@ -64,12 +98,29 @@ namespace SAPLSServer.Controllers
         [Authorize(Policy = Accessibility.ADMIN_ACCESS)]
         public async Task<IActionResult> UpdateAddress([FromBody] UpdateParkingLotAddressRequest request)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    _logger.LogWarning("Invalid model state in UpdateAddress: {@ModelState}", ModelState);
+                    return BadRequest(ModelState);
+                }
 
-            var performerAdminId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
-            await _parkingLotService.UpdateParkingLotAddress(request, performerAdminId);
-            return Ok(new { message = MessageKeys.PARKING_LOT_ADDRESS_UPDATED_SUCCESSFULLY });
+                var performerAdminId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
+                await _parkingLotService.UpdateParkingLotAddress(request, performerAdminId);
+                return Ok(new { message = MessageKeys.PARKING_LOT_ADDRESS_UPDATED_SUCCESSFULLY });
+            }
+            catch (InvalidInformationException ex)
+            {
+                _logger.LogWarning(ex, "Invalid information provided while updating parking lot address");
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while updating parking lot address");
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    new { message = MessageKeys.UNEXPECTED_ERROR });
+            }
         }
 
         /// <summary>
@@ -79,12 +130,29 @@ namespace SAPLSServer.Controllers
         [Authorize(Policy = Accessibility.PARKING_LOT_OWNER_ACCESS)]
         public async Task<IActionResult> UpdateSubscription([FromBody] UpdateParkingLotSubscriptionRequest request)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    _logger.LogWarning("Invalid model state in UpdateSubscription: {@ModelState}", ModelState);
+                    return BadRequest(ModelState);
+                }
 
-            var performerId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
-            var transactionId = await _parkingLotService.UpdateParkingLotSubscription(request, performerId);
-            return Ok(new { message = MessageKeys.PARKING_LOT_BASIC_INFO_UPDATED_SUCCESSFULLY, transactionId });
+                var performerId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
+                var transactionId = await _parkingLotService.UpdateParkingLotSubscription(request, performerId);
+                return Ok(new { message = MessageKeys.PARKING_LOT_BASIC_INFO_UPDATED_SUCCESSFULLY, transactionId });
+            }
+            catch (InvalidInformationException ex)
+            {
+                _logger.LogWarning(ex, "Invalid information provided while updating parking lot subscription");
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while updating parking lot subscription");
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    new { message = MessageKeys.UNEXPECTED_ERROR });
+            }
         }
 
         /// <summary>
@@ -93,10 +161,22 @@ namespace SAPLSServer.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> GetDetails(string id)
         {
-            var result = await _parkingLotService.GetParkingLotDetails(id);
-            if (result == null)
-                return NotFound(new { message = MessageKeys.PARKING_LOT_NOT_FOUND });
-            return Ok(result);
+            try
+            {
+                var result = await _parkingLotService.GetParkingLotDetails(id);
+                if (result == null)
+                {
+                    _logger.LogInformation("Parking lot not found for Id: {Id}", id);
+                    return NotFound(new { message = MessageKeys.PARKING_LOT_NOT_FOUND });
+                }
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while getting parking lot details for Id: {Id}", id);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    new { message = MessageKeys.UNEXPECTED_ERROR });
+            }
         }
 
         /// <summary>
@@ -105,8 +185,17 @@ namespace SAPLSServer.Controllers
         [HttpGet("page")]
         public async Task<IActionResult> GetPage([FromQuery] PageRequest pageRequest, [FromQuery] GetParkingLotListRequest request)
         {
-            var result = await _parkingLotService.GetParkingLotsPage(pageRequest, request);
-            return Ok(result);
+            try
+            {
+                var result = await _parkingLotService.GetParkingLotsPage(pageRequest, request);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while getting paginated parking lots");
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    new { message = MessageKeys.UNEXPECTED_ERROR });
+            }
         }
 
         /// <summary>
@@ -115,8 +204,17 @@ namespace SAPLSServer.Controllers
         [HttpGet]
         public async Task<IActionResult> GetList([FromQuery] GetParkingLotListRequest request)
         {
-            var result = await _parkingLotService.GetParkingLots(request);
-            return Ok(result);
+            try
+            {
+                var result = await _parkingLotService.GetParkingLots(request);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while getting parking lot list");
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    new { message = MessageKeys.UNEXPECTED_ERROR });
+            }
         }
 
         /// <summary>
@@ -126,21 +224,50 @@ namespace SAPLSServer.Controllers
         [Authorize(Policy = Accessibility.HEAD_ADMIN_ACCESS)]
         public async Task<IActionResult> Delete([FromBody] DeleteRequest request)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    _logger.LogWarning("Invalid model state in Delete: {@ModelState}", ModelState);
+                    return BadRequest(ModelState);
+                }
 
-            await _parkingLotService.DeleteParkingLot(request);
-            return Ok(new { message = MessageKeys.PARKING_LOT_DELETED_SUCCESSFULLY });
+                await _parkingLotService.DeleteParkingLot(request);
+                return Ok(new { message = MessageKeys.PARKING_LOT_DELETED_SUCCESSFULLY });
+            }
+            catch (InvalidInformationException ex)
+            {
+                _logger.LogWarning(ex, "Invalid information provided while deleting parking lot");
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while deleting parking lot");
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    new { message = MessageKeys.UNEXPECTED_ERROR });
+            }
         }
         [HttpPost("complete-payment")]
         [AllowAnonymous]
         public async Task<IActionResult> CompletePayment([FromBody] PaymentWebHookRequest paymentWebHookRequest)
         {
-            // Log the incoming webhook request
-            _logger.LogInformation("Received PaymentWebHookRequest: {Request}", JsonSerializer.Serialize(paymentWebHookRequest));
-            await _parkingLotService.ConfirmTransaction(paymentWebHookRequest);
-            return Ok();
+            try
+            {
+                _logger.LogInformation("Received PaymentWebHookRequest: {Request}", JsonSerializer.Serialize(paymentWebHookRequest));
+                await _parkingLotService.ConfirmTransaction(paymentWebHookRequest);
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while processing payment webhook");
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    new { message = MessageKeys.UNEXPECTED_ERROR });
+            }
         }
+
+        /// <summary>
+        /// Gets the subscription details by parking lot ID.
+        /// </summary>
         [HttpGet("subscription/{parkingLotId}")]
         [Authorize(Policy = Accessibility.ADMIN_PARKINGLOT_OWNER_ACCESS)]
         public async Task<IActionResult> GetSubscriptionByParkingLotId(string parkingLotId)
@@ -149,19 +276,28 @@ namespace SAPLSServer.Controllers
             {
                 var result = await _parkingLotService.GetSubscriptionByParkingLotId(parkingLotId);
                 if (result == null)
+                {
+                    _logger.LogInformation("Subscription not found for ParkingLotId: {ParkingLotId}", parkingLotId);
                     return NotFound(new { message = MessageKeys.SUBSCRIPTION_NOT_FOUND });
+                }
                 return Ok(result);
             }
-            catch(InvalidInformationException ex)
+            catch (InvalidInformationException ex)
             {
+                _logger.LogWarning(ex, "Invalid information provided while getting subscription for ParkingLotId: {ParkingLotId}", parkingLotId);
                 return BadRequest(new { message = ex.Message });
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred while getting subscription for ParkingLotId: {ParkingLotId}", parkingLotId);
                 return StatusCode(StatusCodes.Status500InternalServerError,
                     new { message = MessageKeys.UNEXPECTED_ERROR });
             }
         }
+
+        /// <summary>
+        /// Gets the parking lot details for the owner by parking lot ID.
+        /// </summary>
         [HttpGet("for-owner/{parkingLotId}")]
         [Authorize(Policy = Accessibility.ADMIN_PARKINGLOT_OWNER_ACCESS)]
         public async Task<IActionResult> GetDetailsForOwner(string parkingLotId)
@@ -170,19 +306,28 @@ namespace SAPLSServer.Controllers
             {
                 var result = await _parkingLotService.GetParkingLotDetailsForOwner(parkingLotId);
                 if (result == null)
+                {
+                    _logger.LogInformation("Parking lot not found for owner. ParkingLotId: {ParkingLotId}", parkingLotId);
                     return NotFound(new { message = MessageKeys.PARKING_LOT_NOT_FOUND });
+                }
                 return Ok(result);
             }
             catch (InvalidInformationException ex)
             {
+                _logger.LogWarning(ex, "Invalid information provided while getting parking lot details for owner. ParkingLotId: {ParkingLotId}", parkingLotId);
                 return BadRequest(new { message = ex.Message });
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred while getting parking lot details for owner. ParkingLotId: {ParkingLotId}", parkingLotId);
                 return StatusCode(StatusCodes.Status500InternalServerError,
                     new { message = MessageKeys.UNEXPECTED_ERROR });
             }
         }
+
+        /// <summary>
+        /// Gets the latest payment details by parking lot ID.
+        /// </summary>
         [HttpGet("latest-payment/{parkingLotId}")]
         [Authorize(Policy = Accessibility.ADMIN_PARKINGLOT_OWNER_ACCESS)]
         public async Task<IActionResult> GetLatestPaymentByParkingLotId(string parkingLotId)
@@ -191,15 +336,20 @@ namespace SAPLSServer.Controllers
             {
                 var result = await _parkingLotService.GetLatestPaymentByParkingLotId(parkingLotId);
                 if (result == null)
+                {
+                    _logger.LogInformation("Latest payment not found for ParkingLotId: {ParkingLotId}", parkingLotId);
                     return NotFound(new { message = MessageKeys.PARKING_LOT_NOT_FOUND });
+                }
                 return Ok(result);
             }
             catch (InvalidInformationException ex)
             {
+                _logger.LogWarning(ex, "Invalid information provided while getting latest payment for ParkingLotId: {ParkingLotId}", parkingLotId);
                 return BadRequest(new { message = ex.Message });
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred while getting latest payment for ParkingLotId: {ParkingLotId}", parkingLotId);
                 return StatusCode(StatusCodes.Status500InternalServerError,
                     new { message = MessageKeys.UNEXPECTED_ERROR });
             }

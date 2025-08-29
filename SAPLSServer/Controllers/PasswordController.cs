@@ -24,31 +24,43 @@ namespace SAPLSServer.Controllers
             _otpService = otpService;
             _logger = logger;
         }
+
         [HttpGet("reset")]
         public async Task<IActionResult> ShowResetPage([FromQuery] string userId, [FromQuery] string otp)
         {
-            if (!await _otpService.IsOtpValid(userId, otp))
+            try
             {
-                var invalidOtpPage = Path.Combine(Directory.GetCurrentDirectory(), "Views", "InvalidOtp.html");
-                if (!System.IO.File.Exists(invalidOtpPage))
+                if (!await _otpService.IsOtpValid(userId, otp))
+                {
+                    _logger.LogWarning("Invalid OTP in ShowResetPage for userId: {UserId}", userId);
+                    var invalidOtpPage = Path.Combine(Directory.GetCurrentDirectory(), "Views", "InvalidOtp.html");
+                    if (!System.IO.File.Exists(invalidOtpPage))
+                        return NotFound();
+                    var invalidOtpPageContent = await System.IO.File.ReadAllTextAsync(invalidOtpPage);
+                    return Content(invalidOtpPageContent, "text/html");
+                }
+                var resetPasswordPage = Path.Combine(Directory.GetCurrentDirectory(), "Views", "PasswordResetForm.html");
+                if (!System.IO.File.Exists(resetPasswordPage))
                     return NotFound();
-                var invalidOtpPageContent = await System.IO.File.ReadAllTextAsync(invalidOtpPage);
-                return Content(invalidOtpPageContent, "text/html");
+                var resetPasswordPageContent = await System.IO.File.ReadAllTextAsync(resetPasswordPage);
+                resetPasswordPageContent = resetPasswordPageContent.Replace("{userId}", userId)
+                                            .Replace("{otp}", otp);
+                return Content(resetPasswordPageContent, "text/html");
             }
-            var resetPasswordPage = Path.Combine(Directory.GetCurrentDirectory(), "Views", "PasswordResetForm.html");
-            if (!System.IO.File.Exists(resetPasswordPage))
-                return NotFound();
-            var resetPasswordPageContent = await System.IO.File.ReadAllTextAsync(resetPasswordPage);
-            resetPasswordPageContent = resetPasswordPageContent.Replace("{userId}", userId)
-                                    .Replace("{otp}", otp);
-            return Content(resetPasswordPageContent, "text/html");
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while showing reset page for userId: {UserId}", userId);
+                return StatusCode(StatusCodes.Status500InternalServerError, MessageKeys.UNEXPECTED_ERROR);
+            }
         }
+
         [HttpGet("request/reset")]
         public async Task<IActionResult> RequestResetPassword()
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (userId == null)
             {
+                _logger.LogWarning("Unauthorized access attempt in RequestResetPassword (no userId in token)");
                 return Unauthorized(MessageKeys.UNAUTHORIZED_ACCESS);
             }
             try
@@ -58,6 +70,7 @@ namespace SAPLSServer.Controllers
             }
             catch (InvalidInformationException ex)
             {
+                _logger.LogWarning(ex, "Invalid information provided while requesting password reset for user {UserId}", userId);
                 return BadRequest(ex.Message);
             }
             catch (Exception ex)
@@ -66,17 +79,40 @@ namespace SAPLSServer.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
             }
         }
+
+        [HttpGet("request/reset/{email}")]
+        public async Task<IActionResult> RequestResetPassword(string email)
+        {
+            try
+            {
+                await _passwordService.RequestResetPassword(email);
+                return Ok(MessageKeys.RESET_PASSWORD_REQUEST_SENT_SUCCESSFULLY);
+            }
+            catch (InvalidInformationException ex)
+            {
+                _logger.LogWarning(ex, "Invalid information provided while requesting password reset for email {Email}", email);
+                return BadRequest(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while requesting password reset for email {Email}", email);
+                return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+            }
+        }
+
         [HttpPut]
         [Authorize]
         public async Task<IActionResult> UpdatePassword([FromBody] UpdateUserPasswordRequest request)
         {
             if (!ModelState.IsValid)
             {
+                _logger.LogWarning("Invalid model state in UpdatePassword: {@ModelState}", ModelState);
                 return BadRequest(ModelState);
             }
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if(userId == null)
+            if (userId == null)
             {
+                _logger.LogWarning("Unauthorized access attempt in UpdatePassword (no userId in token)");
                 return Unauthorized(MessageKeys.UNAUTHORIZED_ACCESS);
             }
             try
@@ -86,22 +122,27 @@ namespace SAPLSServer.Controllers
             }
             catch (InvalidInformationException ex)
             {
+                _logger.LogWarning(ex, "Invalid information provided while updating password for user {UserId}", userId);
                 return BadRequest(ex.Message);
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred while updating password for user {UserId}", userId);
                 return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
             }
         }
+
         [HttpPost("reset")]
         public async Task<IActionResult> ResetPassword([FromBody] ResetUserPasswordRequest request)
         {
             if (!ModelState.IsValid)
             {
+                _logger.LogWarning("Invalid model state in ResetPassword: {@ModelState}", ModelState);
                 return await GetResetPasswordUnsuccessfully();
             }
             if (string.IsNullOrWhiteSpace(request.UserId) || string.IsNullOrWhiteSpace(request.Otp))
             {
+                _logger.LogWarning("Missing UserId or Otp in ResetPassword request");
                 return await GetResetPasswordUnsuccessfully();
             }
             try
@@ -109,8 +150,9 @@ namespace SAPLSServer.Controllers
                 await _passwordService.ResetPassword(request);
                 return await GetResetPasswordSuccessfully();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred while resetting password for user {UserId}", request.UserId);
                 return await GetResetPasswordUnsuccessfully();
             }
         }

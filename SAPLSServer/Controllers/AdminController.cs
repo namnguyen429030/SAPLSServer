@@ -26,8 +26,6 @@ namespace SAPLSServer.Controllers
         /// <summary>
         /// Registers a new admin profile (Only HeadAdmin can create new admins)
         /// </summary>
-        /// <param name="request">Admin profile creation request</param>
-        /// <returns>Success response</returns>
         [HttpPost("register")]
         [Authorize(Policy = Accessibility.HEAD_ADMIN_ACCESS)]
         public async Task<IActionResult> RegisterAdmin([FromForm] CreateAdminProfileRequest request)
@@ -36,12 +34,14 @@ namespace SAPLSServer.Controllers
             {
                 if (!ModelState.IsValid)
                 {
+                    _logger.LogWarning("Invalid model state in RegisterAdmin: {@ModelState}", ModelState);
                     return BadRequest(ModelState);
                 }
 
                 var performedByAdminUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (performedByAdminUserId == null)
                 {
+                    _logger.LogWarning("Unauthorized access attempt in RegisterAdmin");
                     return Unauthorized(new { message = MessageKeys.UNAUTHORIZED_ACCESS });
                 }
                 await _adminService.Create(request, performedByAdminUserId);
@@ -63,8 +63,6 @@ namespace SAPLSServer.Controllers
         /// <summary>
         /// Updates an existing admin profile
         /// </summary>
-        /// <param name="request">Admin profile update request</param>
-        /// <returns>Success response</returns>
         [HttpPut]
         [Authorize(Policy = Accessibility.HEAD_ADMIN_ACCESS)]
         public async Task<IActionResult> UpdateAdmin([FromBody] UpdateAdminProfileRequest request)
@@ -73,12 +71,14 @@ namespace SAPLSServer.Controllers
             {
                 if (!ModelState.IsValid)
                 {
+                    _logger.LogWarning("Invalid model state in UpdateAdmin: {@ModelState}", ModelState);
                     return BadRequest(ModelState);
                 }
 
                 var performedByAdminUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (performedByAdminUserId == null)
                 {
+                    _logger.LogWarning("Unauthorized access attempt in UpdateAdmin");
                     return Unauthorized(new { message = MessageKeys.UNAUTHORIZED_ACCESS });
                 }
                 await _adminService.Update(request, performedByAdminUserId);
@@ -100,17 +100,22 @@ namespace SAPLSServer.Controllers
         /// <summary>
         /// Gets admin profile by admin ID
         /// </summary>
-        /// <param name="adminId">Admin ID</param>
-        /// <returns>Admin profile details</returns>
         [HttpGet("{adminId}")]
         [Authorize(Policy = Accessibility.ADMIN_ACCESS)]
         public async Task<ActionResult<AdminProfileDetailsDto>> GetByAdminId(string adminId)
         {
             try
             {
+                if (!ModelState.IsValid)
+                {
+                    _logger.LogWarning("Invalid model state in GetByAdminId: {@ModelState}", ModelState);
+                    return BadRequest(ModelState);
+                }
+
                 var result = await _adminService.GetByAdminIdAsync(adminId);
                 if (result == null)
                 {
+                    _logger.LogInformation("Admin profile not found for AdminId: {AdminId}", adminId);
                     return NotFound(new { message = MessageKeys.ADMIN_PROFILE_NOT_FOUND });
                 }
 
@@ -132,17 +137,22 @@ namespace SAPLSServer.Controllers
         /// <summary>
         /// Gets admin profile by user ID
         /// </summary>
-        /// <param name="userId">User ID</param>
-        /// <returns>Admin profile details</returns>
         [HttpGet("user/{userId}")]
         [Authorize(Policy = Accessibility.ADMIN_ACCESS)]
         public async Task<ActionResult<AdminProfileDetailsDto>> GetByUserId(string userId)
         {
             try
             {
+                if (!ModelState.IsValid)
+                {
+                    _logger.LogWarning("Invalid model state in GetByUserId: {@ModelState}", ModelState);
+                    return BadRequest(ModelState);
+                }
+
                 var result = await _adminService.GetByUserIdAsync(userId);
                 if (result == null)
                 {
+                    _logger.LogInformation("Admin profile not found for UserId: {UserId}", userId);
                     return NotFound(new { message = MessageKeys.ADMIN_PROFILE_NOT_FOUND });
                 }
 
@@ -164,15 +174,18 @@ namespace SAPLSServer.Controllers
         /// <summary>
         /// Gets paginated list of admin profiles
         /// </summary>
-        /// <param name="pageRequest">Pagination parameters</param>
-        /// <param name="request">Filter criteria</param>
-        /// <returns>Paginated admin profiles</returns>
         [HttpGet("page")]
         [Authorize(Policy = Accessibility.ADMIN_ACCESS)]
         public async Task<ActionResult<PageResult<AdminProfileSummaryDto>>> GetAdminProfilesPage([FromQuery] PageRequest pageRequest, [FromQuery] GetAdminListRequest request)
         {
             try
             {
+                if (!ModelState.IsValid)
+                {
+                    _logger.LogWarning("Invalid model state in GetAdminProfilesPage: {@ModelState}", ModelState);
+                    return BadRequest(ModelState);
+                }
+
                 var result = await _adminService.GetAdminProfilesPage(pageRequest, request);
                 return Ok(result);
             }
@@ -187,14 +200,18 @@ namespace SAPLSServer.Controllers
         /// <summary>
         /// Gets list of admin profiles
         /// </summary>
-        /// <param name="request">Filter criteria</param>
-        /// <returns>List of admin profiles</returns>
         [HttpGet]
         [Authorize(Policy = Accessibility.ADMIN_ACCESS)]
         public async Task<ActionResult<List<AdminProfileSummaryDto>>> GetAdminProfiles([FromQuery] GetAdminListRequest request)
         {
             try
             {
+                if (!ModelState.IsValid)
+                {
+                    _logger.LogWarning("Invalid model state in GetAdminProfiles: {@ModelState}", ModelState);
+                    return BadRequest(ModelState);
+                }
+
                 var result = await _adminService.GetAdminProfiles(request);
                 return Ok(result);
             }

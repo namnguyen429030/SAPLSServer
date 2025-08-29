@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SAPLSServer.Constants;
 using SAPLSServer.DTOs.Concrete.NotificationDtos;
+using SAPLSServer.Exceptions;
 using SAPLSServer.Services.Interfaces;
 
 namespace SAPLSServer.Controllers
@@ -12,10 +13,12 @@ namespace SAPLSServer.Controllers
     public class NotificationController : ControllerBase
     {
         private readonly IFirebaseNotificationService _notificationService;
+        private readonly ILogger<NotificationController> _logger;
 
-        public NotificationController(IFirebaseNotificationService notificationService)
+        public NotificationController(IFirebaseNotificationService notificationService, ILogger<NotificationController> logger)
         {
             _notificationService = notificationService;
+            _logger = logger;
         }
 
         /// <summary>
@@ -32,19 +35,27 @@ namespace SAPLSServer.Controllers
             {
                 if (!ModelState.IsValid)
                 {
+                    _logger.LogWarning("Invalid model state in SendToToken: {@ModelState}", ModelState);
                     return BadRequest(ModelState);
                 }
 
                 if (!_notificationService.ValidateDeviceToken(deviceToken))
                 {
+                    _logger.LogWarning("Invalid device token format: {DeviceToken}", deviceToken);
                     return BadRequest(new { message = "Invalid device token format" });
                 }
 
                 var result = await _notificationService.SendNotificationToTokenAsync(deviceToken, notification);
                 return Ok(result);
             }
-            catch (Exception)
+            catch (InvalidInformationException ex)
             {
+                _logger.LogWarning(ex, "Invalid information in SendToToken: {Message}", ex.Message);
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unexpected error in SendToToken");
                 return StatusCode(StatusCodes.Status500InternalServerError,
                     new { message = MessageKeys.UNEXPECTED_ERROR });
             }
@@ -63,14 +74,21 @@ namespace SAPLSServer.Controllers
             {
                 if (!ModelState.IsValid)
                 {
+                    _logger.LogWarning("Invalid model state in SendBulkNotification: {@ModelState}", ModelState);
                     return BadRequest(ModelState);
                 }
 
                 var result = await _notificationService.SendBulkNotificationToTokensAsync(request.DeviceTokens, request.Notification);
                 return Ok(result);
             }
-            catch (Exception)
+            catch (InvalidInformationException ex)
             {
+                _logger.LogWarning(ex, "Invalid information in SendBulkNotification: {Message}", ex.Message);
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unexpected error in SendBulkNotification");
                 return StatusCode(StatusCodes.Status500InternalServerError,
                     new { message = MessageKeys.UNEXPECTED_ERROR });
             }
@@ -90,14 +108,21 @@ namespace SAPLSServer.Controllers
             {
                 if (!ModelState.IsValid)
                 {
+                    _logger.LogWarning("Invalid model state in SendTopicNotification: {@ModelState}", ModelState);
                     return BadRequest(ModelState);
                 }
 
                 var result = await _notificationService.SendNotificationToTopicAsync(topic, notification);
                 return Ok(result);
             }
-            catch (Exception)
+            catch (InvalidInformationException ex)
             {
+                _logger.LogWarning(ex, "Invalid information in SendTopicNotification: {Message}", ex.Message);
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unexpected error in SendTopicNotification");
                 return StatusCode(StatusCodes.Status500InternalServerError,
                     new { message = MessageKeys.UNEXPECTED_ERROR });
             }

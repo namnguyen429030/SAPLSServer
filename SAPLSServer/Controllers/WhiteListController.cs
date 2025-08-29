@@ -8,6 +8,7 @@ using SAPLSServer.Services.Interfaces;
 using System;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 
 namespace SAPLSServer.Controllers
 {
@@ -17,9 +18,12 @@ namespace SAPLSServer.Controllers
     public class WhiteListController : ControllerBase
     {
         private readonly IWhiteListService _whiteListService;
-        public WhiteListController(IWhiteListService whiteListService, IParkingLotService parkingLotService)
+        private readonly ILogger<WhiteListController> _logger;
+
+        public WhiteListController(IWhiteListService whiteListService, IParkingLotService parkingLotService, ILogger<WhiteListController> logger)
         {
             _whiteListService = whiteListService;
+            _logger = logger;
         }
 
         /// <summary>
@@ -28,8 +32,16 @@ namespace SAPLSServer.Controllers
         [HttpGet("check")]
         public async Task<IActionResult> IsClientWhitelisted([FromQuery] string parkingLotId, [FromQuery] string clientId)
         {
-            var result = await _whiteListService.IsClientWhitelistedAsync(parkingLotId, clientId);
-            return Ok(new { isWhitelisted = result });
+            try
+            {
+                var result = await _whiteListService.IsClientWhitelistedAsync(parkingLotId, clientId);
+                return Ok(new { isWhitelisted = result });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error checking whitelist for ParkingLotId: {ParkingLotId}, ClientId: {ClientId}", parkingLotId, clientId);
+                return StatusCode(500, new { message = MessageKeys.UNEXPECTED_ERROR });
+            }
         }
 
         /// <summary>
@@ -40,7 +52,10 @@ namespace SAPLSServer.Controllers
         public async Task<IActionResult> AddToWhiteList([FromBody] AddAttendantToWhiteListRequest request)
         {
             if (!ModelState.IsValid)
+            {
+                _logger.LogWarning("Invalid model state in AddToWhiteList: {@ModelState}", ModelState);
                 return BadRequest(ModelState);
+            }
 
             try
             {
@@ -50,7 +65,13 @@ namespace SAPLSServer.Controllers
             }
             catch (InvalidInformationException ex)
             {
+                _logger.LogWarning(ex, "Invalid information in AddToWhiteList for ParkingLotId: {ParkingLotId}, ClientId: {ClientId}", request.ParkingLotId, request.ClientId);
                 return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error adding to whitelist for ParkingLotId: {ParkingLotId}, ClientId: {ClientId}", request.ParkingLotId, request.ClientId);
+                return StatusCode(500, new { message = MessageKeys.UNEXPECTED_ERROR });
             }
         }
 
@@ -62,7 +83,10 @@ namespace SAPLSServer.Controllers
         public async Task<IActionResult> UpdateExpireAt([FromBody] UpdateWhiteListAttendantExpireDateRequest request)
         {
             if (!ModelState.IsValid)
+            {
+                _logger.LogWarning("Invalid model state in UpdateExpireAt: {@ModelState}", ModelState);
                 return BadRequest(ModelState);
+            }
 
             try
             {
@@ -72,7 +96,13 @@ namespace SAPLSServer.Controllers
             }
             catch (InvalidInformationException ex)
             {
+                _logger.LogWarning(ex, "Invalid information in UpdateExpireAt for ParkingLotId: {ParkingLotId}, ClientId: {ClientId}", request.ParkingLotId, request.ClientId);
                 return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating whitelist expire date for ParkingLotId: {ParkingLotId}, ClientId: {ClientId}", request.ParkingLotId, request.ClientId);
+                return StatusCode(500, new { message = MessageKeys.UNEXPECTED_ERROR });
             }
         }
 
@@ -84,7 +114,10 @@ namespace SAPLSServer.Controllers
         public async Task<IActionResult> RemoveFromWhiteList([FromBody] RemoveAttendantFromWhiteListRequest request)
         {
             if (!ModelState.IsValid)
+            {
+                _logger.LogWarning("Invalid model state in RemoveFromWhiteList: {@ModelState}", ModelState);
                 return BadRequest(ModelState);
+            }
 
             try
             {
@@ -94,7 +127,13 @@ namespace SAPLSServer.Controllers
             }
             catch (InvalidInformationException ex)
             {
+                _logger.LogWarning(ex, "Invalid information in RemoveFromWhiteList for ParkingLotId: {ParkingLotId}, ClientId: {ClientId}", request.ParkingLotId, request.ClientId);
                 return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error removing from whitelist for ParkingLotId: {ParkingLotId}, ClientId: {ClientId}", request.ParkingLotId, request.ClientId);
+                return StatusCode(500, new { message = MessageKeys.UNEXPECTED_ERROR });
             }
         }
 
@@ -105,8 +144,16 @@ namespace SAPLSServer.Controllers
         [Authorize(Policy = Accessibility.PARKING_LOT_OWNER_ACCESS)]
         public async Task<IActionResult> GetWhiteList([FromQuery] GetWhiteListAttendantListRequest request)
         {
-            var result = await _whiteListService.GetWhiteListAsync(request);
-            return Ok(result);
+            try
+            {
+                var result = await _whiteListService.GetWhiteListAsync(request);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving whitelist for ParkingLotId: {ParkingLotId}", request.ParkingLotId);
+                return StatusCode(500, new { message = MessageKeys.UNEXPECTED_ERROR });
+            }
         }
 
         /// <summary>
@@ -115,8 +162,16 @@ namespace SAPLSServer.Controllers
         [HttpGet("page")]
         public async Task<IActionResult> GetWhiteListPage([FromQuery] PageRequest pageRequest, [FromQuery] GetWhiteListAttendantListRequest request)
         {
-            var result = await _whiteListService.GetWhiteListPageAsync(pageRequest, request);
-            return Ok(result);
+            try
+            {
+                var result = await _whiteListService.GetWhiteListPageAsync(pageRequest, request);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving paginated whitelist for ParkingLotId: {ParkingLotId}", request.ParkingLotId);
+                return StatusCode(500, new { message = MessageKeys.UNEXPECTED_ERROR });
+            }
         }
     }
 }

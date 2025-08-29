@@ -29,8 +29,6 @@ namespace SAPLSServer.Controllers
         /// <summary>
         /// Authenticates a user with email and password
         /// </summary>
-        /// <param name="request">User authentication request containing email and password</param>
-        /// <returns>Authentication response with JWT token if successful</returns>
         [HttpPost("login")]
         public async Task<ActionResult<AuthenticateUserResponse>> AuthenticateUser([FromBody] AuthenticateUserRequest request)
         {
@@ -38,13 +36,15 @@ namespace SAPLSServer.Controllers
             {
                 if (!ModelState.IsValid)
                 {
+                    _logger.LogWarning("Invalid model state in AuthenticateUser: {@ModelState}", ModelState);
                     return BadRequest(ModelState);
                 }
 
                 var result = await _authService.AuthenticateUser(request);
-                
+
                 if (result == null)
                 {
+                    _logger.LogInformation("Authentication failed for user: {Email}", request.Email);
                     return Unauthorized(new { message = MessageKeys.INVALID_CREDENTIALS });
                 }
 
@@ -65,8 +65,6 @@ namespace SAPLSServer.Controllers
         /// <summary>
         /// Authenticates a client profile with email/citizen ID and password
         /// </summary>
-        /// <param name="request">Client profile authentication request</param>
-        /// <returns>Authentication response with JWT token if successful</returns>
         [HttpPost("client/login")]
         public async Task<ActionResult<AuthenticateUserResponse>> AuthenticateClientProfile([FromBody] AuthenticateClientProfileRequest request)
         {
@@ -74,13 +72,15 @@ namespace SAPLSServer.Controllers
             {
                 if (!ModelState.IsValid)
                 {
+                    _logger.LogWarning("Invalid model state in AuthenticateClientProfile: {@ModelState}", ModelState);
                     return BadRequest(ModelState);
                 }
 
                 var result = await _authService.AuthenticateClientProfile(request);
-                
+
                 if (result == null)
                 {
+                    _logger.LogInformation("Authentication failed for client profile: {EmailOrCitizenIdNo}", request.EmailOrCitizenIdNo);
                     return Unauthorized(new { message = MessageKeys.INVALID_CREDENTIALS });
                 }
 
@@ -106,69 +106,65 @@ namespace SAPLSServer.Controllers
         /// <summary>
         /// Initiates Google OAuth authentication flow - redirects user to Google sign-in
         /// </summary>
-        /// <param name="returnUrl">URL to redirect to after successful authentication</param>
-        /// <returns>Redirect to Google OAuth provider</returns>
         [HttpGet("google-login")]
         public IActionResult GoogleLogin(string? returnUrl = null)
         {
+            // No exception expected here, so no logger needed.
             var redirectUrl = Url.Action(nameof(GoogleCallback), "Auth", new { returnUrl });
-            var properties = new AuthenticationProperties 
-            { 
+            var properties = new AuthenticationProperties
+            {
                 RedirectUri = redirectUrl,
-                Items = 
+                Items =
                 {
                     { "returnUrl", returnUrl ?? "/" }
                 }
             };
-            
+
             return Challenge(properties, GoogleDefaults.AuthenticationScheme);
         }
 
         /// <summary>
         /// Handles Google OAuth callback and processes authentication for existing users only
         /// </summary>
-        /// <param name="returnUrl">URL to redirect to after processing</param>
-        /// <returns>Redirect with authentication result</returns>
         [HttpGet("google-callback")]
         public async Task<IActionResult> GoogleCallback(string? returnUrl = null)
         {
             try
             {
-                // Authenticate with Google
                 var authenticateResult = await HttpContext.AuthenticateAsync(GoogleDefaults.AuthenticationScheme);
-                
+
                 if (!authenticateResult.Succeeded)
                 {
+                    _logger.LogWarning("Google authentication failed in callback.");
                     return RedirectToFrontend($"/login?error={MessageKeys.GOOGLE_AUTH_FAILED}");
                 }
 
-                // Extract user information from Google claims
                 var claims = authenticateResult.Principal?.Claims;
                 var googleId = claims?.FirstOrDefault(c => c.Type == "google_id")?.Value;
                 var email = claims?.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value;
 
                 if (string.IsNullOrWhiteSpace(googleId) || string.IsNullOrWhiteSpace(email))
                 {
+                    _logger.LogWarning("Missing user info in Google callback. GoogleId: {GoogleId}, Email: {Email}", googleId, email);
                     return RedirectToFrontend($"/login?error={MessageKeys.MISSING_USER_INFO}");
                 }
 
-                // CheckIn a Google auth request with the ID token approach
                 var googleAuthRequest = new GoogleAuthRequest
                 {
-                    AccessToken = googleId // This will be validated in AuthService
+                    AccessToken = googleId
                 };
 
                 var result = await _authService.AuthenticateWithGoogle(googleAuthRequest);
-                
+
                 if (result == null)
                 {
+                    _logger.LogInformation("Google user not found for GoogleId: {GoogleId}, Email: {Email}", googleId, email);
                     return RedirectToFrontend($"/login?error={MessageKeys.USER_NOT_FOUND}");
                 }
 
-                // Redirect with token for SPA
                 var frontendUrl = GetFrontendUrl();
                 var redirectWithToken = $"{frontendUrl}/auth/callback?token={result.AccessToken}&refreshToken={result.RefreshToken}&expiresAt={result.ExpiresAt:O}";
-                
+
                 return Redirect(redirectWithToken);
             }
             catch (Exception ex)
@@ -181,8 +177,6 @@ namespace SAPLSServer.Controllers
         /// <summary>
         /// For mobile/desktop apps - authenticate with Google ID token for existing users only
         /// </summary>
-        /// <param name="request">Google authentication request with ID token</param>
-        /// <returns>Authentication response with JWT token if successful</returns>
         [HttpPost("google")]
         public async Task<ActionResult<AuthenticateUserResponse>> AuthenticateWithGoogleToken([FromBody] GoogleAuthRequest request)
         {
@@ -190,18 +184,21 @@ namespace SAPLSServer.Controllers
             {
                 if (!ModelState.IsValid)
                 {
+                    _logger.LogWarning("Invalid model state in AuthenticateWithGoogleToken: {@ModelState}", ModelState);
                     return BadRequest(ModelState);
                 }
 
                 if (string.IsNullOrWhiteSpace(request?.AccessToken))
                 {
+                    _logger.LogWarning("Access token is required for Google authentication.");
                     return BadRequest(new { message = MessageKeys.ACCESS_TOKEN_REQUIRED });
                 }
 
                 var result = await _authService.AuthenticateWithGoogle(request);
-                
+
                 if (result == null)
                 {
+                    _logger.LogInformation("Invalid Google token or user not found for Google authentication.");
                     return BadRequest(new { message = MessageKeys.INVALID_GOOGLE_TOKEN_OR_USER_NOT_FOUND });
                 }
 
@@ -222,19 +219,14 @@ namespace SAPLSServer.Controllers
         /// <summary>
         /// Sign out from Google OAuth specifically
         /// </summary>
-        /// <returns>Success response</returns>
         [HttpPost("google-logout")]
         [Authorize]
         public async Task<IActionResult> GoogleLogout()
         {
             try
             {
-                // Sign out from Google authentication
                 await HttpContext.SignOutAsync(GoogleDefaults.AuthenticationScheme);
-                
-                // Clear auth cookies if using them
                 ClearAuthCookies();
-                
                 return Ok(new { message = MessageKeys.LOGGED_OUT_FROM_GOOGLE_SUCCESSFULLY });
             }
             catch (Exception ex)
@@ -247,8 +239,6 @@ namespace SAPLSServer.Controllers
         /// <summary>
         /// Refreshes the access token using a valid refresh token
         /// </summary>
-        /// <param name="request">Refresh token request containing the refresh token</param>
-        /// <returns>New access token and refresh token if successful</returns>
         [HttpPost("refresh-token")]
         public async Task<ActionResult<AuthenticateUserResponse>> RefreshToken([FromBody] RefreshTokenRequest request)
         {
@@ -256,14 +246,16 @@ namespace SAPLSServer.Controllers
             {
                 if (!ModelState.IsValid)
                 {
+                    _logger.LogWarning("Invalid model state in RefreshToken: {@ModelState}", ModelState);
                     return BadRequest(ModelState);
                 }
                 var currentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
 
                 var result = await _authService.RefreshToken(currentUserId, request);
-                
+
                 if (result == null)
                 {
+                    _logger.LogInformation("Invalid refresh token for user: {UserId}", currentUserId);
                     return Unauthorized(new { message = MessageKeys.INVALID_REFRESH_TOKEN });
                 }
 
@@ -288,8 +280,8 @@ namespace SAPLSServer.Controllers
             var isDevelopment = HttpContext.RequestServices
                 .GetRequiredService<IWebHostEnvironment>()
                 .IsDevelopment();
-                
-            return isDevelopment 
+
+            return isDevelopment
                 ? _configuration["Urls:Frontend:Development"] ?? "http://localhost:3000"
                 : _configuration["Urls:Frontend:Production"] ?? "https://yourdomain.com";
         }
