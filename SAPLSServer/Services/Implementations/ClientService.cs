@@ -33,23 +33,31 @@ namespace SAPLSServer.Services.Implementations
         public async Task Create(CreateClientProfileRequest request)
         {
             string userId = await _userService.Create(request, UserRole.Client);
-            var clientProfile = new ClientProfile
+            try
             {
-                UserId = userId,
-                CitizenId = string.Empty,
-                DateOfBirth = DateOnly.FromDateTime(DateTime.UtcNow),
-                Sex = true,
-                Nationality = string.Empty,
-                PlaceOfOrigin = string.Empty,
-                PlaceOfResidence = string.Empty,
-                ShareCode = _vehicleShareCodeService.GenerateShareCode(VehicleShareCodeService.VEHICLE_SHARE_CODE_LENGTH),
-            };
-            while (await _clientProfileRepository.ExistsAsync(cp => cp.ShareCode == clientProfile.ShareCode))
-            {
-                clientProfile.ShareCode = _vehicleShareCodeService.GenerateShareCode(VehicleShareCodeService.VEHICLE_SHARE_CODE_LENGTH);
+                var clientProfile = new ClientProfile
+                {
+                    UserId = userId,
+                    CitizenId = string.Empty,
+                    DateOfBirth = DateOnly.FromDateTime(DateTime.UtcNow),
+                    Sex = true,
+                    Nationality = string.Empty,
+                    PlaceOfOrigin = string.Empty,
+                    PlaceOfResidence = string.Empty,
+                    ShareCode = _vehicleShareCodeService.GenerateShareCode(VehicleShareCodeService.VEHICLE_SHARE_CODE_LENGTH),
+                };
+                while (await _clientProfileRepository.ExistsAsync(cp => cp.ShareCode == clientProfile.ShareCode))
+                {
+                    clientProfile.ShareCode = _vehicleShareCodeService.GenerateShareCode(VehicleShareCodeService.VEHICLE_SHARE_CODE_LENGTH);
+                }
+                await _clientProfileRepository.AddAsync(clientProfile);
+                await _clientProfileRepository.SaveChangesAsync();
             }
-            await _clientProfileRepository.AddAsync(clientProfile);
-            await _clientProfileRepository.SaveChangesAsync();
+            catch
+            {
+                await _userService.Delete(userId);
+                throw;
+            }
         }
 
         public async Task Update(UpdateClientProfileRequest request, string updatePerformerId)

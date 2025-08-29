@@ -33,15 +33,22 @@ namespace SAPLSServer.Services.Implementations
 
             request.Password = _passwordService.RandomizePassword();
             var userId = await _userService.Create(request, UserRole.Staff);
-
-            var staffProfile = new StaffProfile
+            try
             {
-                UserId = userId,
-                StaffId = request.StaffId,
-                ParkingLotId = request.ParkingLotId
-            };
-            await _staffProfileRepository.AddAsync(staffProfile);
-            await _staffProfileRepository.SaveChangesAsync();
+                var staffProfile = new StaffProfile
+                {
+                    UserId = userId,
+                    StaffId = request.StaffId,
+                    ParkingLotId = request.ParkingLotId
+                };
+                await _staffProfileRepository.AddAsync(staffProfile);
+                await _staffProfileRepository.SaveChangesAsync();
+            }
+            catch (Exception)
+            {
+                await _userService.Delete(userId); // Rollback user creation if staff profile creation fails
+                throw;
+            }
         }
 
         public async Task Update(UpdateStaffProfileRequest request)

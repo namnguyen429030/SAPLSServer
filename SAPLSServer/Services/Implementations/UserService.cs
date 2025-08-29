@@ -350,5 +350,14 @@ namespace SAPLSServer.Services.Implementations
             await _userRepository.SaveChangesAsync();
             await SendConfirmationEmail(user);
         }
+
+        public async Task Delete(string userId)
+        {
+           var user = await _userRepository.Find(userId);
+              if (user == null)
+                 throw new InvalidInformationException(MessageKeys.USER_NOT_FOUND);
+            _userRepository.Remove(user);
+            await _userRepository.SaveChangesAsync();
+        }
     }
 }

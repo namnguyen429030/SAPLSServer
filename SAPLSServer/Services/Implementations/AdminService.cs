@@ -26,24 +26,33 @@ namespace SAPLSServer.Services.Implementations
 
         public async Task Create(CreateAdminProfileRequest request, string performedByAdminUserId)
         {
+
             // Check for unique AdminId
             bool adminIdExists = await _adminProfileRepository.ExistsAsync(a => a.AdminId == request.AdminId);
             if (adminIdExists)
                 throw new InvalidInformationException(MessageKeys.ADMIN_ID_ALREADY_EXISTS);
             request.Password = _passwordService.RandomizePassword();
             var userId = await _userService.Create(request, UserRole.Admin);
-            if(userId == null)
-                throw new InvalidOperationException(MessageKeys.USER_CREATION_FAILED);
-            var adminProfile = new AdminProfile
+            try
             {
-                UserId = userId,
-                AdminId = request.AdminId,
-                Role = AdminRole.Admin.ToString(),
-                CreatedBy = performedByAdminUserId,
-                UpdatedBy = performedByAdminUserId,
-            };
-            await _adminProfileRepository.AddAsync(adminProfile);
-            await _adminProfileRepository.SaveChangesAsync();
+                if (userId == null)
+                    throw new InvalidOperationException(MessageKeys.USER_CREATION_FAILED);
+                var adminProfile = new AdminProfile
+                {
+                    UserId = userId,
+                    AdminId = request.AdminId,
+                    Role = AdminRole.Admin.ToString(),
+                    CreatedBy = performedByAdminUserId,
+                    UpdatedBy = performedByAdminUserId,
+                };
+                await _adminProfileRepository.AddAsync(adminProfile);
+                await _adminProfileRepository.SaveChangesAsync();
+            }
+            catch (Exception)
+            {
+                await _userService.Delete(userId);
+                throw;
+            }
         }
 
         public async Task Update(UpdateAdminProfileRequest request, string performedByAdminUserId)

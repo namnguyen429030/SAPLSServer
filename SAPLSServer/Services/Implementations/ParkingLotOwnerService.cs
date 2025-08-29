@@ -35,19 +35,26 @@ namespace SAPLSServer.Services.Implementations
                 throw new InvalidInformationException(MessageKeys.PARKING_LOT_OWNER_ID_ALREADY_EXISTS);
             request.Password = _passwordService.RandomizePassword();
             var userId = await _userService.Create(request, UserRole.ParkingLotOwner);
-
-            var ownerProfile = new ParkingLotOwnerProfile
+            try
             {
-                UserId = userId,
-                ParkingLotOwnerId = request.ParkingLotOwnerId,
-                ApiKey = request.ApiKey,
-                ClientKey = request.ClientKey,
-                CheckSumKey = request.CheckSumKey,
-                CreatedBy = createPerformerId,
-                UpdatedBy = createPerformerId,
-            };
-            await _parkingLotOwnerProfileRepository.AddAsync(ownerProfile);
-            await _parkingLotOwnerProfileRepository.SaveChangesAsync();
+                var ownerProfile = new ParkingLotOwnerProfile
+                {
+                    UserId = userId,
+                    ParkingLotOwnerId = request.ParkingLotOwnerId,
+                    ApiKey = request.ApiKey,
+                    ClientKey = request.ClientKey,
+                    CheckSumKey = request.CheckSumKey,
+                    CreatedBy = createPerformerId,
+                    UpdatedBy = createPerformerId,
+                };
+                await _parkingLotOwnerProfileRepository.AddAsync(ownerProfile);
+                await _parkingLotOwnerProfileRepository.SaveChangesAsync();
+            }
+            catch(Exception)
+            {
+                await _userService.Delete(userId);
+                throw;
+            }
         }
 
         public async Task Update(UpdateParkingLotOwnerProfileRequest request, string updatePerformerId)

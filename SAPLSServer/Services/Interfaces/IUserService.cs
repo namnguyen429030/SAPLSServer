@@ -94,6 +94,7 @@ namespace SAPLSServer.Services.Interfaces
         /// <param name="userId">The user ID to check.</param>
         /// <returns>True if the user exists and is valid; otherwise, false.</returns>
         Task<bool> IsUserValid(string userId);
+        Task Delete(string userId);
         Task SendNewConfirmationEmail(string email);
     }
 }
