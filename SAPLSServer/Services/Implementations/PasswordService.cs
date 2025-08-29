@@ -131,5 +131,15 @@ namespace SAPLSServer.Services.Implementations
 
             return new string(chars.ToArray());
         }
+
+        public async Task RequestResetPasswordByEmail(string email)
+        {
+            var user = await _userRepository.Find([u => u.Email == email]);
+            if (user == null)
+            {
+                throw new InvalidInformationException(MessageKeys.USER_NOT_FOUND);
+            }
+            await RequestResetPassword(user.Id);
+        }
     }
 }
