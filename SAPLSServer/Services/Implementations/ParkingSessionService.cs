@@ -177,7 +177,8 @@ namespace SAPLSServer.Services.Implementations
                     DriverId = driverId,
                     CheckInStaffId = staffId,
                     ParkingFeeSchedule = await _parkingFeeScheduleService
-                        .GetParkingLotCurrentFeeSchedule(request.ParkingLotId),
+                        .GetParkingLotCurrentFeeSchedule(request.ParkingLotId, 
+                        Enum.TryParse<VehicleType>(vehicle.VehicleType, out var vehicleType) ? vehicleType : VehicleType.Motorbike),
                 };
 
                 await _parkingSessionRepository.AddAsync(session);
@@ -319,37 +320,46 @@ namespace SAPLSServer.Services.Implementations
                 var session = await _parkingSessionRepository.FindLatest(request.VehicleLicensePlate, request.ParkingLotId);
                 if (session == null)
                     throw new InvalidInformationException(MessageKeys.PARKING_SESSION_NOT_FOUND);
-                var frontCaptureUploadRequest = new FileUploadRequest
+                var exitFrontCaptureUrl = string.Empty;
+                var exitBackCaptureUrl = string.Empty;
+                if (request.ExitFrontCapture != null)
                 {
-                    File = request.ExitFrontCapture!,
-                    Container = "parking-session-captures",
-                    SubFolder = $"vehicle-{request.VehicleLicensePlate}",
-                    GenerateUniqueFileName = true,
-                    Metadata = new Dictionary<string, string>
+                    var frontCaptureUploadRequest = new FileUploadRequest
+                    {
+                        File = request.ExitFrontCapture,
+                        Container = "parking-session-captures",
+                        SubFolder = $"vehicle-{request.VehicleLicensePlate}",
+                        GenerateUniqueFileName = true,
+                        Metadata = new Dictionary<string, string>
                     {
                         { "VehicleId", session.VehicleId },
                         { "CaptureType", "ExitFront" }
                     }
-                };
-                var frontCaptureResult = await _fileService.UploadFileAsync(frontCaptureUploadRequest);
-
-                var backCaptureUploadRequest = new FileUploadRequest
+                    };
+                    var frontCaptureResult = await _fileService.UploadFileAsync(frontCaptureUploadRequest);
+                    exitFrontCaptureUrl = frontCaptureResult.CdnUrl;
+                }
+                if (request.ExitBackCapture != null)
                 {
-                    File = request.ExitBackCapture!,
-                    Container = "parking-session-captures",
-                    SubFolder = $"vehicle-{request.VehicleLicensePlate}",
-                    GenerateUniqueFileName = true,
-                    Metadata = new Dictionary<string, string>
+                    var backCaptureUploadRequest = new FileUploadRequest
+                    {
+                        File = request.ExitBackCapture,
+                        Container = "parking-session-captures",
+                        SubFolder = $"vehicle-{request.VehicleLicensePlate}",
+                        GenerateUniqueFileName = true,
+                        Metadata = new Dictionary<string, string>
                     {
                         { "VehicleId", session.VehicleId },
                         { "CaptureType", "ExitBack" }
                     }
-                };
-                var backCaptureResult = await _fileService.UploadFileAsync(backCaptureUploadRequest);
+                    };
+                    var backCaptureResult = await _fileService.UploadFileAsync(backCaptureUploadRequest);
+                    exitBackCaptureUrl = backCaptureResult.CdnUrl;
+                }
 
                 session.Status = ParkingSessionStatus.Finished.ToString();
-                session.ExitFrontCaptureUrl = frontCaptureResult.CloudUrl;
-                session.ExitBackCaptureUrl = backCaptureResult.CloudUrl;
+                session.ExitFrontCaptureUrl = exitFrontCaptureUrl;
+                session.ExitBackCaptureUrl = exitBackCaptureUrl;
                 session.CheckOutStaffId = staffId;
                 session.PaymentStatus = ParkingSessionPayStatus.Paid.ToString();
                 session.ExitDateTime = DateTime.UtcNow;
@@ -539,11 +549,7 @@ namespace SAPLSServer.Services.Implementations
                     parsedVehicleType
                 );
             }
-            return await _parkingFeeScheduleService.CalculateParkingSessionFee(
-                    session.ParkingFeeSchedule,
-                    session.EntryDateTime,
-                    DateTime.UtcNow,
-                    VehicleType.Motorbike);
+            return 0;
         }
 
         public async Task<int?> GetSessionTransactionId(string sessionId)
@@ -594,6 +600,7 @@ namespace SAPLSServer.Services.Implementations
             {
                 return null;
             }
+            session.Cost = await CalculateSessionFee(session);
             return new ParkingSessionDetailsForParkingLotDto(session);
         }
     }

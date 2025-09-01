@@ -6,6 +6,7 @@ namespace SAPLSServer.DTOs.Concrete.GuestParkingSessionDtos
     {
         public string Id { get; set; }
         public string VehicleLicensePlate { get; set; }
+        public string VehicleType { get; set; }
         public DateTime EntryDateTime { get; set; }
         public DateTime? ExitDateTime { get; set; }
         public decimal Cost { get; set; }
@@ -15,6 +16,7 @@ namespace SAPLSServer.DTOs.Concrete.GuestParkingSessionDtos
         {
             Id = session.Id;
             VehicleLicensePlate = session.VehicleLicensePlate;
+            VehicleType = session.VehicleType;
             EntryDateTime = session.EntryDateTime;
             ExitDateTime = session.ExitDateTime;
             Cost = session.Cost;

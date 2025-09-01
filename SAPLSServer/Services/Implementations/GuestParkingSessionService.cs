@@ -60,6 +60,7 @@ namespace SAPLSServer.Services.Implementations
             var session = await _guestParkingSessionRepository.Find(sessionId);
             if (session == null)
                 return null;
+            session.Cost = await CalculateSessionFee(session);
             return new GuestParkingSessionDetailsForParkingLotDto(session);
         }
 
@@ -74,6 +75,7 @@ namespace SAPLSServer.Services.Implementations
             var result = new List<GuestParkingSessionSummaryForParkingLotDto>();
             foreach (var session in sessions)
             {
+                session.Cost = await CalculateSessionFee(session);
                 result.Add(new GuestParkingSessionSummaryForParkingLotDto(session));
             }
             return result;
@@ -93,6 +95,7 @@ namespace SAPLSServer.Services.Implementations
             var items = new List<GuestParkingSessionSummaryForParkingLotDto>();
             foreach (var session in page)
             {
+                session.Cost = await CalculateSessionFee(session);
                 items.Add(new GuestParkingSessionSummaryForParkingLotDto(session));
             }
             return new PageResult<GuestParkingSessionSummaryForParkingLotDto>
@@ -158,10 +161,11 @@ namespace SAPLSServer.Services.Implementations
                 Status = GuestParkingSessionStatus.Parking.ToString(),
                 PaymentStatus = ParkingSessionPayStatus.NotPaid.ToString(),
                 PaymentMethod = PaymentMethod.Cash.ToString(),
-                VehicleType = request.VehicleType,
+                VehicleType = request.VehicleType ?? VehicleType.Motorbike.ToString(),
                 Cost = 0,
                 CheckInStaffId = staffId,
-                ParkingFeeSchedule = await _parkingFeeScheduleService.GetParkingLotCurrentFeeSchedule(request.ParkingLotId),
+                ParkingFeeSchedule = await _parkingFeeScheduleService.GetParkingLotCurrentFeeSchedule(request.ParkingLotId, 
+                Enum.TryParse<VehicleType>(request.VehicleType, out var vehicleType) ? vehicleType : VehicleType.Motorbike),
             };
             await _guestParkingSessionRepository.AddAsync(guestSession);
             await _guestParkingSessionRepository.SaveChangesAsync();
@@ -217,6 +221,7 @@ namespace SAPLSServer.Services.Implementations
             }
 
             session.Status = GuestParkingSessionStatus.Finished.ToString();
+            session.Cost = await CalculateSessionFee(session);
             session.ExitFrontCaptureUrl = frontCaptureUrl;
             session.ExitBackCaptureUrl = backCaptureUrl;
             session.CheckOutStaffId = staffId;
@@ -224,7 +229,16 @@ namespace SAPLSServer.Services.Implementations
             _guestParkingSessionRepository.Update(session);
             await _guestParkingSessionRepository.SaveChangesAsync();
         }
-
+        private async Task<decimal> CalculateSessionFee(GuestParkingSession session)
+        {
+            Enum.TryParse<VehicleType>(session.VehicleType, out var parsedVehicleType);
+            return await _parkingFeeScheduleService.CalculateParkingSessionFee(
+                session.ParkingFeeSchedule,
+                session.EntryDateTime,
+                DateTime.UtcNow,
+                parsedVehicleType
+            );
+        }
         private List<Expression<Func<GuestParkingSession, bool>>> BuildSessionCriterias(
             GetGuestParkingSessionListByParkingLotIdRequest request,
             Expression<Func<GuestParkingSession, bool>>? extra = null)
@@ -265,6 +279,7 @@ namespace SAPLSServer.Services.Implementations
             {
                 return null;
             }
+            session.Cost = await CalculateSessionFee(session);
             var parkingSession = new ParkingSession()
             {
                 Id = session.Id,
@@ -280,15 +295,11 @@ namespace SAPLSServer.Services.Implementations
                 EntryBackCaptureUrl = session.EntryBackCaptureUrl,
                 ExitFrontCaptureUrl = session.ExitFrontCaptureUrl,
                 ExitBackCaptureUrl = session.ExitBackCaptureUrl,
-                TransactionId = session.TransactionId != null ? int.Parse(session.TransactionId) : null,
-                TransactionCount = null, // GuestParkingSession doesn't have TransactionCount
-                PaymentInformation = null, // GuestParkingSession doesn't have PaymentInformation
                 PaymentMethod = session.PaymentMethod,
                 Cost = session.Cost,
                 Status = session.Status,
                 PaymentStatus = session.PaymentStatus,
-                ParkingFeeSchedule = session.ParkingFeeSchedule
-
+                ParkingFeeSchedule = session.ParkingFeeSchedule,
             };
             return new ParkingSessionDetailsForParkingLotDto(parkingSession);
         }

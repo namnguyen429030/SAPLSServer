@@ -85,6 +85,10 @@ namespace SAPLSServer.Services.Implementations
             {
                 throw new InvalidInformationException(MessageKeys.WRONG_PASSWORD);
             }
+            if(userId != request.Id)
+            {
+                throw new UnauthorizedAccessException(MessageKeys.UNAUTHORIZED_ACCESS);
+            }
             user.Password = HashPassword(request.NewPassword);
             user.OneTimePassword = _otpService.GenerateOtp(OtpService.DEFAULT_OTP_LENGTH, OtpService.DEFAULT_OTP_DURATION);
             _userRepository.Update(user);

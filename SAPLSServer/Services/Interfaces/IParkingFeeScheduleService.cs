@@ -9,7 +9,7 @@ namespace SAPLSServer.Services.Interfaces
         Task<ParkingFeeScheduleDto> UpdateAsync(UpdateParkingFeeScheduleRequest request, string performerId);
         Task<List<ParkingFeeScheduleDto>> GetListByParkingLotAsync(string parkingLotId, string performerId);
         Task<ParkingFeeScheduleDto?> GetByIdAsync(string id, string performerId);
-        Task<string> GetParkingLotCurrentFeeSchedule(string parkingLotId);
+        Task<string> GetParkingLotCurrentFeeSchedule(string parkingLotId, VehicleType vehicleType);
         Task<decimal> CalculateParkingSessionFee(string scheduleId, DateTime startTime, DateTime endTime,
             VehicleType vehicleType);
     }

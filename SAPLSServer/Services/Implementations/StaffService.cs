@@ -176,8 +176,6 @@ namespace SAPLSServer.Services.Implementations
             var now = DateTime.UtcNow;
             int currentMinutes = now.Hour * 60 + now.Minute;
 
-            int currentDay = ((int)now.DayOfWeek + 6) % 7;
-
             foreach (var shift in staffProfile.ParkingLotShifts)
             {
                 // Check status
@@ -188,7 +186,7 @@ namespace SAPLSServer.Services.Implementations
                 if (string.IsNullOrWhiteSpace(shift.DayOfWeeks))
                     continue;
                 var days = shift.DayOfWeeks.Split(',').Select(d => d.Trim());
-                if (!days.Contains(currentDay.ToString()))
+                if (!days.Contains(((int)now.DayOfWeek).ToString()))
                     continue;
 
                 // Check time range

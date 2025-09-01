@@ -111,11 +111,10 @@ namespace SAPLSServer.Services.Implementations
             };
         }
 
-        public async Task<string> GetParkingLotCurrentFeeSchedule(string parkingLotId)
+        public async Task<string> GetParkingLotCurrentFeeSchedule(string parkingLotId, VehicleType vehicleType)
         {
             var now = DateTime.UtcNow;
             int currentMinutes = now.Hour * 60 + now.Minute;
-            int currentDay = ((int)now.DayOfWeek + 6) % 7;
 
             // Fetch all schedules first, then filter in-memory
             var schedules = await _parkingFeeScheduleRepository.GetAllAsync([
@@ -124,10 +123,11 @@ namespace SAPLSServer.Services.Implementations
             && !string.IsNullOrEmpty(s.DayOfWeeks)
             && s.StartTime <= currentMinutes
             && s.EndTime >= currentMinutes
+            && s.ForVehicleType == vehicleType.ToString()
             ]);
 
             var currentSchedule = schedules
-                .FirstOrDefault(s => s.DayOfWeeks.Split(',').Contains(currentDay.ToString()));
+                .FirstOrDefault(s => s.DayOfWeeks.Split(',').Contains(((int)now.DayOfWeek).ToString()));
 
             return currentSchedule?.Id ?? string.Empty;
         }
