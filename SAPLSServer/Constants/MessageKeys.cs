@@ -284,5 +284,8 @@ namespace SAPLSServer.Constants
         public const string USER_CREATION_FAILED = "USER_CREATION_FAILED";
         public const string PARKING_LOT_OWNER_NOT_FOUND = "PARKING_LOT_OWNER_NOT_FOUND";
         public const string PARKING_SESSION_NOT_CHECKED_OUT = "PARKING_SESSION_NOT_CHECKED_OUT";
+        public const string INITIAL_MINUTES_REQUIRED = "INITIAL_MINUTES_REQUIRED";
+        public const string INVALID_INITIAL_MINUTES = "INVALID_INITIAL_MINUTES";
+        public const string INVALID_ADDITIONAL_MINUTES = "INVALID_ADDITIONAL_MINUTES";
     }
 }

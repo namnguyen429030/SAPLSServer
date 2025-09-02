@@ -10,6 +10,7 @@ namespace SAPLSServer.DTOs.Concrete.ParkingFeeScheduleDtos
         public int StartTime { get; set; }
         public int EndTime { get; set; }
         public decimal InitialFee { get; set; }
+        public int InitialMinutes { get; set; }
         public decimal AdditionalFee { get; set; }
         public int AdditionalMinutes { get; set; }
         public string? DayOfWeeks { get; set; }

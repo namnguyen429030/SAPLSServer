@@ -14,8 +14,12 @@ namespace SAPLSServer.DTOs.Concrete.ParkingFeeScheduleDtos
         [Required(ErrorMessage = MessageKeys.INITIAL_FEE_REQUIRED)]
         [Range(minimum: 0, maximum: int.MaxValue, ErrorMessage = MessageKeys.INVALID_INITIAL_FEE)]
         public decimal InitialFee { get; set; }
+        [Required(ErrorMessage = MessageKeys.INITIAL_MINUTES_REQUIRED)]
+        [Range(minimum: 0, maximum: int.MaxValue, ErrorMessage = MessageKeys.INVALID_INITIAL_MINUTES)]
+        public int InitialMinutes { get; set; }
         [Range(minimum: 0, maximum: int.MaxValue, ErrorMessage = MessageKeys.INVALID_ADDITIONAL_FEE)]
         public decimal? AdditionalFee { get; set; }
+        [Range(minimum: 0, maximum: int.MaxValue, ErrorMessage = MessageKeys.INVALID_ADDITIONAL_MINUTES)]
         public int? AdditionalMinutes { get; set; }
         [Required(ErrorMessage = MessageKeys.DAY_OF_WEEKS_REQUIRED)]
         public string DayOfWeeks { get; set; } = null!;

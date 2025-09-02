@@ -34,6 +34,7 @@ namespace SAPLSServer.Services.Implementations
                 StartTime = request.StartTime,
                 EndTime = request.EndTime,
                 InitialFee = request.InitialFee,
+                InitialMinutes = request.InitialMinutes,
                 AdditionalFee = request.AdditionalFee ?? 0,
                 AdditionalMinutes = request.AdditionalMinutes ?? 0,
                 DayOfWeeks = request.DayOfWeeks,
@@ -59,6 +60,7 @@ namespace SAPLSServer.Services.Implementations
             schedule.StartTime = request.StartTime;
             schedule.EndTime = request.EndTime;
             schedule.InitialFee = request.InitialFee;
+            schedule.InitialMinutes = request.InitialMinutes;
             schedule.AdditionalFee = request.AdditionalFee ?? 0;
             schedule.AdditionalMinutes = request.AdditionalMinutes ?? 0;
             schedule.DayOfWeeks = request.DayOfWeeks;
@@ -101,6 +103,7 @@ namespace SAPLSServer.Services.Implementations
                 StartTime = schedule.StartTime,
                 EndTime = schedule.EndTime,
                 InitialFee = schedule.InitialFee,
+                InitialMinutes = schedule.InitialMinutes,
                 AdditionalFee = schedule.AdditionalFee,
                 AdditionalMinutes = schedule.AdditionalMinutes,
                 DayOfWeeks = schedule.DayOfWeeks,
@@ -142,7 +145,7 @@ namespace SAPLSServer.Services.Implementations
             var totalMinutes = (endTime - startTime).TotalMinutes;
             
             var additionalMinutes = schedule.AdditionalMinutes > 0
-                ? (int)(totalMinutes % schedule.AdditionalMinutes)
+                ? (int)((totalMinutes - schedule.InitialMinutes) % schedule.AdditionalMinutes)
                 : 0;
 
             return schedule.InitialFee + (int)(additionalMinutes / 60) * schedule.AdditionalFee;
