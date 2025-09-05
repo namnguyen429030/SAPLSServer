@@ -55,7 +55,16 @@ namespace SAPLSServer.Services.Implementations
                 filters.Add(d => d.CreatedAt.Date == request.UploadedDate.Value.ToDateTime(TimeOnly.MinValue).Date);
 
             var diaries = await _shiftDiaryRepository.GetAllAsync(filters.ToArray());
-            return diaries.Select(d => new ShiftDiarySummaryDto(d)).ToList();
+            var result = new List<ShiftDiarySummaryDto>();
+            foreach (var diary in diaries)
+            {
+                var diaryIncludingSender = await _shiftDiaryRepository.FindIncludingSenderReadOnly(diary.Id);
+                if (diaryIncludingSender != null)
+                {
+                    result.Add(new ShiftDiarySummaryDto(diaryIncludingSender));
+                }
+            }
+            return result;
         }
 
         public async Task<PageResult<ShiftDiarySummaryDto>> GetPageAsync(PageRequest pageRequest, GetShiftDiaryListRequest request)
@@ -74,9 +83,18 @@ namespace SAPLSServer.Services.Implementations
                 false
             );
             var total = await _shiftDiaryRepository.CountAsync(filters.ToArray());
+            var items = new List<ShiftDiarySummaryDto>();
+            foreach ( var diary in diaries)
+            {
+                var diaryIncludingSender = await _shiftDiaryRepository.FindIncludingSenderReadOnly(diary.Id);
+                if (diaryIncludingSender != null)
+                {
+                    items.Add(new ShiftDiarySummaryDto(diaryIncludingSender));
+                }
+            }
             return new PageResult<ShiftDiarySummaryDto>
             {
-                Items = diaries.Select(d => new ShiftDiarySummaryDto(d)).ToList(),
+                Items = items,
                 TotalCount = total,
                 PageNumber = pageRequest.PageNumber,
                 PageSize = pageRequest.PageSize

@@ -30,7 +30,7 @@ namespace SAPLSServer.Controllers
         /// </summary>
         [HttpPost]
         [Authorize(Policy = Accessibility.STAFF_ACCESS)]
-        public async Task<IActionResult> Create([FromBody] CreateIncidentReportRequest request)
+        public async Task<IActionResult> Create([FromForm] CreateIncidentReportRequest request)
         {
             if (!ModelState.IsValid)
             {
