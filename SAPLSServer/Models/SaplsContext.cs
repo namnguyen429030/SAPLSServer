@@ -105,7 +105,7 @@ public partial class SaplsContext : DbContext
             entity.Property(e => e.FileExtension).HasMaxLength(10);
             entity.Property(e => e.FileHash).HasMaxLength(64);
             entity.Property(e => e.OriginalFileName).HasMaxLength(255);
-            entity.Property(e => e.StorageFileName).HasMaxLength(100);
+            entity.Property(e => e.StorageFileName).HasMaxLength(255);
             entity.Property(e => e.UploadAt).HasDefaultValueSql("(getdate())");
         });
 
