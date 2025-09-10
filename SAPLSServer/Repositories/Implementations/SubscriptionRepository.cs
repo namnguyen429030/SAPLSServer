@@ -13,13 +13,13 @@ namespace SAPLSServer.Repositories.Implementations
 
         public async Task<Subscription?> FindIncludUpdatedBy(string id)
         {
-            return await _dbSet.Include(s => s.UpdateBy).ThenInclude(u => u.User)
+            return await _dbSet.Include(s => s.UpdatedByNavigation).ThenInclude(u => u!.User)
                                .FirstOrDefaultAsync(CreateIdPredicate(id));
         }
 
         public async Task<Subscription?> FindIncludUpdatedByReadOnly(string id)
         {
-            return await _dbSet.Include(s => s.UpdateBy).ThenInclude(u => u.User)
+            return await _dbSet.Include(s => s.UpdatedByNavigation).ThenInclude(u => u!.User)
                 .AsNoTracking().FirstOrDefaultAsync(CreateIdPredicate(id));
         }
 

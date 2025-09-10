@@ -1,6 +1,5 @@
 using SAPLSServer.Constants;
 using SAPLSServer.DTOs.Concrete.FileUploadDtos;
-using SAPLSServer.DTOs.Concrete.GuestParkingSessionDtos;
 using SAPLSServer.DTOs.Concrete.ParkingSessionDtos;
 using SAPLSServer.DTOs.Concrete.PaymentDtos;
 using SAPLSServer.DTOs.PaginationDto;
@@ -14,10 +13,10 @@ using System.Text.Json;
 
 namespace SAPLSServer.Services.Implementations
 {
+    //Todo: Handle anonymous parking session check-in and check-out
     public class ParkingSessionService : IParkingSessionService
     {
         private readonly IParkingSessionRepository _parkingSessionRepository;
-        private readonly IGuestParkingSessionService _guestParkingSessionService;
         private readonly IParkingLotService _parkingLotService;
         private readonly IPaymentService _paymentService;
         private readonly IParkingFeeScheduleService _parkingFeeScheduleService;
@@ -26,7 +25,6 @@ namespace SAPLSServer.Services.Implementations
 
         public ParkingSessionService(
             IParkingSessionRepository parkingSessionRepository,
-            IGuestParkingSessionService guestParkingSessionService,
             IParkingLotService parkingLotService,
             IPaymentService paymentService,
             IClientService clientService,
@@ -36,7 +34,6 @@ namespace SAPLSServer.Services.Implementations
             IParkingFeeScheduleService parkingFeeScheduleService)
         {
             _parkingSessionRepository = parkingSessionRepository;
-            _guestParkingSessionService = guestParkingSessionService;
             _vehicleService = vehicleService;
             _paymentService = paymentService;
             _parkingLotService = parkingLotService;
@@ -62,10 +59,14 @@ namespace SAPLSServer.Services.Implementations
 
         public async Task<ParkingSessionDetailsForParkingLotDto?> GetSessionDetailsForParkingLot(string sessionId)
         {
-            var session = await _parkingSessionRepository.FindIncludingVehicleAndOwnerReadOnly(sessionId);
+            var session = await _parkingSessionRepository.Find(sessionId);
             if (session == null)
                 return null;
-            if (session.Status != ParkingSessionStatus.CheckedOut.ToString())
+            if (session.VehicleId != null && session.DriverId != null)
+            {
+                session = await _parkingSessionRepository.FindIncludingVehicleAndOwnerReadOnly(sessionId);
+            }
+            if (session!.Status != ParkingSessionStatus.CheckedOut.ToString())
                 session.Cost = await CalculateSessionFee(session);
             return new ParkingSessionDetailsForParkingLotDto(session);
         }
@@ -99,15 +100,10 @@ namespace SAPLSServer.Services.Implementations
             var result = new List<ParkingSessionSummaryForParkingLotDto>();
             foreach (var session in sessions)
             {
-                var sessionIncludingVehicle = await _parkingSessionRepository
-                    .FindIncludingVehicleReadOnly(session.Id);
-                if (sessionIncludingVehicle == null)
-                {
-                    continue;
-                }
-                if (sessionIncludingVehicle.Status != ParkingSessionStatus.CheckedOut.ToString())
-                    sessionIncludingVehicle.Cost = await CalculateSessionFee(session);
-                result.Add(new ParkingSessionSummaryForParkingLotDto(sessionIncludingVehicle));
+                if (session.Status != ParkingSessionStatus.CheckedOut.ToString())
+                    session.Cost = await CalculateSessionFee(session);
+                session.Cost = await CalculateSessionFee(session);
+                result.Add(new ParkingSessionSummaryForParkingLotDto(session));
             }
             return result;
         }
@@ -117,78 +113,75 @@ namespace SAPLSServer.Services.Implementations
             if (!await _parkingLotService.IsParkingLotValid(request.ParkingLotId))
                 throw new InvalidInformationException(MessageKeys.PARKING_LOT_NOT_FOUND);
             var vehicle = await _vehicleService.GetByLicensePlate(request.VehicleLicensePlate);
-            if (vehicle != null)
-            {
-                var frontCaptureUrl = string.Empty;
-                var backCaptureUrl = string.Empty;
-                if (request.EntryFrontCapture != null)
-                {
-                    var frontCaptureUploadRequest = new FileUploadRequest
-                    {
-                        File = request.EntryFrontCapture!,
-                        Container = "parking-session-captures",
-                        SubFolder = $"vehicle-{request.VehicleLicensePlate}",
-                        GenerateUniqueFileName = true,
-                        Metadata = new Dictionary<string, string>
-                        {
-                            { "LicenPlate", request.VehicleLicensePlate },
-                            { "CaptureType", "EntryFront" }
-                        }
-                    };
-                    var frontCaptureResult = await _fileService.UploadFileAsync(frontCaptureUploadRequest);
-                    frontCaptureUrl = frontCaptureResult.CdnUrl;
-                }
-                if (request.EntryBackCapture != null)
-                {
-                    var backCaptureUploadRequest = new FileUploadRequest
-                    {
-                        File = request.EntryBackCapture!,
-                        Container = "parking-session-captures",
-                        SubFolder = $"vehicle-{request.VehicleLicensePlate}",
-                        GenerateUniqueFileName = true,
-                        Metadata = new Dictionary<string, string>
-                        {
-                            { "LicenPlate", request.VehicleLicensePlate },
-                            { "CaptureType", "EntryBack" }
-                        }
-                    };
-                    var backCaptureResult = await _fileService.UploadFileAsync(backCaptureUploadRequest);
-                    backCaptureUrl = backCaptureResult.CdnUrl;
-                }
-                string driverId = vehicle.OwnerId;
-                if (vehicle.SharingStatus == VehicleSharingStatus.Shared.ToString())
-                {
-                    driverId = await _vehicleService.GetCurrentHolderId(vehicle.Id) ?? string.Empty;
-                }
 
-                var session = new ParkingSession
+            var frontCaptureUrl = string.Empty;
+            var backCaptureUrl = string.Empty;
+
+            if (request.EntryFrontCapture != null)
+            {
+                var frontCaptureUploadRequest = new FileUploadRequest
                 {
-                    Id = Guid.NewGuid().ToString(),
-                    VehicleId = vehicle.Id,
-                    ParkingLotId = request.ParkingLotId,
-                    EntryDateTime = DateTime.UtcNow,
-                    EntryFrontCaptureUrl = frontCaptureUrl,
-                    EntryBackCaptureUrl = backCaptureUrl,
-                    Status = ParkingSessionStatus.Parking.ToString(),
-                    PaymentStatus = ParkingSessionPayStatus.NotPaid.ToString(),
-                    PaymentMethod = PaymentMethod.Cash.ToString(),
-                    Cost = 0,
-                    TransactionCount = 0,
-                    DriverId = driverId,
-                    CheckInStaffId = staffId,
-                    ParkingFeeSchedule = await _parkingFeeScheduleService
-                        .GetParkingLotCurrentFeeSchedule(request.ParkingLotId, 
-                        Enum.TryParse<VehicleType>(vehicle.VehicleType, out var vehicleType) ? vehicleType : VehicleType.Motorbike),
+                    File = request.EntryFrontCapture!,
+                    Container = "parking-session-captures",
+                    SubFolder = $"vehicle-{request.VehicleLicensePlate}",
+                    GenerateUniqueFileName = true,
+                    Metadata = new Dictionary<string, string>
+                    {
+                        { "LicensePlate", request.VehicleLicensePlate },
+                        { "CaptureType", "EntryFront" }
+                    }
                 };
-
-                await _parkingSessionRepository.AddAsync(session);
-                await _parkingSessionRepository.SaveChangesAsync();
+                var frontCaptureResult = await _fileService.UploadFileAsync(frontCaptureUploadRequest);
+                frontCaptureUrl = frontCaptureResult.CdnUrl;
             }
-            else
+            if (request.EntryBackCapture != null)
             {
-                // Delegate guest sessionDto check-in to the guest service
-                await _guestParkingSessionService.CheckIn(request, staffId);
+                var backCaptureUploadRequest = new FileUploadRequest
+                {
+                    File = request.EntryBackCapture!,
+                    Container = "parking-session-captures",
+                    SubFolder = $"vehicle-{request.VehicleLicensePlate}",
+                    GenerateUniqueFileName = true,
+                    Metadata = new Dictionary<string, string>
+                    {
+                        { "LicensePlate", request.VehicleLicensePlate },
+                        { "CaptureType", "EntryBack" }
+                    }
+                };
+                var backCaptureResult = await _fileService.UploadFileAsync(backCaptureUploadRequest);
+                backCaptureUrl = backCaptureResult.CdnUrl;
             }
+
+            string? driverId = vehicle?.OwnerId ?? null;
+            if (vehicle != null && vehicle.SharingStatus == VehicleSharingStatus.Shared.ToString())
+            {
+                driverId = await _vehicleService.GetCurrentHolderId(vehicle.Id) ?? string.Empty;
+            }
+            string vehicleType = vehicle?.VehicleType ?? request.VehicleType ?? VehicleType.Motorbike.ToString();
+            var session = new ParkingSession
+            {
+                Id = Guid.NewGuid().ToString(),
+                VehicleId = vehicle?.Id ?? null,
+                DriverId = driverId,
+                LicensePlate = request.VehicleLicensePlate,
+                ParkingLotId = request.ParkingLotId,
+                VehicleType = vehicleType,
+                EntryDateTime = DateTime.UtcNow,
+                EntryFrontCaptureUrl = frontCaptureUrl,
+                EntryBackCaptureUrl = backCaptureUrl,
+                Status = ParkingSessionStatus.Parking.ToString(),
+                PaymentStatus = ParkingSessionPayStatus.NotPaid.ToString(),
+                PaymentMethod = PaymentMethod.Cash.ToString(),
+                Cost = 0,
+                TransactionCount = 0,
+                CheckInStaffId = staffId,
+                ParkingFeeSchedule = await _parkingFeeScheduleService
+                    .GetParkingLotCurrentFeeSchedule(request.ParkingLotId, 
+                    Enum.TryParse<VehicleType>(vehicleType, out var parsedVehicleType) ? parsedVehicleType : VehicleType.Motorbike),
+            };
+
+            await _parkingSessionRepository.AddAsync(session);
+            await _parkingSessionRepository.SaveChangesAsync();
         }
         public async Task CheckOut(CheckOutParkingSessionRequest request, string userId)
         {
@@ -210,9 +203,9 @@ namespace SAPLSServer.Services.Implementations
                 int transactionId = new Random().Next(1, int.MaxValue);
                 session.TransactionId = transactionId;
                 session.TransactionCount++;
-                var apiKey = await _parkingLotService.GetParkingLotApiKey(session.ParkingLotId);
-                var clientKey = await _parkingLotService.GetParkingLotClientKey(session.ParkingLotId);
-                var checkSumKey = await _parkingLotService.GetParkingLotCheckSumKey(session.ParkingLotId);
+                var apiKey = await _parkingLotService.GetParkingLotApiKey(session.ParkingLotId ?? string.Empty);
+                var clientKey = await _parkingLotService.GetParkingLotClientKey(session.ParkingLotId ?? string.Empty);
+                var checkSumKey = await _parkingLotService.GetParkingLotCheckSumKey(session.ParkingLotId ?? string.Empty);
                 string data = $"amount={(int)session.Cost}&cancelUrl={""}&description=SESS{transactionId}&orderCode={transactionId}&returnUrl={""}";
                 var signature = _paymentService.GenerateSignature(data, checkSumKey);
                 // Prepare payment request
@@ -277,7 +270,7 @@ namespace SAPLSServer.Services.Implementations
                         GenerateUniqueFileName = true,
                         Metadata = new Dictionary<string, string>
                         {
-                            { "VehicleId", session.VehicleId },
+                            { "LicensePlate", request.VehicleLicensePlate },
                             { "CaptureType", "ExitFront" }
                         }
                     };
@@ -293,10 +286,10 @@ namespace SAPLSServer.Services.Implementations
                         SubFolder = $"vehicle-{request.VehicleLicensePlate}",
                         GenerateUniqueFileName = true,
                         Metadata = new Dictionary<string, string>
-                    {
-                        { "VehicleId", session.VehicleId },
-                        { "CaptureType", "ExitBack" }
-                    }
+                        {
+                            { "LicensePlate", request.VehicleLicensePlate },
+                            { "CaptureType", "ExitBack" }
+                        }
                     };
                     var backCaptureResult = await _fileService.UploadFileAsync(backCaptureUploadRequest);
                     exitBackCaptureUrl = backCaptureResult.CdnUrl;
@@ -332,7 +325,7 @@ namespace SAPLSServer.Services.Implementations
                         GenerateUniqueFileName = true,
                         Metadata = new Dictionary<string, string>
                     {
-                        { "VehicleId", session.VehicleId },
+                        { "LicensePlate" , request.VehicleLicensePlate },
                         { "CaptureType", "ExitFront" }
                     }
                     };
@@ -349,7 +342,7 @@ namespace SAPLSServer.Services.Implementations
                         GenerateUniqueFileName = true,
                         Metadata = new Dictionary<string, string>
                     {
-                        { "VehicleId", session.VehicleId },
+                        { "LicensePlate" , request.VehicleLicensePlate },
                         { "CaptureType", "ExitBack" }
                     }
                     };
@@ -365,11 +358,6 @@ namespace SAPLSServer.Services.Implementations
                 session.ExitDateTime = DateTime.UtcNow;
                 _parkingSessionRepository.Update(session);
                 await _parkingSessionRepository.SaveChangesAsync();
-            }
-            else
-            {
-                // Delegate guest sessionDto finish to the guest service
-                await _guestParkingSessionService.Finish(request, staffId);
             }
         }
         public async Task<List<ParkingSessionSummaryForClientDto>> GetOwnedSessions(
@@ -439,15 +427,9 @@ namespace SAPLSServer.Services.Implementations
             var items = new List<ParkingSessionSummaryForParkingLotDto>();
             foreach (var session in page)
             {
-                var sessionIncludingAll = await _parkingSessionRepository
-                    .FindIncludingVehicleReadOnly(session.Id);
-                if (sessionIncludingAll == null)
-                {
-                    continue;
-                }
-                if (sessionIncludingAll.Status != ParkingSessionStatus.CheckedOut.ToString())
-                    sessionIncludingAll.Cost = await CalculateSessionFee(sessionIncludingAll);
-                items.Add(new ParkingSessionSummaryForParkingLotDto(sessionIncludingAll));
+                if (session.Status != ParkingSessionStatus.CheckedOut.ToString())
+                    session.Cost = await CalculateSessionFee(session);
+                items.Add(new ParkingSessionSummaryForParkingLotDto(session));
             }
             return new PageResult<ParkingSessionSummaryForParkingLotDto>
             {
@@ -505,9 +487,7 @@ namespace SAPLSServer.Services.Implementations
                 criterias.Add(s => s.ExitDateTime.HasValue && s.ExitDateTime.Value.Date
                 <= request.EndExitDate.Value.ToDateTime(TimeOnly.MaxValue).Date);
             if (!string.IsNullOrWhiteSpace(request.SearchCriteria))
-                criterias.Add(s => s.VehicleId.Contains(request.SearchCriteria)
-                || s.Vehicle.LicensePlate.Contains(request.SearchCriteria)
-                || s.Driver.User.FullName.Contains(request.SearchCriteria));
+                criterias.Add(s => s.LicensePlate.Contains(request.SearchCriteria));
             return criterias;
         }
 
@@ -539,17 +519,27 @@ namespace SAPLSServer.Services.Implementations
 
         private async Task<decimal> CalculateSessionFee(ParkingSession session)
         {
-            if (session.Vehicle != null)
+            if (session.ParkingFeeSchedule != null)
             {
-                Enum.TryParse<VehicleType>(session.Vehicle.VehicleType, out var parsedVehicleType);
                 return await _parkingFeeScheduleService.CalculateParkingSessionFee(
                     session.ParkingFeeSchedule,
                     session.EntryDateTime,
-                    DateTime.UtcNow,
-                    parsedVehicleType
+                    DateTime.UtcNow
                 );
             }
-            return 0;
+            else
+            {
+                var feeSchedule = await _parkingFeeScheduleService.GetParkingLotCurrentFeeSchedule(session.ParkingLotId ?? string.Empty,
+                    Enum.TryParse<VehicleType>(session.VehicleType, out var parsedVehicleType) ? parsedVehicleType : VehicleType.Motorbike);
+                if (feeSchedule != null)
+                {
+                    return await _parkingFeeScheduleService.CalculateParkingSessionFee(
+                        feeSchedule,
+                        session.EntryDateTime,
+                        DateTime.UtcNow);
+                }
+                return 0;
+            }
         }
 
         public async Task<int?> GetSessionTransactionId(string sessionId)
@@ -581,26 +571,32 @@ namespace SAPLSServer.Services.Implementations
             var session = await _parkingSessionRepository.Find([p => p.TransactionId == request.Data.OrderCode]);
             if (session != null)
             {
-                session.PaymentStatus = ParkingSessionPayStatus.Paid.ToString();
+                if (request.Success)
+                {
+                    session.PaymentStatus = ParkingSessionPayStatus.Paid.ToString();
+                }
+                else
+                {
+                    session.PaymentStatus = ParkingSessionPayStatus.NotPaid.ToString();
+                }
                 _parkingSessionRepository.Update(session);
                 await _parkingSessionRepository.SaveChangesAsync();
             }
-
         }
 
         public async Task<ParkingSessionDetailsForParkingLotDto?> GetByLicensePlateNumber(string licensePlateNumber, string parkingLotId)
         {
-
-            if(await _vehicleService.GetByLicensePlate(licensePlateNumber) == null)
-            {
-                return await _guestParkingSessionService.GetByLicensePlateNumber(licensePlateNumber, parkingLotId);
-            }
             var session = await _parkingSessionRepository.FindLatest(licensePlateNumber, parkingLotId);
-            if(session == null)
+            if (session == null)
             {
                 return null;
             }
-            session.Cost = await CalculateSessionFee(session);
+            var vehicle = await _vehicleService.GetByLicensePlate(licensePlateNumber);
+            if (vehicle != null)
+            {
+                session = await _parkingSessionRepository.FindIncludingVehicleAndOwnerReadOnly(session.Id);
+            }
+            session!.Cost = await CalculateSessionFee(session);
             return new ParkingSessionDetailsForParkingLotDto(session);
         }
     }

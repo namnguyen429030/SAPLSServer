@@ -118,7 +118,7 @@ namespace SAPLSServer.Services.Implementations
             entity.Status = request.Status;
             entity.InternalNote = request.InternalNote;
             entity.ResponseMessage = request.ResponseMessage;
-            entity.LastUpdatePersonId = adminId;
+            entity.UpdatedBy = adminId;
             entity.UpdatedAt = DateTime.UtcNow;
 
             // Process data updates if request is resolved

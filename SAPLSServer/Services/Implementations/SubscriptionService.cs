@@ -29,12 +29,19 @@ namespace SAPLSServer.Services.Implementations
             var items = new List<SubscriptionSummaryDto>();
             foreach (var subscription in subscriptions)
             {
-                var subscriptionIncludedUpdatedBy = await _subscriptionRepository.FindIncludUpdatedBy(subscription.Id);
-                if(subscriptionIncludedUpdatedBy == null)
+                if (subscription.CreatedBy != null)
                 {
-                    continue;
+                    var subscriptionIncludedUpdatedBy = await _subscriptionRepository.FindIncludUpdatedBy(subscription.Id);
+                    if (subscriptionIncludedUpdatedBy == null)
+                    {
+                        continue;
+                    }
+                    items.Add(new SubscriptionSummaryDto(subscriptionIncludedUpdatedBy));
                 }
-                items.Add(new SubscriptionSummaryDto(subscriptionIncludedUpdatedBy));
+                else
+                {
+                    items.Add(new SubscriptionSummaryDto(subscription));
+                }
             }
             return items;
         }
@@ -98,8 +105,8 @@ namespace SAPLSServer.Services.Implementations
                 Status = request.Status,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow,
-                CreatedById = adminId,
-                UpdateById = adminId
+                CreatedBy = adminId,
+                UpdatedBy = adminId
             };
 
             await _subscriptionRepository.AddAsync(subscription);
@@ -114,7 +121,7 @@ namespace SAPLSServer.Services.Implementations
 
             subscription.Status = request.Status;
             subscription.UpdatedAt = DateTime.UtcNow;
-            subscription.UpdateById = adminId;
+            subscription.UpdatedBy = adminId;
 
             _subscriptionRepository.Update(subscription);
             await _subscriptionRepository.SaveChangesAsync();
@@ -146,7 +153,7 @@ namespace SAPLSServer.Services.Implementations
             subscription.Duration = (long)TimeSpan.FromDays(request.Duration).TotalMilliseconds;
             subscription.Price = request.Price;
             subscription.UpdatedAt = DateTime.UtcNow;
-            subscription.UpdateById = adminId;
+            subscription.UpdatedBy = adminId;
             _subscriptionRepository.Update(subscription);
             await _subscriptionRepository.SaveChangesAsync();
         }
