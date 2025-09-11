@@ -158,157 +158,18 @@
 <body>
     <div class="form-container">
         <div class="header">
-            <h2>🔐 Reset Your Password</h2>
-            <p>Enter your new password below</p>
+            <h2>⏰ Session Expired</h2>
+            <p>Your password reset session has expired</p>
         </div>
 
-        <div id="alertMessage" class="alert"></div>
+        <div id="alertMessage" class="alert error" style="display: block;">
+            <strong>⚠️ Session Expired:</strong> Your password reset link has expired for security reasons. Password reset links are only valid for a limited time to protect your account.
+        </div>
 
-        <form method="POST" action="/api/password/reset" id="passwordResetForm">
-            <!-- Hidden fields populated by your C# action -->
-            <input type="hidden" name="UserId" value="{userId}">
-            <input type="hidden" name="Otp" value="{otp}">
-
-            <div class="form-group">
-                <label for="newPassword">New Password</label>
-                <input type="password" id="newPassword" name="NewPassword" required>
-                <div id="newPasswordError" class="error-message">New password is required</div>
-            </div>
-
-            <div class="form-group">
-                <label for="confirmPassword">Confirm New Password</label>
-                <input type="password" id="confirmPassword" required>
-                <!-- Note: No 'name' attribute - this field won't be submitted to server -->
-                <div id="confirmPasswordError" class="error-message">Passwords do not match</div>
-            </div>
-
-            <div class="password-requirements">
-                <h4>🔒 Password Requirements:</h4>
-                <ul>
-                    <li id="req-length">At least 8 characters long</li>
-                    <li id="req-case">Include uppercase and lowercase letters</li>
-                    <li id="req-number">Include at least one number</li>
-                    <li id="req-special">Include at least one special character (!@#$%^&*)</li>
-                    <li id="req-spaces">No spaces allowed</li>
-                </ul>
-            </div>
-
-            <button type="submit" id="submitBtn" class="submit-btn" disabled>
-                🔐 Reset Password
-            </button>
-        </form>
+        <div class="retry-instruction">
+            <strong>🔄 What should you do?</strong><br>
+            Please request a new password reset link from the login page to continue with resetting your password.
+        </div>
     </div>
-
-    <script>
-        const newPasswordInput = document.getElementById('newPassword');
-        const confirmPasswordInput = document.getElementById('confirmPassword');
-        const submitBtn = document.getElementById('submitBtn');
-        const alertMessage = document.getElementById('alertMessage');
-
-        // Password requirement elements
-        const requirements = {
-            length: document.getElementById('req-length'),
-            case: document.getElementById('req-case'),
-            number: document.getElementById('req-number'),
-            special: document.getElementById('req-special'),
-            spaces: document.getElementById('req-spaces')
-        };
-
-        function validatePassword(password) {
-            const checks = {
-                length: password.length >= 8,
-                case: /[A-Z]/.test(password) && /[a-z]/.test(password),
-                number: /\d/.test(password),
-                special: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password),
-                spaces: !/\s/.test(password)
-            };
-
-            // Update requirement list visual feedback
-            Object.keys(checks).forEach(key => {
-                if (checks[key]) {
-                    requirements[key].classList.add('valid');
-                } else {
-                    requirements[key].classList.remove('valid');
-                }
-            });
-
-            return Object.values(checks).every(check => check);
-        }
-
-        function validateForm() {
-            const newPassword = newPasswordInput.value;
-            const confirmPassword = confirmPasswordInput.value;
-
-            const isPasswordValid = validatePassword(newPassword);
-            const passwordsMatch = newPassword === confirmPassword && newPassword !== '';
-
-            // Update submit button state
-            submitBtn.disabled = !(isPasswordValid && passwordsMatch);
-
-            // Show/hide error messages
-            const newPasswordError = document.getElementById('newPasswordError');
-            const confirmPasswordError = document.getElementById('confirmPasswordError');
-
-            if (newPassword && !isPasswordValid) {
-                newPasswordInput.classList.add('error');
-                newPasswordError.style.display = 'block';
-                newPasswordError.textContent = 'Password does not meet requirements';
-            } else {
-                newPasswordInput.classList.remove('error');
-                newPasswordError.style.display = 'none';
-            }
-
-            if (confirmPassword && !passwordsMatch) {
-                confirmPasswordInput.classList.add('error');
-                confirmPasswordError.style.display = 'block';
-                confirmPasswordError.textContent = 'Passwords do not match';
-            } else {
-                confirmPasswordInput.classList.remove('error');
-                confirmPasswordError.style.display = 'none';
-            }
-        }
-
-        function showAlert(message, type) {
-            alertMessage.textContent = message;
-            alertMessage.className = `alert ${type}`;
-            alertMessage.style.display = 'block';
-        }
-
-        function hideAlert() {
-            alertMessage.style.display = 'none';
-        }
-
-        // Event listeners
-        newPasswordInput.addEventListener('input', validateForm);
-        confirmPasswordInput.addEventListener('input', validateForm);
-
-        document.getElementById('passwordResetForm').addEventListener('submit', function (e) {
-            if (submitBtn.disabled) {
-                e.preventDefault();
-                return;
-            }
-
-            const newPassword = newPasswordInput.value;
-            const confirmPassword = confirmPasswordInput.value;
-
-            if (newPassword !== confirmPassword) {
-                e.preventDefault();
-                showAlert('Passwords do not match', 'error');
-                return;
-            }
-
-            if (!validatePassword(newPassword)) {
-                e.preventDefault();
-                showAlert('Password does not meet requirements', 'error');
-                return;
-            }
-
-            // Form will submit normally to /api/password/reset
-            // Only UserId, Otp, and NewPassword will be sent
-        });
-
-        // Initial validation
-        validateForm();
-    </script>
 </body>
 </html>
