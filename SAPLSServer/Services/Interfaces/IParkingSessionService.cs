@@ -76,10 +76,10 @@ namespace SAPLSServer.Services.Interfaces
         /// <summary>
         /// Retrieves a paged list of parking session summaries for a client.
         /// </summary>
-        /// <param name="request">The page request containing client and paging information.</param>
+        /// <param name="pageRequest">The page request containing client and paging information.</param>
         /// <param name="listRequest">The filter and search criteria for the client sessions.</param>
         /// <returns>Paged result of parking session summaries for the client.</returns>
-        Task<PageResult<ParkingSessionSummaryForClientDto>> GetPageByClient(PageRequest request,
+        Task<PageResult<ParkingSessionSummaryForClientDto>> GetPageByClient(PageRequest pageRequest,
             GetParkingSessionListByClientIdRequest listRequest);
 
         /// <summary>
@@ -88,7 +88,7 @@ namespace SAPLSServer.Services.Interfaces
         /// <param name="request">The page request containing parking lot and paging information.</param>
         /// <param name="listRequest">The filter and search criteria for the parking lot sessions.</param>
         /// <returns>Paged result of parking session summaries for the parking lot.</returns>
-        Task<PageResult<ParkingSessionSummaryForParkingLotDto>> GetPageByParkingLot(PageRequest request,
+        Task<PageResult<ParkingSessionSummaryForParkingLotDto>> GetPageByParkingLot(PageRequest pageRequest,
             GetParkingSessionListByParkingLotIdRequest listRequest);
 
         /// <summary>
@@ -98,7 +98,7 @@ namespace SAPLSServer.Services.Interfaces
         /// <param name="listRequest">The filter and search criteria for the owned sessions.</param>
         /// <param name="clientId">The ID of the client who owns the sessions.</param>
         /// <returns>Paged result of owned parking session summaries for the client.</returns>
-        Task<PageResult<ParkingSessionSummaryForClientDto>> GetPageByOwnedSessions(PageRequest request,
+        Task<PageResult<ParkingSessionSummaryForClientDto>> GetPageByOwnedSessions(PageRequest pageRequest,
             GetOwnedParkingSessionListRequest listRequest, string clientId);
 
         Task<int?> GetSessionTransactionId(string sessionId);
@@ -111,7 +111,7 @@ namespace SAPLSServer.Services.Interfaces
         /// <param name="request">The payment webhook request containing transaction details.</param>
         /// <returns>A task representing the asynchronous operation.</returns>
         Task ConfirmTransaction(PaymentWebHookRequest request);
-        Task<ParkingSessionDetailsForParkingLotDto?> GetByLicensePlateNumber(string licennsePlateNumber, string parkingLotId);
+        Task<ParkingSessionDetailsForParkingLotDto?> GetByLicensePlateNumber(string licensePlateNumber, string parkingLotId);
         Task ForceFinish(FinishParkingSessionRequest request, string staffId);
     }
 }

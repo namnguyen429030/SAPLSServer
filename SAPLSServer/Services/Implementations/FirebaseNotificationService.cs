@@ -145,7 +145,7 @@ namespace SAPLSServer.Services.Implementations
                 await FirebaseMessaging.DefaultInstance.SubscribeToTopicAsync(new List<string> { deviceToken }, topic);
                 return true;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return false;
             }
@@ -158,7 +158,7 @@ namespace SAPLSServer.Services.Implementations
                 await FirebaseMessaging.DefaultInstance.UnsubscribeFromTopicAsync(new List<string> { deviceToken }, topic);
                 return true;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return false;
             }

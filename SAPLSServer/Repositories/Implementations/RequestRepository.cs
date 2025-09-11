@@ -15,14 +15,14 @@ namespace SAPLSServer.Repositories.Implementations
 
         public async Task<Request?> FindIncludingSenderAndLastUpdater(string id)
         {
-            return await _dbSet.Include(r => r.Sender).Include(r => r.LastUpdatePerson)
+            return await _dbSet.Include(r => r.Sender).Include(r => r.UpdatedByNavigation)
                            .AsNoTracking()
                            .FirstOrDefaultAsync(CreateIdPredicate(id));
         }
 
         public async Task<Request?> FindIncludingSenderAndLastUpdaterReadOnly(string id)
         {
-            return await _dbSet.Include(r => r.Sender).Include(r => r.LastUpdatePerson).ThenInclude(a => a!.User)
+            return await _dbSet.Include(r => r.Sender).Include(r => r.UpdatedByNavigation).ThenInclude(a => a!.User)
                 .AsNoTracking()
                 .FirstOrDefaultAsync(CreateIdPredicate(id));
         }

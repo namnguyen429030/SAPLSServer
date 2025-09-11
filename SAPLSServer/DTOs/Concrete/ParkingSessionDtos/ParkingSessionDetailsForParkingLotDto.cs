@@ -9,20 +9,21 @@ namespace SAPLSServer.DTOs.Concrete.ParkingSessionDtos
     {
         public VehicleSummaryDto? Vehicle { get; set; }
         public UserSummaryDto? Owner { get; set; }
+        public string LicensePlate { get; set; }
         public DateTime EntryDateTime { get; set; }
 
         public DateTime? ExitDateTime { get; set; }
 
         public DateTime? CheckOutDateTime { get; set; }
 
-        public string EntryFrontCaptureUrl { get; set; }
+        public string? EntryFrontCaptureUrl { get; set; }
 
-        public string EntryBackCaptureUrl { get; set; }
+        public string? EntryBackCaptureUrl { get; set; }
 
         public string? ExitFrontCaptureUrl { get; set; }
 
         public string? ExitBackCaptureUrl { get; set; }
-        public string PaymentMethod { get; set; }
+        public string? PaymentMethod { get; set; }
         public decimal Cost { get; set; }
         public string Status { get; set; }
         public string PaymentStatus { get; set; }
@@ -32,8 +33,12 @@ namespace SAPLSServer.DTOs.Concrete.ParkingSessionDtos
             if (session.Vehicle != null)
             {
                 Vehicle = new VehicleSummaryDto(session.Vehicle);
-                Owner = new UserSummaryDto(session.Vehicle.Owner.User);
             }
+            if (session.Driver != null)
+            {
+                Owner = new UserSummaryDto(session.Driver.User);
+            }
+            LicensePlate = session.LicensePlate;
             EntryDateTime = session.EntryDateTime;
             ExitDateTime = session.ExitDateTime;
             CheckOutDateTime = session.CheckOutDateTime;

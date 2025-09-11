@@ -135,11 +135,9 @@ namespace SAPLSServer.Services.Implementations
             return currentSchedule?.Id ?? string.Empty;
         }
 
-        public async Task<decimal> CalculateParkingSessionFee(string scheduleId, DateTime startTime, 
-            DateTime endTime, VehicleType vehicleType)
+        public async Task<decimal> CalculateParkingSessionFee(string scheduleId, DateTime startTime, DateTime endTime)
         {
-            var schedule = await _parkingFeeScheduleRepository.Find([ps => ps.Id == scheduleId 
-                                                && ps.ForVehicleType == vehicleType.ToString()]);
+            var schedule = await _parkingFeeScheduleRepository.Find([ps => ps.Id == scheduleId]);
             if (schedule == null)
                 throw new InvalidInformationException(MessageKeys.PARKING_FEE_SCHEDULE_NOT_FOUND);
             var totalMinutes = (endTime - startTime).TotalMinutes;
@@ -148,7 +146,7 @@ namespace SAPLSServer.Services.Implementations
                 ? (int)((totalMinutes - schedule.InitialMinutes) % schedule.AdditionalMinutes)
                 : 0;
 
-            return schedule.InitialFee + (int)(additionalMinutes / 60) * schedule.AdditionalFee;
+            return schedule.InitialFee + additionalMinutes * schedule.AdditionalFee;
         }
     }
 }

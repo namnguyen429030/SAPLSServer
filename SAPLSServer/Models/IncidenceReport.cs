@@ -17,7 +17,7 @@ public partial class IncidenceReport
 
     public string Status { get; set; } = null!;
 
-    public string ReporterId { get; set; } = null!;
+    public string? ReporterId { get; set; }
 
     public string ParkingLotId { get; set; } = null!;
 
@@ -25,5 +25,5 @@ public partial class IncidenceReport
 
     public virtual ParkingLot ParkingLot { get; set; } = null!;
 
-    public virtual StaffProfile Reporter { get; set; } = null!;
+    public virtual StaffProfile? Reporter { get; set; }
 }

@@ -7,7 +7,7 @@ namespace SAPLSServer.DTOs.Concrete.ParkingSessionDtos
         public string ParkingLotName { get; set; }
         public ParkingSessionSummaryForClientDto(ParkingSession parkingSession) : base(parkingSession)
         {
-            ParkingLotName = parkingSession.ParkingLot.Name;
+            ParkingLotName = parkingSession.ParkingLot?.Name ?? string.Empty;
         }
     }
 }

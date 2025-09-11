@@ -302,6 +302,8 @@ namespace SAPLSServer.Services.Implementations
             var parkingLot = await _parkingLotRepository.Find(parkingLotId);
             if (parkingLot == null)
                 throw new InvalidInformationException(MessageKeys.PARKING_LOT_NOT_FOUND);
+            if(parkingLot.SubscriptionId == null)
+                throw new InvalidInformationException(MessageKeys.SUBSCRIPTION_NOT_FOUND);
             return await _subscriptionService.GetDetailsAsync(parkingLot.SubscriptionId);
         }
 

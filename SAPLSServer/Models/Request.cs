@@ -21,7 +21,7 @@ public partial class Request
 
     public string? ResponseMessage { get; set; }
 
-    public string? LastUpdatePersonId { get; set; }
+    public string? UpdatedBy { get; set; }
 
     public string? DataType { get; set; }
 
@@ -29,9 +29,9 @@ public partial class Request
 
     public string? SenderId { get; set; }
 
-    public virtual AdminProfile? LastUpdatePerson { get; set; }
-
     public virtual ICollection<RequestAttachedFile> RequestAttachedFiles { get; set; } = new List<RequestAttachedFile>();
 
     public virtual User? Sender { get; set; }
+
+    public virtual AdminProfile? UpdatedByNavigation { get; set; }
 }

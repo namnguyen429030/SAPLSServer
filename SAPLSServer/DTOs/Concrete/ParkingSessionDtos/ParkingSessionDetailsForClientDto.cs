@@ -6,12 +6,14 @@ namespace SAPLSServer.DTOs.Concrete.ParkingSessionDtos
 {
     public class ParkingSessionDetailsForClientDto : ParkingSessionSummaryForClientDto
     {
-        public ParkingLotSummaryDto ParkingLot { get; set; }
+        public ParkingLotSummaryDto? ParkingLot { get; set; }
         public PaymentResponseDto? PaymentInformation { get; set; }
         public ParkingSessionDetailsForClientDto(ParkingSession session) 
             : base(session)
         {
-            ParkingLot = new ParkingLotSummaryDto(session.ParkingLot);
+            if(session.ParkingLot != null)
+                ParkingLot = new ParkingLotSummaryDto(session.ParkingLot);
+
         }
     }
 }

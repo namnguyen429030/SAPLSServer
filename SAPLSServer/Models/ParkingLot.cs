@@ -25,7 +25,7 @@ public partial class ParkingLot
 
     public string ParkingLotOwnerId { get; set; } = null!;
 
-    public string SubscriptionId { get; set; } = null!;
+    public string? SubscriptionId { get; set; }
 
     public string? TempSubscriptionId { get; set; }
 
@@ -35,13 +35,11 @@ public partial class ParkingLot
 
     public DateTime ExpiredAt { get; set; }
 
-    public string CreatedBy { get; set; } = null!;
+    public string? CreatedBy { get; set; }
 
-    public string UpdatedBy { get; set; } = null!;
+    public string? UpdatedBy { get; set; }
 
-    public virtual AdminProfile CreatedByNavigation { get; set; } = null!;
-
-    public virtual ICollection<GuestParkingSession> GuestParkingSessions { get; set; } = new List<GuestParkingSession>();
+    public virtual AdminProfile? CreatedByNavigation { get; set; }
 
     public virtual ICollection<IncidenceReport> IncidenceReports { get; set; } = new List<IncidenceReport>();
 
@@ -57,9 +55,9 @@ public partial class ParkingLot
 
     public virtual ICollection<StaffProfile> StaffProfiles { get; set; } = new List<StaffProfile>();
 
-    public virtual Subscription Subscription { get; set; } = null!;
+    public virtual Subscription? Subscription { get; set; }
 
-    public virtual AdminProfile UpdatedByNavigation { get; set; } = null!;
+    public virtual AdminProfile? UpdatedByNavigation { get; set; }
 
     public virtual ICollection<WhiteList> WhiteLists { get; set; } = new List<WhiteList>();
 }

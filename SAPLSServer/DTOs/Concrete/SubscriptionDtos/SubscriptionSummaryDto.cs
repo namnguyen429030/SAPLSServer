@@ -18,7 +18,7 @@ namespace SAPLSServer.DTOs.Concrete.SubscriptionDtos
             Duration = model.Duration;
             Price = model.Price;
             Status = model.Status;
-            UpdatedBy = model.UpdateBy?.User.FullName;
+            UpdatedBy = model.UpdatedByNavigation?.User.FullName;
             Description = model.Description;
         }
     }

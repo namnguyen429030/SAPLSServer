@@ -21,13 +21,13 @@ public partial class Subscription
 
     public DateTime UpdatedAt { get; set; }
 
-    public string CreatedById { get; set; } = null!;
+    public string? CreatedBy { get; set; }
 
-    public string UpdateById { get; set; } = null!;
+    public string? UpdatedBy { get; set; }
 
-    public virtual AdminProfile CreatedBy { get; set; } = null!;
+    public virtual AdminProfile? CreatedByNavigation { get; set; }
 
     public virtual ICollection<ParkingLot> ParkingLots { get; set; } = new List<ParkingLot>();
 
-    public virtual AdminProfile UpdateBy { get; set; } = null!;
+    public virtual AdminProfile? UpdatedByNavigation { get; set; }
 }

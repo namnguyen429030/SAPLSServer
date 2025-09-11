@@ -60,7 +60,7 @@ namespace SAPLSServer.Repositories.Implementations
         public Task<ParkingSession?> FindIncludingVehicleAndOwner(string id)
         {
            return _dbSet.Include(ps => ps.Vehicle)
-                .ThenInclude(v => v.Owner)
+                .ThenInclude(v => v!.Owner)
                 .ThenInclude(o => o.User)
                 .FirstOrDefaultAsync(CreateIdPredicate(id));
         }
@@ -68,7 +68,7 @@ namespace SAPLSServer.Repositories.Implementations
         public Task<ParkingSession?> FindIncludingVehicleAndOwnerReadOnly(string id)
         {
             return _dbSet.Include(ps => ps.Vehicle)
-                .ThenInclude(v => v.Owner)
+                .ThenInclude(v => v!.Owner)
                 .ThenInclude(o => o.User)
                 .AsNoTracking()
                 .FirstOrDefaultAsync(CreateIdPredicate(id));
@@ -83,11 +83,8 @@ namespace SAPLSServer.Repositories.Implementations
 
         public Task<ParkingSession?> FindLatest(string licensePlate, string parkingLotId)
         {
-            return _dbSet.Where(ps => ps.Vehicle.LicensePlate == licensePlate && ps.ParkingLotId == parkingLotId)
+            return _dbSet.Where(ps => ps.LicensePlate == licensePlate && ps.ParkingLotId == parkingLotId)
                 .OrderByDescending(ps => ps.EntryDateTime)
-                .Include(ps => ps.Vehicle)
-                .ThenInclude(v => v.Owner)
-                .ThenInclude(o => o.User)
                 .FirstOrDefaultAsync();
         }
 

@@ -7,15 +7,19 @@ public partial class ParkingSession
 {
     public string Id { get; set; } = null!;
 
-    public string VehicleId { get; set; } = null!;
+    public string? VehicleId { get; set; }
 
-    public string DriverId { get; set; } = null!;
+    public string? DriverId { get; set; }
+
+    public string? ParkingLotId { get; set; }
+
+    public string LicensePlate { get; set; } = null!;
+
+    public string? VehicleType { get; set; }
 
     public string CheckInStaffId { get; set; } = null!;
 
     public string? CheckOutStaffId { get; set; }
-
-    public string ParkingLotId { get; set; } = null!;
 
     public DateTime EntryDateTime { get; set; }
 
@@ -23,9 +27,9 @@ public partial class ParkingSession
 
     public DateTime? CheckOutDateTime { get; set; }
 
-    public string EntryFrontCaptureUrl { get; set; } = null!;
+    public string? EntryFrontCaptureUrl { get; set; }
 
-    public string EntryBackCaptureUrl { get; set; } = null!;
+    public string? EntryBackCaptureUrl { get; set; }
 
     public string? ExitFrontCaptureUrl { get; set; }
 
@@ -37,7 +41,7 @@ public partial class ParkingSession
 
     public string? PaymentInformation { get; set; }
 
-    public string PaymentMethod { get; set; } = null!;
+    public string? PaymentMethod { get; set; }
 
     public decimal Cost { get; set; }
 
@@ -45,17 +49,17 @@ public partial class ParkingSession
 
     public string PaymentStatus { get; set; } = null!;
 
-    public string ParkingFeeSchedule { get; set; } = null!;
+    public string? ParkingFeeSchedule { get; set; }
 
     public virtual StaffProfile CheckInStaff { get; set; } = null!;
 
     public virtual StaffProfile? CheckOutStaff { get; set; }
 
-    public virtual ClientProfile Driver { get; set; } = null!;
+    public virtual ClientProfile? Driver { get; set; }
 
-    public virtual ParkingFeeSchedule ParkingFeeScheduleNavigation { get; set; } = null!;
+    public virtual ParkingFeeSchedule? ParkingFeeScheduleNavigation { get; set; }
 
-    public virtual ParkingLot ParkingLot { get; set; } = null!;
+    public virtual ParkingLot? ParkingLot { get; set; }
 
-    public virtual Vehicle Vehicle { get; set; } = null!;
+    public virtual Vehicle? Vehicle { get; set; }
 }

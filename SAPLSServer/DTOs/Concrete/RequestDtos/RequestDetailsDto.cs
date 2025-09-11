@@ -20,8 +20,8 @@ namespace SAPLSServer.DTOs.Concrete.RequestDtos
             Description = request.Description;
             InternalNote = request.InternalNote;
             ResponseMessage = request.ResponseMessage;
-            LastUpdateAdminId = request.LastUpdatePerson?.AdminId;
-            LastUpdateAdminFullName = request.LastUpdatePerson?.User.FullName;
+            LastUpdateAdminId = request.UpdatedByNavigation?.AdminId;
+            LastUpdateAdminFullName = request.UpdatedByNavigation?.User.FullName;
             Attachments = attachments?.ToArray();
         }
     }

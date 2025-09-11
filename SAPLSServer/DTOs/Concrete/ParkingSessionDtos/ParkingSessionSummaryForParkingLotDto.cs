@@ -14,7 +14,7 @@ namespace SAPLSServer.DTOs.Concrete.ParkingSessionDtos
         public ParkingSessionSummaryForParkingLotDto(ParkingSession parkingSession)
         {
             Id = parkingSession.Id;
-            LicensePlate = parkingSession.Vehicle.LicensePlate;
+            LicensePlate = parkingSession.LicensePlate;
             EntryDateTime = parkingSession.EntryDateTime;
             ExitDateTime = parkingSession.ExitDateTime;
             Cost = parkingSession.Cost;
