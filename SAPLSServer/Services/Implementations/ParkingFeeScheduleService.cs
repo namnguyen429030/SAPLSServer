@@ -146,7 +146,7 @@ namespace SAPLSServer.Services.Implementations
                 ? (int)((totalMinutes - schedule.InitialMinutes) % schedule.AdditionalMinutes)
                 : 0;
 
-            return schedule.InitialFee + (int)(additionalMinutes / 60) * schedule.AdditionalFee;
+            return schedule.InitialFee + additionalMinutes * schedule.AdditionalFee;
         }
     }
 }
