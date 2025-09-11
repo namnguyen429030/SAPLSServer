@@ -35,5 +35,6 @@ namespace SAPLSServer.Services.Interfaces
         /// <param name="request">The filter criteria for incident reports.</param>
         /// <returns>A list of incident report summaries.</returns>
         Task<List<IncidentReportSummaryDto>> GetIncidentReportsList(GetIncidenReportListRequest request);
+        Task<PageResult<IncidentReportSummaryDto>> GetIncidentReportsPage(PageRequest pageRequest, GetIncidenReportListRequest listRequest);
     }
 }

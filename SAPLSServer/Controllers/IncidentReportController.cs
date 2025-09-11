@@ -131,5 +131,20 @@ namespace SAPLSServer.Controllers
                     new { message = MessageKeys.UNEXPECTED_ERROR });
             }
         }
+        [HttpGet("page")]
+        public async Task<IActionResult> GetPagedList([FromQuery] PageRequest pageRequest, [FromQuery] GetIncidenReportListRequest listRequest)
+        {
+            try
+            {
+                var result = await _incidentReportService.GetIncidentReportsPage(pageRequest, listRequest);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while fetching paged incident reports list");
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    new { message = MessageKeys.UNEXPECTED_ERROR });
+            }
+        }
     }
 }
