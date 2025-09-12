@@ -31,7 +31,7 @@ namespace SAPLSServer.Services.Implementations
             var exists = await _parkingFeeScheduleRepository.GetAllAsync(filters: [s => s.ParkingLotId == request.ParkingLotId]);
             foreach(var existedSchedule in exists)
             {
-                bool overlap = !(request.EndTime < existedSchedule.StartTime || request.StartTime > existedSchedule.EndTime) &&
+                bool overlap = (request.EndTime <= existedSchedule.StartTime && request.StartTime >= existedSchedule.EndTime) &&
                     existedSchedule.DayOfWeeks.Split(',').Any(d => request.DayOfWeeks.Split(',').Contains(d)) &&
                     existedSchedule.ForVehicleType == request.ForVehicleType;
                 if (overlap)

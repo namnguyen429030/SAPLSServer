@@ -46,7 +46,7 @@ namespace SAPLSServer.Services.Implementations
             {
                 foreach (var staffId in request.StaffIds ?? new List<string>())
                 {
-                    bool overlap = !(request.EndTime <= existingShift.StartTime || request.StartTime >= existingShift.EndTime) &&
+                    bool overlap = (request.EndTime <= existingShift.StartTime && request.StartTime >= existingShift.EndTime) &&
                                existingShift.DayOfWeeks.Split(',').Any(d => request.DayOfWeeks.Split(',').Contains(d)) &&
                                existingShift.StaffUsers.Any(s => s.StaffId == s.StaffId);
                     if (overlap)
