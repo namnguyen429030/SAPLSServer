@@ -28,6 +28,16 @@ namespace SAPLSServer.Services.Implementations
             if (!await _parkingLotService.IsParkingLotOwner(request.ParkingLotId, performerId))
                 throw new UnauthorizedAccessException(MessageKeys.UNAUTHORIZED_ACCESS);
 
+            var exists = await _parkingFeeScheduleRepository.GetAllAsync(filters: [s => s.ParkingLotId == request.ParkingLotId]);
+            foreach(var existedSchedule in exists)
+            {
+                bool overlap = !(request.EndTime < existedSchedule.StartTime || request.StartTime > existedSchedule.EndTime) &&
+                    existedSchedule.DayOfWeeks.Split(',').Any(d => request.DayOfWeeks.Split(',').Contains(d)) &&
+                    existedSchedule.ForVehicleType == request.ForVehicleType;
+                if (overlap)
+                    throw new InvalidInformationException(MessageKeys.FEE_SCHEDULE_TIME_OVERLAP);
+            }
+
             var schedule = new ParkingFeeSchedule
             {
                 Id = Guid.NewGuid().ToString(),

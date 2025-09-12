@@ -288,5 +288,7 @@ namespace SAPLSServer.Constants
         public const string INVALID_INITIAL_MINUTES = "INVALID_INITIAL_MINUTES";
         public const string INVALID_ADDITIONAL_MINUTES = "INVALID_ADDITIONAL_MINUTES";
         public const string EMAIL_NOT_EXIST = "EMAIL_NOT_EXIST";
+        public const string FEE_SCHEDULE_TIME_OVERLAP = "FEE_SCHEDULE_TIME_OVERLAP";
+        public const string SHIFT_TIME_OVERLAP = "SHIFT_TIME_OVERLAP";
     }
 }

@@ -14,16 +14,13 @@ namespace SAPLSServer.Services.Implementations
         private readonly IParkingLotShiftRepository _shiftRepository;
         private readonly IStaffProfileRepository _staffProfileRepository;
         private readonly IParkingLotService _parkingLotService;
-        private readonly IStaffService _staffService;
 
         public ParkingLotShiftService(IParkingLotShiftRepository shiftRepository, 
             IParkingLotService parkingLotService,
-            IStaffService staffService,
             IStaffProfileRepository staffProfileRepository)
         {
             _shiftRepository = shiftRepository;
             _parkingLotService = parkingLotService;
-            _staffService = staffService;
             _staffProfileRepository = staffProfileRepository;
         }
 
@@ -43,6 +40,19 @@ namespace SAPLSServer.Services.Implementations
         {
             if (!await _parkingLotService.IsParkingLotOwner(request.ParkingLotId, performerId))
                 throw new UnauthorizedAccessException(MessageKeys.UNAUTHORIZED_ACCESS);
+
+            var existingShifts = await _shiftRepository.GetByParkingLotIdAsync(request.ParkingLotId);
+            foreach (var existingShift in existingShifts)
+            {
+                foreach (var staffId in request.StaffIds ?? new List<string>())
+                {
+                    bool overlap = !(request.EndTime <= existingShift.StartTime || request.StartTime >= existingShift.EndTime) &&
+                               existingShift.DayOfWeeks.Split(',').Any(d => request.DayOfWeeks.Split(',').Contains(d)) &&
+                               existingShift.StaffUsers.Any(s => s.StaffId == s.StaffId);
+                    if (overlap)
+                        throw new InvalidInformationException(MessageKeys.SHIFT_TIME_OVERLAP);
+                }
+            }
 
             var shift = new ParkingLotShift
             {
