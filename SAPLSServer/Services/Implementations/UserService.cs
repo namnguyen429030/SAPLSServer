@@ -97,7 +97,8 @@ namespace SAPLSServer.Services.Implementations
             catch(Exception)
             {
                 _userRepository.Remove(user);
-                return string.Empty;
+                await _userRepository.SaveChangesAsync();
+                throw new InvalidInformationException(MessageKeys.EMAIL_NOT_EXIST);
             }
             return user.Id;
         }
@@ -117,7 +118,7 @@ namespace SAPLSServer.Services.Implementations
                 return null;
             return new UserDetailsDto(user);
         }
-
+         
         public async Task<string> GetPassword(string userId)
         {
             var user = await _userRepository.Find(userId);
