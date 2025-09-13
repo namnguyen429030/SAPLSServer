@@ -152,9 +152,9 @@ namespace SAPLSServer.Services.Implementations
                 throw new InvalidInformationException(MessageKeys.PARKING_FEE_SCHEDULE_NOT_FOUND);
             var totalMinutes = (endTime - startTime).TotalMinutes;
             
-            var additionalMinutes = schedule.AdditionalMinutes > 0
+            var additionalMinutes = Math.Max(schedule.AdditionalMinutes > 0
                 ? (int)((totalMinutes - schedule.InitialMinutes) % schedule.AdditionalMinutes)
-                : 0;
+                : 0, 0);
 
             return schedule.InitialFee + additionalMinutes * schedule.AdditionalFee;
         }

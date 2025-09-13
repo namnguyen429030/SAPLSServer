@@ -583,7 +583,7 @@ namespace SAPLSServer.Services.Implementations
         public async Task<ParkingSessionDetailsForParkingLotDto?> GetByLicensePlateNumber(string licensePlateNumber, string parkingLotId)
         {
             var session = await _parkingSessionRepository.FindLatest(licensePlateNumber, parkingLotId);
-            if (session == null)
+            if (session == null || session.Status == ParkingSessionStatus.Finished.ToString())
             {
                 return null;
             }
