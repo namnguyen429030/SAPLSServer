@@ -352,6 +352,7 @@ namespace SAPLSServer.Services.Implementations
             session.CheckOutStaffId = staffId;
             session.PaymentStatus = ParkingSessionPayStatus.Paid.ToString();
             session.ExitDateTime = DateTime.UtcNow;
+            session.Cost = await CalculateSessionFee(session);
             _parkingSessionRepository.Update(session);
             await _parkingSessionRepository.SaveChangesAsync();
         }
