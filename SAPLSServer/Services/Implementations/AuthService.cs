@@ -109,7 +109,7 @@ namespace SAPLSServer.Services.Implementations
             {
                 user = await _userService.GetByPhoneOrEmail(request.EmailOrCitizenIdNo);
             }
-            if (user == null || user.Status != UserStatus.Active.ToString())
+            if (user == null || user.Role != UserRole.Client.ToString() || user.Status != UserStatus.Active.ToString())
                 return null;
             var userPassword = await _userService.GetPassword(user.Id);
             if (!_passwordService.VerifyPassword(request.Password, userPassword))

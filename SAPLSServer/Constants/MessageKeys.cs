@@ -290,5 +290,6 @@ namespace SAPLSServer.Constants
         public const string EMAIL_NOT_EXIST = "EMAIL_NOT_EXIST";
         public const string FEE_SCHEDULE_TIME_OVERLAP = "FEE_SCHEDULE_TIME_OVERLAP";
         public const string SHIFT_TIME_OVERLAP = "SHIFT_TIME_OVERLAP";
+        public const string INCIDENT_REPORT_CREATED_SUCCESSFULLY = "INCIDENT_REPORT_CREATED_SUCCESSFULLY";
     }
 }

@@ -41,7 +41,7 @@ namespace SAPLSServer.Controllers
             {
                 var reporterId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
                 await _incidentReportService.CreateIncidentReport(request, reporterId);
-                return Ok(new { message = MessageKeys.SHIFT_DIARY_CREATED_SUCCESSFULLY });
+                return Ok(new { message = MessageKeys.INCIDENT_REPORT_CREATED_SUCCESSFULLY });
             }
             catch (InvalidInformationException ex)
             {
