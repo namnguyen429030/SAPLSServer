@@ -42,6 +42,10 @@ namespace SAPLSServer.Services.Implementations
             {
                 throw new InvalidInformationException(MessageKeys.STAFF_PROFILE_NOT_FOUND);
             }
+            if (await _parkingLotService.IsParkingLotValid(reporter.ParkingLotId))
+            {
+                throw new InvalidInformationException(MessageKeys.PARKING_LOT_NOT_FOUND);
+            }
             var incidentReport = new IncidenceReport
             {
                 Id = Guid.NewGuid().ToString(),
@@ -93,48 +97,48 @@ namespace SAPLSServer.Services.Implementations
             return new IncidentReportDetailsDto(incidentReport, attachments?.ToArray());
         }
 
-        public async Task<PageResult<IncidentReportSummaryDto>> GetIncidentReportsPage(PageRequest pageRequest, GetIncidenReportListRequest request)
+        public async Task<PageResult<IncidentReportSummaryDto>> GetIncidentReportsPage(PageRequest pageRequest, GetIncidenReportListRequest listRequest)
         {
-            // Build filter criteria based on the request parameters
+            // Build filter criteria based on the listRequest parameters
             var criterias = new List<Expression<Func<IncidenceReport, bool>>>();
 
             // Filter by parking lot (required field)
-            if (!string.IsNullOrWhiteSpace(request.ParkingLotId))
+            if (!string.IsNullOrWhiteSpace(listRequest.ParkingLotId))
             {
-                criterias.Add(ir => ir.ParkingLotId == request.ParkingLotId);
+                criterias.Add(ir => ir.ParkingLotId == listRequest.ParkingLotId);
             }
 
             // Filter by priority
-            if (!string.IsNullOrWhiteSpace(request.Priority))
+            if (!string.IsNullOrWhiteSpace(listRequest.Priority))
             {
-                criterias.Add(ir => ir.Priority == request.Priority);
+                criterias.Add(ir => ir.Priority == listRequest.Priority);
             }
 
             // Filter by status
-            if (!string.IsNullOrWhiteSpace(request.Status))
+            if (!string.IsNullOrWhiteSpace(listRequest.Status))
             {
-                criterias.Add(ir => ir.Status == request.Status);
+                criterias.Add(ir => ir.Status == listRequest.Status);
             }
 
             // Filter by date range
-            if (request.StartDate.HasValue && request.EndDate.HasValue)
+            if (listRequest.StartDate.HasValue && listRequest.EndDate.HasValue)
             {
-                var startDateTime = request.StartDate.Value.ToDateTime(TimeOnly.MinValue);
+                var startDateTime = listRequest.StartDate.Value.ToDateTime(TimeOnly.MinValue);
                 criterias.Add(ir => ir.ReportedDate >= startDateTime);
-                var endDateTime = request.EndDate.Value.ToDateTime(TimeOnly.MaxValue);
+                var endDateTime = listRequest.EndDate.Value.ToDateTime(TimeOnly.MaxValue);
                 criterias.Add(ir => ir.ReportedDate <= endDateTime);
             }
 
             // Filter by search criteria (search in header and description)
-            if (!string.IsNullOrWhiteSpace(request.SearchCriteria))
+            if (!string.IsNullOrWhiteSpace(listRequest.SearchCriteria))
             {
-                criterias.Add(ir => ir.Header.Contains(request.SearchCriteria) ||
-                                   ir.Description.Contains(request.SearchCriteria));
+                criterias.Add(ir => ir.Header.Contains(listRequest.SearchCriteria) ||
+                                   ir.Description.Contains(listRequest.SearchCriteria));
             }
 
 
             // Determine sort order (default to descending for dates)
-            bool isAscending = request.Order == OrderType.Asc.ToString();
+            bool isAscending = listRequest.Order == OrderType.Asc.ToString();
 
             // Get total count for pagination
             var totalCount = await _incidentReportRepository.CountAsync(criterias.ToArray());
@@ -161,7 +165,7 @@ namespace SAPLSServer.Services.Implementations
 
         public async Task<List<IncidentReportSummaryDto>> GetIncidentReportsList(GetIncidenReportListRequest request)
         {
-            // Build filter criteria based on the request parameters (same logic as GetIncidentReportsPage)
+            // Build filter criteria based on the listRequest parameters (same logic as GetIncidentReportsPage)
             var criterias = new List<Expression<Func<IncidenceReport, bool>>>();
 
             // Filter by parking lot (required field)

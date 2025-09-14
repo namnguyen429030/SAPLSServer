@@ -4,7 +4,6 @@ using SAPLSServer.DTOs.Concrete.ParkingSessionDtos;
 using SAPLSServer.DTOs.Concrete.PaymentDtos;
 using SAPLSServer.DTOs.PaginationDto;
 using SAPLSServer.Exceptions;
-using SAPLSServer.Helpers;
 using SAPLSServer.Models;
 using SAPLSServer.Repositories.Interfaces;
 using SAPLSServer.Services.Interfaces;
@@ -21,6 +20,7 @@ namespace SAPLSServer.Services.Implementations
         private readonly IParkingFeeScheduleService _parkingFeeScheduleService;
         private readonly IVehicleService _vehicleService;
         private readonly IFileService _fileService;
+        private readonly IWhiteListService _whiteListService;
 
         public ParkingSessionService(
             IParkingSessionRepository parkingSessionRepository,
@@ -30,7 +30,8 @@ namespace SAPLSServer.Services.Implementations
             IVehicleService vehicleService,
             ISharedVehicleService sharedVehicleService,
             IFileService fileService,
-            IParkingFeeScheduleService parkingFeeScheduleService)
+            IParkingFeeScheduleService parkingFeeScheduleService,
+            IWhiteListService whiteListService)
         {
             _parkingSessionRepository = parkingSessionRepository;
             _vehicleService = vehicleService;
@@ -38,6 +39,7 @@ namespace SAPLSServer.Services.Implementations
             _parkingLotService = parkingLotService;
             _fileService = fileService;
             _parkingFeeScheduleService = parkingFeeScheduleService;
+            _whiteListService = whiteListService;
         }
 
         public async Task<ParkingSessionDetailsForClientDto?> GetSessionDetailsForClient(string sessionId)
@@ -111,6 +113,12 @@ namespace SAPLSServer.Services.Implementations
         {
             if (!await _parkingLotService.IsParkingLotValid(request.ParkingLotId))
                 throw new InvalidInformationException(MessageKeys.PARKING_LOT_NOT_FOUND);
+            if(!await _parkingLotService.IsParkingLotUsingWhiteList(request.ParkingLotId))
+            {
+                var isWhiteListed = await _whiteListService.IsClientWhitelistedAsync(request.ParkingLotId, staffId);
+                if (!isWhiteListed)
+                    throw new UnauthorizedAccessException(MessageKeys.CLIENT_NOT_IN_WHITE_LIST);
+            }
             var vehicle = await _vehicleService.GetByLicensePlate(request.VehicleLicensePlate);
 
             var frontCaptureUrl = string.Empty;
