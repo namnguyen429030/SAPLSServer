@@ -57,19 +57,19 @@ namespace SAPLSServer.Repositories.Implementations
             return ps => ps.Id == id;
         }
 
-        public async Task<ParkingSession?> FindIncludingVehicleAndOwner(string id)
+        public async Task<ParkingSession?> FindIncludingVehicleAndDriver(string id)
         {
            return await _dbSet.Include(ps => ps.Vehicle)
-                .ThenInclude(v => v!.Owner)
-                .ThenInclude(o => o.User)
+                .Include(ps => ps!.Driver)
+                .ThenInclude(đ => đ!.User)
                 .FirstOrDefaultAsync(CreateIdPredicate(id));
         }
 
-        public async Task<ParkingSession?> FindIncludingVehicleAndOwnerReadOnly(string id)
+        public async Task<ParkingSession?> FindIncludingVehicleAndDriverReadOnly(string id)
         {
             return await _dbSet.Include(ps => ps.Vehicle)
-                .ThenInclude(v => v!.Owner)
-                .ThenInclude(o => o.User)
+                .Include(ps => ps.Driver)
+                .ThenInclude(đ => đ!.User)
                 .AsNoTracking()
                 .FirstOrDefaultAsync(CreateIdPredicate(id));
         }

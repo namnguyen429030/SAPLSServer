@@ -64,7 +64,7 @@ namespace SAPLSServer.Services.Implementations
                 return null;
             if (session.VehicleId != null && session.DriverId != null)
             {
-                session = await _parkingSessionRepository.FindIncludingVehicleAndOwnerReadOnly(sessionId);
+                session = await _parkingSessionRepository.FindIncludingVehicleAndDriverReadOnly(sessionId);
             }
             if (session!.Status == ParkingSessionStatus.Parking.ToString())
                 session.Cost = await CalculateSessionFee(session);
@@ -597,7 +597,7 @@ namespace SAPLSServer.Services.Implementations
             var vehicle = await _vehicleService.GetByLicensePlate(licensePlateNumber);
             if (vehicle != null)
             {
-                session = await _parkingSessionRepository.FindIncludingVehicleAndOwnerReadOnly(session.Id);
+                session = await _parkingSessionRepository.FindIncludingVehicleAndDriverReadOnly(session.Id);
             }
             session!.Cost = await CalculateSessionFee(session);
             return new ParkingSessionDetailsForParkingLotDto(session);

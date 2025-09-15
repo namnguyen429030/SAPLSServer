@@ -72,7 +72,7 @@ namespace SAPLSServer.Repositories.Interfaces
         /// <param name="id">The unique identifier of the parking session to retrieve. Cannot be <c>null</c> or empty.</param>
         /// <returns>A <see cref="ParkingSession"/> instance containing the session, vehicle, and owner information if found;
         /// otherwise, <c>null</c>.</returns>
-        Task<ParkingSession?> FindIncludingVehicleAndOwner(string id);
+        Task<ParkingSession?> FindIncludingVehicleAndDriver(string id);
         /// <summary>
         /// Retrieves a parking session by its unique identifier, including associated vehicle and owner information, in
         /// read-only context.
@@ -82,7 +82,7 @@ namespace SAPLSServer.Repositories.Interfaces
         /// <param name="id">The unique identifier of the parking session to retrieve. Cannot be <c>null</c> or empty.</param>
         /// <returns>A <see cref="ParkingSession"/> instance containing the session details and related vehicle and owner
         /// information if found; otherwise, <c>null</c>.</returns>
-        Task<ParkingSession?> FindIncludingVehicleAndOwnerReadOnly(string id);
+        Task<ParkingSession?> FindIncludingVehicleAndDriverReadOnly(string id);
         /// <summary>
         /// Retrieves a parking session by its unique identifier, including the associated parking fee schedule, in a read-only context.
         /// </summary>
