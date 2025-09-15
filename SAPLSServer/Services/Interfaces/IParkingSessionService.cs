@@ -113,5 +113,6 @@ namespace SAPLSServer.Services.Interfaces
         Task ConfirmTransaction(PaymentWebHookRequest request);
         Task<ParkingSessionDetailsForParkingLotDto?> GetByLicensePlateNumber(string licensePlateNumber, string parkingLotId);
         Task ForceFinish(FinishParkingSessionRequest request, string staffId);
+        Task<ParkingSessionDetailsForClientDto?> GetCurrentParkingSession(string vehicleId);
     }
 }

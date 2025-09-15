@@ -312,7 +312,7 @@ namespace SAPLSServer.Services.Implementations
             }
             throw new InvalidInformationException(MessageKeys.PARKING_SESSION_NOT_FOUND);
         }
-        public async Task ForceFinish(FinishParkingSessionRequest request, string staffId)
+        public async Task       ForceFinish(FinishParkingSessionRequest request, string staffId)
         {
             var session = await _parkingSessionRepository.FindLatest(request.VehicleLicensePlate, request.ParkingLotId);
             if (session == null)
@@ -602,6 +602,17 @@ namespace SAPLSServer.Services.Implementations
             }
             session!.Cost = await CalculateSessionFee(session);
             return new ParkingSessionDetailsForParkingLotDto(session);
+        }
+
+        public async Task<ParkingSessionDetailsForClientDto?> GetCurrentParkingSession(string vehicleId)
+        {
+            var session = await _parkingSessionRepository.FindLatest(vehicleId);
+            if (session == null || session.Status == ParkingSessionStatus.Finished.ToString())
+            {
+                return null;
+            }
+            session!.Cost = await CalculateSessionFee(session);
+            return new ParkingSessionDetailsForClientDto(session);
         }
     }
 }

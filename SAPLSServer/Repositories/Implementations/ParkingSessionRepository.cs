@@ -57,33 +57,40 @@ namespace SAPLSServer.Repositories.Implementations
             return ps => ps.Id == id;
         }
 
-        public Task<ParkingSession?> FindIncludingVehicleAndOwner(string id)
+        public async Task<ParkingSession?> FindIncludingVehicleAndOwner(string id)
         {
-           return _dbSet.Include(ps => ps.Vehicle)
+           return await _dbSet.Include(ps => ps.Vehicle)
                 .ThenInclude(v => v!.Owner)
                 .ThenInclude(o => o.User)
                 .FirstOrDefaultAsync(CreateIdPredicate(id));
         }
 
-        public Task<ParkingSession?> FindIncludingVehicleAndOwnerReadOnly(string id)
+        public async Task<ParkingSession?> FindIncludingVehicleAndOwnerReadOnly(string id)
         {
-            return _dbSet.Include(ps => ps.Vehicle)
+            return await _dbSet.Include(ps => ps.Vehicle)
                 .ThenInclude(v => v!.Owner)
                 .ThenInclude(o => o.User)
                 .AsNoTracking()
                 .FirstOrDefaultAsync(CreateIdPredicate(id));
         }
 
-        public Task<ParkingSession?> FindInlcudingParkingFeeScheduleReadOnly(string id)
+        public async Task<ParkingSession?> FindInlcudingParkingFeeScheduleReadOnly(string id)
         {
-            return _dbSet.Include(ps => ps.ParkingFeeSchedule)
+            return await _dbSet.Include(ps => ps.ParkingFeeSchedule)
                 .AsNoTracking()
                 .FirstOrDefaultAsync(CreateIdPredicate(id));
         }
 
-        public Task<ParkingSession?> FindLatest(string licensePlate, string parkingLotId)
+        public async Task<ParkingSession?> FindLatest(string licensePlate, string parkingLotId)
         {
-            return _dbSet.Where(ps => ps.LicensePlate == licensePlate && ps.ParkingLotId == parkingLotId)
+            return await _dbSet.Where(ps => ps.LicensePlate == licensePlate && ps.ParkingLotId == parkingLotId)
+                .OrderByDescending(ps => ps.EntryDateTime)
+                .FirstOrDefaultAsync();
+        }
+
+        public async Task<ParkingSession?> FindLatest(string vehicleId)
+        {
+            return await _dbSet.Where(ps => ps.VehicleId == vehicleId)
                 .OrderByDescending(ps => ps.EntryDateTime)
                 .FirstOrDefaultAsync();
         }

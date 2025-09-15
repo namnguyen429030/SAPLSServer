@@ -95,6 +95,47 @@ namespace SAPLSServer.Controllers
             }
         }
 
+        [HttpGet("current/{vehicleId}")]
+        public async Task<IActionResult> GetCurrentParkingSession(string vehicleId)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(vehicleId))
+                {
+                    _logger.LogWarning("VehicleId is required in GetCurrentParkingSession");
+                    return BadRequest(new { error = MessageKeys.VEHICLE_ID_REQUIRED });
+                }
+
+                var result = await _parkingSessionService.GetCurrentParkingSession(vehicleId);
+                if (result == null)
+                {
+                    _logger.LogInformation("Current parking session not found for vehicle. VehicleId: {VehicleId}", vehicleId);
+                    return NotFound(new { error = MessageKeys.PARKING_SESSION_NOT_FOUND });
+                }
+
+                return Ok(new
+                {
+                    message = MessageKeys.GET_PARKING_SESSION_DETAILS_SUCCESSFULLY,
+                    data = result
+                });
+            }
+            catch (InvalidInformationException ex)
+            {
+                _logger.LogWarning(ex, "Invalid information provided while retrieving current parking session for vehicle with VehicleId: {VehicleId}", vehicleId);
+                return BadRequest(new { error = ex.Message });
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                _logger.LogWarning(ex, "Unauthorized access attempt while retrieving current parking session for vehicle with VehicleId: {VehicleId}", vehicleId);
+                return StatusCode(403, new { error = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while retrieving current parking session for vehicle with VehicleId: {VehicleId}", vehicleId);
+                return StatusCode(500, new { error = MessageKeys.UNEXPECTED_ERROR });
+            }
+        }
+
         [HttpGet("by-client")]
         public async Task<IActionResult> GetSessionsByClient([FromQuery] GetParkingSessionListByClientIdRequest request)
         {

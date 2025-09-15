@@ -106,6 +106,7 @@ namespace SAPLSServer.Repositories.Interfaces
         /// for the specified vehicle and parking lot if found; otherwise, <see langword="null"/>.
         /// </returns>
         Task<ParkingSession?> FindLatest(string licensePlate, string parkingLotId);
+        Task<ParkingSession?> FindLatest(string vehicleId);
 
         /// <summary>
         /// Counts the total number of parking session transactions in the system.
