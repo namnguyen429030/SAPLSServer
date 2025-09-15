@@ -105,44 +105,6 @@ namespace SAPLSServer.Controllers
         }
 
         /// <summary>
-        /// Gets the status of a payment by parking session ID
-        /// </summary>
-        [HttpGet("session/{parkingSessionId}/status")]
-        public async Task<ActionResult<PaymentStatusResponseDto>> GetPaymentStatusBySession(string parkingSessionId)
-        {
-            try
-            {
-                if (string.IsNullOrWhiteSpace(parkingSessionId))
-                {
-                    _logger.LogWarning("Invalid parkingSessionId in GetPaymentStatusBySession: {ParkingSessionId}", parkingSessionId);
-                    return BadRequest(new { message = "Invalid parking session ID" });
-                }
-
-                var result = await _paymentService.GetPaymentStatus(parkingSessionId);
-
-                if (result == null)
-                {
-                    _logger.LogInformation("Payment not found for parking session in GetPaymentStatusBySession: {ParkingSessionId}", parkingSessionId);
-                    return NotFound(new { message = "Payment not found for parking session" });
-                }
-
-                return Ok(result);
-            }
-            catch (InvalidOperationException ex)
-            {
-                _logger.LogWarning(ex, "Operation failed in GetPaymentStatusBySession for ParkingSessionId: {ParkingSessionId}", parkingSessionId);
-                return StatusCode(StatusCodes.Status503ServiceUnavailable,
-                    new { message = ex.Message });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Unexpected error in GetPaymentStatusBySession for ParkingSessionId: {ParkingSessionId}", parkingSessionId);
-                return StatusCode(StatusCodes.Status500InternalServerError,
-                    new { message = MessageKeys.UNEXPECTED_ERROR });
-            }
-        }
-
-        /// <summary>
         /// Cancels a payment request by payment ID
         /// </summary>
         [HttpPost("{paymentId}/cancel")]
@@ -182,51 +144,6 @@ namespace SAPLSServer.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Unexpected error in CancelPayment for PaymentId: {PaymentId}", paymentId);
-                return StatusCode(StatusCodes.Status500InternalServerError,
-                    new { message = MessageKeys.UNEXPECTED_ERROR });
-            }
-        }
-
-        /// <summary>
-        /// Cancels a payment request by parking session ID
-        /// </summary>
-        [HttpPost("session/{parkingSessionId}/cancel")]
-        public async Task<ActionResult<PaymentStatusResponseDto>> CancelPaymentBySession(string parkingSessionId, [FromBody] PaymentCancelRequestDto request)
-        {
-            try
-            {
-                if (string.IsNullOrWhiteSpace(parkingSessionId))
-                {
-                    _logger.LogWarning("Invalid parkingSessionId in CancelPaymentBySession: {ParkingSessionId}", parkingSessionId);
-                    return BadRequest(new { message = "Invalid parking session ID" });
-                }
-
-                if (!ModelState.IsValid)
-                {
-                    _logger.LogWarning("Invalid model state in CancelPaymentBySession: {@ModelState}", ModelState);
-                    return BadRequest(ModelState);
-                }
-
-                var result = await _paymentService.SendCancelPaymentRequest(request, parkingSessionId);
-
-                if (result == null)
-                {
-                    _logger.LogError("Payment service unavailable when cancelling payment for ParkingSessionId: {ParkingSessionId}", parkingSessionId);
-                    return StatusCode(StatusCodes.Status500InternalServerError,
-                        new { message = MessageKeys.PAYOS_SERVICE_UNAVAILABLE });
-                }
-
-                return Ok(result);
-            }
-            catch (InvalidOperationException ex)
-            {
-                _logger.LogWarning(ex, "Operation failed in CancelPaymentBySession for ParkingSessionId: {ParkingSessionId}", parkingSessionId);
-                return StatusCode(StatusCodes.Status503ServiceUnavailable,
-                    new { message = ex.Message });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Unexpected error in CancelPaymentBySession for ParkingSessionId: {ParkingSessionId}", parkingSessionId);
                 return StatusCode(StatusCodes.Status500InternalServerError,
                     new { message = MessageKeys.UNEXPECTED_ERROR });
             }

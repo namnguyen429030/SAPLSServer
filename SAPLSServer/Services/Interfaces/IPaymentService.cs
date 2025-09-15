@@ -10,7 +10,5 @@ namespace SAPLSServer.Services.Interfaces
             string apiKey, PaymentCancelRequestDto request);
         Task<PaymentStatusResponseDto?> GetPaymentStatus(int paymentId, string clientKey, string apiKey);
         string GenerateSignature(string data, string checkSumKey);
-        Task<PaymentStatusResponseDto?> SendCancelPaymentRequest(PaymentCancelRequestDto request, string parkingSessionId);
-        Task<PaymentStatusResponseDto?> GetPaymentStatus(string parkingSessionId);
     }
 }

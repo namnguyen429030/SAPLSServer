@@ -114,5 +114,8 @@ namespace SAPLSServer.Services.Interfaces
         Task<ParkingSessionDetailsForParkingLotDto?> GetByLicensePlateNumber(string licensePlateNumber, string parkingLotId);
         Task ForceFinish(FinishParkingSessionRequest request, string staffId);
         Task<ParkingSessionDetailsForClientDto?> GetCurrentParkingSession(string vehicleId);
+
+        Task<PaymentStatusResponseDto?> SendCancelPaymentRequest(PaymentCancelRequestDto request, string parkingSessionId);
+        Task<PaymentStatusResponseDto?> GetPaymentStatus(string parkingSessionId);
     }
 }

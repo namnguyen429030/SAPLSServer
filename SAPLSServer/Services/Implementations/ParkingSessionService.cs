@@ -1,3 +1,4 @@
+using Google.Apis.Services;
 using SAPLSServer.Constants;
 using SAPLSServer.DTOs.Concrete.FileUploadDtos;
 using SAPLSServer.DTOs.Concrete.ParkingSessionDtos;
@@ -613,6 +614,54 @@ namespace SAPLSServer.Services.Implementations
             }
             session!.Cost = await CalculateSessionFee(session);
             return new ParkingSessionDetailsForClientDto(session);
+        }
+
+        public async Task<PaymentStatusResponseDto?> GetPaymentStatus(string parkingSessionId)
+        {
+            var parkingSession = await _parkingSessionRepository.Find(parkingSessionId)
+                ?? throw new InvalidOperationException(MessageKeys.PARKING_SESSION_NOT_FOUND);
+
+            if (parkingSession.PaymentInformation == null)
+            {
+                throw new InvalidOperationException(MessageKeys.PARKING_SESSION_PAYMENT_INFO_NOT_FOUND);
+            }
+
+            int paymentId = JsonSerializer.Deserialize<PaymentResponseDto>(parkingSession.PaymentInformation)!.Data!.OrderCode;
+
+            if (parkingSession.ParkingLot == null)
+            {
+                throw new InvalidOperationException(MessageKeys.PARKING_LOT_NOT_FOUND);
+            }
+            string clientKey = await _parkingLotService.GetParkingLotClientKey(parkingSession.ParkingLot.Id)
+                ?? throw new InvalidOperationException(MessageKeys.PARKING_LOT_CLIENT_KEY_NOT_FOUND);
+
+            string apiKey = await _parkingLotService.GetParkingLotApiKey(parkingSession.ParkingLot.Id);
+
+           
+            return await _paymentService.GetPaymentStatus(paymentId, clientKey, apiKey);
+        }
+        public async Task<PaymentStatusResponseDto?> SendCancelPaymentRequest(PaymentCancelRequestDto request, string parkingSessionId)
+        {
+            var parkingSession = await _parkingSessionRepository.Find(parkingSessionId)
+                ?? throw new InvalidOperationException(MessageKeys.PARKING_SESSION_NOT_FOUND);
+
+            if (parkingSession.PaymentInformation == null)
+            {
+                throw new InvalidOperationException(MessageKeys.PARKING_SESSION_PAYMENT_INFO_NOT_FOUND);
+            }
+
+            int paymentId = JsonSerializer.Deserialize<PaymentResponseDto>(parkingSession.PaymentInformation)!.Data!.OrderCode;
+
+            if (parkingSession.ParkingLot == null)
+            {
+                throw new InvalidOperationException(MessageKeys.PARKING_LOT_NOT_FOUND);
+            }
+            string clientKey = await _parkingLotService.GetParkingLotClientKey(parkingSession.ParkingLot.Id)
+                ?? throw new InvalidOperationException(MessageKeys.PARKING_LOT_CLIENT_KEY_NOT_FOUND);
+
+            string apiKey = await _parkingLotService.GetParkingLotApiKey(parkingSession.ParkingLot.Id);
+
+            return await _paymentService.SendCancelPaymentRequest(paymentId, clientKey, apiKey, request);
         }
     }
 }

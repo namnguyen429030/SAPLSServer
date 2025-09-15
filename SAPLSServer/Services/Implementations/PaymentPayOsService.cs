@@ -26,49 +26,6 @@ namespace SAPLSServer.Services.Implementations
             _parkingSessionService = parkingSessionService;
         }
 
-        public async Task<PaymentStatusResponseDto?> SendCancelPaymentRequest(PaymentCancelRequestDto request, string parkingSessionId)
-        {
-            var parkingSession = await _parkingSessionService.GetSessionDetailsForClient(parkingSessionId)
-                ?? throw new InvalidOperationException(MessageKeys.PARKING_SESSION_NOT_FOUND);
-
-            var paymentInfo = await _parkingSessionService.GetSessionPaymentInfo(parkingSessionId);
-
-            if (paymentInfo == null)
-            {
-                throw new InvalidOperationException(MessageKeys.PARKING_SESSION_PAYMENT_INFO_NOT_FOUND);
-            }
-
-            int paymentId = paymentInfo.Data!.OrderCode;
-            string cancelPaymentStatusUrl = $"{_baseUrl}{UrlPaths.PAYMENT_REQUEST_PATH}/{paymentId}{UrlPaths.PAYMENT_CANCEL_PATH}";
-
-            if (parkingSession.ParkingLot == null)
-            {
-                throw new InvalidOperationException(MessageKeys.PARKING_LOT_NOT_FOUND);
-            }
-            string clientKey = await _parkingLotService.GetParkingLotClientKey(parkingSession.ParkingLot.Id)
-                ?? throw new InvalidOperationException(MessageKeys.PARKING_LOT_CLIENT_KEY_NOT_FOUND);
-
-            string apiKey = await _parkingLotService.GetParkingLotApiKey(parkingSession.ParkingLot.Id)
-                ?? throw new InvalidOperationException(MessageKeys.PARKING_LOT_API_KEY_NOT_FOUND);
-
-            var headers = new Dictionary<string, string>
-            {
-                {
-                    HeaderKeys.PAYOS_CLIENT_HEADER, clientKey
-                },
-                {
-                    HeaderKeys.PAYOS_API_KEY_HEADER, apiKey
-                }
-            };
-            var requestBody = JsonSerializer.Serialize(request);
-            var response = await _clientService.PostAsync(cancelPaymentStatusUrl, requestBody, headers);
-            if (string.IsNullOrWhiteSpace(response))
-            {
-                throw new InvalidOperationException(MessageKeys.PAYOS_SERVICE_UNAVAILABLE);
-            }
-            var paymentStatusResponse = JsonSerializer.Deserialize<PaymentStatusResponseDto>(response);
-            return paymentStatusResponse;
-        }
         public async Task<PaymentStatusResponseDto?> SendCancelPaymentRequest(int paymentId, string clientKey, 
             string apiKey, PaymentCancelRequestDto request)
         {
@@ -93,47 +50,6 @@ namespace SAPLSServer.Services.Implementations
         }
         public async Task<PaymentStatusResponseDto?> GetPaymentStatus(int paymentId, string clientKey, string apiKey)
         {
-            string getPaymentStatusUrl = $"{_baseUrl}{UrlPaths.PAYMENT_REQUEST_PATH}/{paymentId}";
-            var headers = new Dictionary<string, string>
-            {
-                {
-                    HeaderKeys.PAYOS_CLIENT_HEADER, clientKey
-                },
-                {
-                    HeaderKeys.PAYOS_API_KEY_HEADER, apiKey
-                }
-            };
-            var response = await _clientService.GetAsync(getPaymentStatusUrl, headers);
-            if (string.IsNullOrWhiteSpace(response))
-            {
-                throw new InvalidOperationException(MessageKeys.PAYOS_SERVICE_UNAVAILABLE);
-            }
-            var paymentStatusResponse = JsonSerializer.Deserialize<PaymentStatusResponseDto>(response);
-            return paymentStatusResponse;
-        }
-        public async Task<PaymentStatusResponseDto?> GetPaymentStatus(string parkingSessionId)
-        {
-            var parkingSession = await _parkingSessionService.GetSessionDetailsForClient(parkingSessionId)
-                ?? throw new InvalidOperationException(MessageKeys.PARKING_SESSION_NOT_FOUND);
-
-            var paymentInfo = await _parkingSessionService.GetSessionPaymentInfo(parkingSessionId);
-
-            if (paymentInfo == null)
-            {
-                throw new InvalidOperationException(MessageKeys.PARKING_SESSION_PAYMENT_INFO_NOT_FOUND);
-            }
-
-            int paymentId = paymentInfo.Data!.OrderCode;
-
-            if (parkingSession.ParkingLot == null)
-            {
-                throw new InvalidOperationException(MessageKeys.PARKING_LOT_NOT_FOUND);
-            }
-            string clientKey = await _parkingLotService.GetParkingLotClientKey(parkingSession.ParkingLot.Id)
-                ?? throw new InvalidOperationException(MessageKeys.PARKING_LOT_CLIENT_KEY_NOT_FOUND);
-
-            string apiKey = await _parkingLotService.GetParkingLotApiKey(parkingSession.ParkingLot.Id);
-
             string getPaymentStatusUrl = $"{_baseUrl}{UrlPaths.PAYMENT_REQUEST_PATH}/{paymentId}";
             var headers = new Dictionary<string, string>
             {
