@@ -1,4 +1,3 @@
-using Google.Apis.Services;
 using SAPLSServer.Constants;
 using SAPLSServer.DTOs.Concrete.FileUploadDtos;
 using SAPLSServer.DTOs.Concrete.ParkingSessionDtos;
@@ -27,7 +26,6 @@ namespace SAPLSServer.Services.Implementations
             IParkingSessionRepository parkingSessionRepository,
             IParkingLotService parkingLotService,
             IPaymentService paymentService,
-            IClientService clientService,
             IVehicleService vehicleService,
             ISharedVehicleService sharedVehicleService,
             IFileService fileService,
