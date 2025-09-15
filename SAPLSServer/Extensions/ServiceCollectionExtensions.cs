@@ -268,7 +268,7 @@ namespace SAPLSServer.Extensions
                 options.AddPolicy("ProductionPolicy", policy =>
                 {
                     policy.WithOrigins(
-                        "https://semiautomaticparkinglot-ffcwadc0ezdbfzfj.southeastasia-01.azurewebsites.net",
+                        "https://web.weback1609.io.vn",
                         "https://anemosnguyen2409.southeastasia.cloudapp.azure.com",
                         "http://localhost:5173")
                           .AllowAnyMethod()
