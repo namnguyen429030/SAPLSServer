@@ -12,18 +12,13 @@ namespace SAPLSServer.Services.Implementations
     public class PaymentPayOsService : IPaymentService
     {
         private readonly IHttpClientService _clientService;
-        private readonly IParkingLotService _parkingLotService;
-        private readonly IParkingSessionService _parkingSessionService;
 
         private readonly string _baseUrl;
-        public PaymentPayOsService(IHttpClientService clientService, IConfiguration configuration, 
-            IParkingLotService parkingLotService, IParkingSessionService parkingSessionService)
+        public PaymentPayOsService(IHttpClientService clientService, IConfiguration configuration)
         {
             _clientService = clientService;
             _baseUrl = configuration[ConfigurationConstants.PayOsApiBaseUrl]
                 ?? throw new EmptyConfigurationValueException();
-            _parkingLotService = parkingLotService;
-            _parkingSessionService = parkingSessionService;
         }
 
         public async Task<PaymentStatusResponseDto?> SendCancelPaymentRequest(int paymentId, string clientKey, 

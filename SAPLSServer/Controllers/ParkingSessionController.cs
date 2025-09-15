@@ -604,7 +604,7 @@ namespace SAPLSServer.Controllers
         /// <summary>
         /// Cancels a payment request by parking session ID
         /// </summary>
-        [HttpPost("session/{parkingSessionId}/cancel")]
+        [HttpPost("payment/{parkingSessionId}/cancel")]
         public async Task<ActionResult<PaymentStatusResponseDto>> CancelPaymentBySession(string parkingSessionId, [FromBody] PaymentCancelRequestDto request)
         {
             try
@@ -649,7 +649,7 @@ namespace SAPLSServer.Controllers
         /// <summary>
         /// Gets the status of a payment by parking session ID
         /// </summary>
-        [HttpGet("session/{parkingSessionId}/status")]
+        [HttpGet("payment/{parkingSessionId}/status")]
         public async Task<ActionResult<PaymentStatusResponseDto>> GetPaymentStatusBySession(string parkingSessionId)
         {
             try
