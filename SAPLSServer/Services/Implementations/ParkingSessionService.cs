@@ -626,14 +626,14 @@ namespace SAPLSServer.Services.Implementations
 
             int paymentId = JsonSerializer.Deserialize<PaymentResponseDto>(parkingSession.PaymentInformation)!.Data!.OrderCode;
 
-            if (parkingSession.ParkingLot == null)
+            if (parkingSession.ParkingLotId == null)
             {
                 throw new InvalidOperationException(MessageKeys.PARKING_LOT_NOT_FOUND);
             }
-            string clientKey = await _parkingLotService.GetParkingLotClientKey(parkingSession.ParkingLot.Id)
+            string clientKey = await _parkingLotService.GetParkingLotClientKey(parkingSession.ParkingLotId)
                 ?? throw new InvalidOperationException(MessageKeys.PARKING_LOT_CLIENT_KEY_NOT_FOUND);
 
-            string apiKey = await _parkingLotService.GetParkingLotApiKey(parkingSession.ParkingLot.Id);
+            string apiKey = await _parkingLotService.GetParkingLotApiKey(parkingSession.ParkingLotId);
 
            
             return await _paymentService.GetPaymentStatus(paymentId, clientKey, apiKey);
@@ -650,14 +650,14 @@ namespace SAPLSServer.Services.Implementations
 
             int paymentId = JsonSerializer.Deserialize<PaymentResponseDto>(parkingSession.PaymentInformation)!.Data!.OrderCode;
 
-            if (parkingSession.ParkingLot == null)
+            if (parkingSession.ParkingLotId == null)
             {
                 throw new InvalidOperationException(MessageKeys.PARKING_LOT_NOT_FOUND);
             }
-            string clientKey = await _parkingLotService.GetParkingLotClientKey(parkingSession.ParkingLot.Id)
+            string clientKey = await _parkingLotService.GetParkingLotClientKey(parkingSession.ParkingLotId)
                 ?? throw new InvalidOperationException(MessageKeys.PARKING_LOT_CLIENT_KEY_NOT_FOUND);
 
-            string apiKey = await _parkingLotService.GetParkingLotApiKey(parkingSession.ParkingLot.Id);
+            string apiKey = await _parkingLotService.GetParkingLotApiKey(parkingSession.ParkingLotId);
 
             return await _paymentService.SendCancelPaymentRequest(paymentId, clientKey, apiKey, request);
         }
