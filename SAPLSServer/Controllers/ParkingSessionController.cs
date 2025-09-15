@@ -392,6 +392,8 @@ namespace SAPLSServer.Controllers
             }
         }
 
+
+
         [HttpPost("check-out")]
         public async Task<IActionResult> CheckOut([FromBody] CheckOutParkingSessionRequest request)
         {
@@ -550,6 +552,8 @@ namespace SAPLSServer.Controllers
                 return StatusCode(500, new { error = MessageKeys.UNEXPECTED_ERROR });
             }
         }
+
+        
 
         [HttpPost("complete-payment")]
         [AllowAnonymous]
