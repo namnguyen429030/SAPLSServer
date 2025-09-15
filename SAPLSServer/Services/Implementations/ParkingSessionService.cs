@@ -113,7 +113,7 @@ namespace SAPLSServer.Services.Implementations
         {
             if (!await _parkingLotService.IsParkingLotValid(request.ParkingLotId))
                 throw new InvalidInformationException(MessageKeys.PARKING_LOT_NOT_FOUND);
-            if(!await _parkingLotService.IsParkingLotUsingWhiteList(request.ParkingLotId))
+            if(await _parkingLotService.IsParkingLotUsingWhiteList(request.ParkingLotId))
             {
                 var isWhiteListed = await _whiteListService.IsClientWhitelistedAsync(request.ParkingLotId, staffId);
                 if (!isWhiteListed)
