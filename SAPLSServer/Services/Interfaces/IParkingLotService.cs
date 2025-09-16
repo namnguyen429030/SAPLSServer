@@ -17,7 +17,7 @@ namespace SAPLSServer.Services.Interfaces
         /// <param name="dto">The request containing parking lot creation details.</param>
         /// <param name="performerAdminId">The unique identifier of the admin performing the creation.</param>
         /// <returns>A task representing the asynchronous operation.</returns>
-        Task CreateParkingLot(CreateParkingLotRequest dto, string performerAdminId);
+        Task CreateParkingLot(CreateParkingLotRequest request, string performerAdminId);
 
         /// <summary>
         /// Updates the basic information of an existing parking lot.
