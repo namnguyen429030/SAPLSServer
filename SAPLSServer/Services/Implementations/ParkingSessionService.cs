@@ -542,7 +542,7 @@ namespace SAPLSServer.Services.Implementations
                 BuyerEmail = session.Driver?.User?.Email,
                 BuyerPhone = session.Driver?.User?.Phone,
                 BuyerAddress = string.Empty,
-                ExpiredAt = (int)DateTime.UtcNow.AddMinutes(15).ToUniversalTime().Subtract(DateTime.UnixEpoch).TotalSeconds,
+                ExpiredAt = (int)DateTime.UtcNow.AddMinutes(BusinessRules.PAYMENT_DURATION_IN_MINUTES).ToUniversalTime().Subtract(DateTime.UnixEpoch).TotalSeconds,
                 Items = new List<DTOs.Concrete.PaymentDtos.PaymentItemDto>
                 {
                     new DTOs.Concrete.PaymentDtos.PaymentItemDto
