@@ -6,6 +6,7 @@ using SAPLSServer.Services.Interfaces;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using SAPLSServer.Exceptions;
 
 namespace SAPLSServer.Controllers
 {
@@ -81,6 +82,11 @@ namespace SAPLSServer.Controllers
                 var performerId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
                 var result = await _shiftService.CreateShiftAsync(request, performerId);
                 return Ok(result);
+            }
+            catch (InvalidInformationException ex)
+            {
+                _logger.LogWarning(ex, "Invalid information provided while creating parking lot shift");
+                return BadRequest(new { message = ex.Message });
             }
             catch (Exception ex)
             {
