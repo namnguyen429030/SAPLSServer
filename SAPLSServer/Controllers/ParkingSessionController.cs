@@ -392,7 +392,56 @@ namespace SAPLSServer.Controllers
             }
         }
 
+        /// <summary>
+        /// Gets payment information for a parking session by staff
+        /// </summary>
+        [HttpGet("{sessionId}/payment-info-staff")]
+        [Authorize(Policy = Accessibility.STAFF_ACCESS)]
+        public async Task<IActionResult> GetSessionPaymentInfoByStaff(string sessionId)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(sessionId))
+                {
+                    _logger.LogWarning("SessionId is required in GetSessionPaymentInfoByStaff");
+                    return BadRequest(new { error = MessageKeys.PARKING_SESSION_ID_REQUIRED });
+                }
 
+                var staffId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (string.IsNullOrEmpty(staffId))
+                {
+                    _logger.LogWarning("StaffId is required in GetSessionPaymentInfoByStaff");
+                    return Unauthorized(new { error = MessageKeys.STAFF_PROFILE_ID_REQUIRED });
+                }
+
+                var result = await _parkingSessionService.GetSessionPaymentInfoByStaff(sessionId, staffId);
+                if (result == null)
+                {
+                    _logger.LogInformation("Payment info not found for parking session by staff. SessionId: {SessionId}, StaffId: {StaffId}", sessionId, staffId);
+                    return NotFound(new { error = MessageKeys.PARKING_SESSION_NOT_FOUND });
+                }
+
+                return Ok(new
+                {
+                    data = result
+                });
+            }
+            catch (InvalidInformationException ex)
+            {
+                _logger.LogWarning(ex, "Invalid information provided while retrieving payment info by staff for parking session with SessionId: {SessionId}", sessionId);
+                return BadRequest(new { error = ex.Message });
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                _logger.LogWarning(ex, "Unauthorized access attempt while retrieving payment info by staff for parking session with SessionId: {SessionId}", sessionId);
+                return StatusCode(403, new { error = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while retrieving payment info by staff for parking session with SessionId: {SessionId}", sessionId);
+                return StatusCode(500, new { error = MessageKeys.UNEXPECTED_ERROR });
+            }
+        }
 
         [HttpPost("check-out")]
         public async Task<IActionResult> CheckOut([FromBody] CheckOutParkingSessionRequest request)

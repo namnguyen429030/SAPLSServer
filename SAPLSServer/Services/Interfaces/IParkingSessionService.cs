@@ -117,5 +117,6 @@ namespace SAPLSServer.Services.Interfaces
 
         Task<PaymentStatusResponseDto?> SendCancelPaymentRequest(PaymentCancelRequestDto request, string parkingSessionId);
         Task<PaymentStatusResponseDto?> GetPaymentStatus(string parkingSessionId);
+        Task<PaymentResponseDto?> GetSessionPaymentInfoByStaff(string sessionId, string staffId);
     }
 }

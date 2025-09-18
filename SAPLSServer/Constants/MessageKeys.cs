@@ -291,5 +291,6 @@ namespace SAPLSServer.Constants
         public const string FEE_SCHEDULE_TIME_OVERLAP = "FEE_SCHEDULE_TIME_OVERLAP";
         public const string SHIFT_TIME_OVERLAP = "SHIFT_TIME_OVERLAP";
         public const string INCIDENT_REPORT_CREATED_SUCCESSFULLY = "INCIDENT_REPORT_CREATED_SUCCESSFULLY";
+        public const string PARKING_SESSION_ALREADY_PAID = "PARKING_SESSION_ALREADY_PAID";
     }
 }
