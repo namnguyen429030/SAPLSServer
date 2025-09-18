@@ -23,14 +23,12 @@ namespace SAPLSServer.Services.Implementations
         private readonly IPaymentService _paymentService;
         private readonly IPaymentSettings _paymentSettings;
         private readonly IParkingLotOwnerService _parkingLotOwnerService;
-        private readonly ILogger<ParkingLotService> _logger;
         public ParkingLotService(IParkingLotRepository parkingLotRepository,
             ISubscriptionService subscriptionService,
             IStaffService staffService,
             IPaymentService paymentService,
             IPaymentSettings paymentSettings,
-            IParkingLotOwnerService parkingLotOwnerService,
-            ILogger<ParkingLotService> logger)
+            IParkingLotOwnerService parkingLotOwnerService)
         {
             _paymentSettings = paymentSettings;
             _parkingLotRepository = parkingLotRepository;
@@ -38,7 +36,6 @@ namespace SAPLSServer.Services.Implementations
             _staffService = staffService;
             _paymentService = paymentService;
             _parkingLotOwnerService = parkingLotOwnerService;
-            _logger = logger;
         }
 
         public async Task CreateParkingLot(CreateParkingLotRequest request, string performerAdminId)
@@ -188,7 +185,6 @@ namespace SAPLSServer.Services.Implementations
         public async Task<int> UpdateParkingLotSubscription(UpdateParkingLotSubscriptionRequest request,
                                                         string performerId)
         {
-            var subscriptionDuration = await _subscriptionService.GetDurationOfSubscription(request.SubscriptionId);
             var cost = await _subscriptionService.GetCostOfSubscription(request.SubscriptionId);
             var parkingLot = await _parkingLotRepository.Find(request.Id);
             if (parkingLot == null)
@@ -196,49 +192,14 @@ namespace SAPLSServer.Services.Implementations
             if (parkingLot.ParkingLotOwnerId != performerId)
                 throw new UnauthorizedAccessException(MessageKeys.UNAUTHORIZED_ACCESS);
 
-            int transactionId = new Random().Next(0, int.MaxValue);
-            parkingLot.SubscriptionTransactionId = transactionId;
-            var apiKey =  _paymentSettings.PaymentGatewayApiKey;
-            var clientKey = _paymentSettings.PaymentGatewayClientKey;
-            var checkSumKey = _paymentSettings.PaymentGatewayCheckSumKey;
-            _logger.LogInformation($"ApiKey: {apiKey}, ClientKey: {clientKey}, CheckSumKey: {checkSumKey}");
-
-            string data = $"amount={(int)cost}&cancelUrl={""}&description=SUB{transactionId}" +
-                $"&orderCode={transactionId}&returnUrl={""}";
-            var signature = _paymentService.GenerateSignature(data, checkSumKey);
-            // Prepare payment request
-            var paymentRequest = new PaymentRequestDto
-            {
-                OrderCode = transactionId,
-                Amount = (int)cost,
-                Description = $"SUB{transactionId}",
-                CancelUrl = "",
-                ReturnUrl = "",
-                Signature = signature,
-                BuyerName = "",
-                BuyerEmail = "",
-                BuyerPhone = "",
-                BuyerAddress = string.Empty,
-                ExpiredAt = (int)DateTime.UtcNow.AddMinutes(15).ToUniversalTime().Subtract(DateTime.UnixEpoch).TotalSeconds,
-                Items = new List<DTOs.Concrete.PaymentDtos.PaymentItemDto>
-                    {
-                        new DTOs.Concrete.PaymentDtos.PaymentItemDto
-                        {
-                            Name = "Parking lot Subscription",
-                            Quantity = 1,
-                            Price = (int)cost
-                        }
-                    },
-            };
-            var paymentResponse = await _paymentService.SendPaymentRequest(paymentRequest, clientKey, apiKey, checkSumKey);
+            var paymentResult = await CreateSubscriptionPaymentRequest((int)cost);
+            parkingLot.SubscriptionTransactionId = paymentResult.TransactionId;
             parkingLot.TempSubscriptionId = request.SubscriptionId;
-            parkingLot.SubscriptionTransactionInformation = JsonSerializer.Serialize(paymentResponse);
-            //parkingLot.ExpiredAt = DateTime.UtcNow.AddMilliseconds(subscriptionDuration);
-            //parkingLot.UpdatedAt = DateTime.UtcNow;
-            //parkingLot.UpdatedBy = performerId;
+            parkingLot.SubscriptionTransactionInformation = paymentResult.PaymentInformation;
+            
             _parkingLotRepository.Update(parkingLot);
             await _parkingLotRepository.SaveChangesAsync();
-            return paymentRequest.OrderCode;
+            return paymentResult.TransactionId;
         }
 
         public Task<bool> IsParkingLotValid(string parkingLotId)
@@ -284,16 +245,13 @@ namespace SAPLSServer.Services.Implementations
         public async Task ConfirmTransaction(PaymentWebHookRequest request)
         {
             var parkingLot = await _parkingLotRepository.Find([plo => plo.SubscriptionTransactionId == request.Data.OrderCode]);
-            if (parkingLot != null)
+            if (parkingLot != null && parkingLot.TempSubscriptionId != null)
             {
-                if (parkingLot.TempSubscriptionId != null)
-                {
-                    parkingLot.SubscriptionId = parkingLot.TempSubscriptionId;
-                    parkingLot.ExpiredAt = DateTime.UtcNow.AddMilliseconds(
-                        await _subscriptionService.GetDurationOfSubscription(parkingLot.TempSubscriptionId));
-                    _parkingLotRepository.Update(parkingLot);
-                    await _parkingLotRepository.SaveChangesAsync();
-                }
+                parkingLot.SubscriptionId = parkingLot.TempSubscriptionId;
+                parkingLot.ExpiredAt = DateTime.UtcNow.AddMilliseconds(
+                    await _subscriptionService.GetDurationOfSubscription(parkingLot.TempSubscriptionId));
+                _parkingLotRepository.Update(parkingLot);
+                await _parkingLotRepository.SaveChangesAsync();
             }
         }
 
@@ -316,10 +274,96 @@ namespace SAPLSServer.Services.Implementations
             {
                 throw new InvalidInformationException(MessageKeys.PARKING_LOT_SUBSCSRIPTION_PAYMENT_INFO_NOT_FOUND);
             }
+
+            var apiKey = _paymentSettings.PaymentGatewayApiKey;
+            var clientKey = _paymentSettings.PaymentGatewayClientKey;
+
+            var paymentStatus = await _paymentService.GetPaymentStatus((int)parkingLot.SubscriptionTransactionId!, clientKey, apiKey);
+            if (paymentStatus != null && paymentStatus.Data != null)
+            {
+                var data = paymentStatus.Data;
+                if (data.Status == PayOSPaymentStatus.EXPIRED.ToString() || 
+                    data.Status == PayOSPaymentStatus.UNDERPAID.ToString() ||
+                    data.Status == PayOSPaymentStatus.CANCELLED.ToString())
+                {
+                    // Get the current subscription cost for renewal
+                    if (parkingLot.TempSubscriptionId != null)
+                    {
+                        var cost = await _subscriptionService.GetCostOfSubscription(parkingLot.TempSubscriptionId);
+                        var paymentResult = await CreateSubscriptionPaymentRequest((int)cost);
+                            
+                        parkingLot.SubscriptionTransactionId = paymentResult.TransactionId;
+                        parkingLot.SubscriptionTransactionInformation = paymentResult.PaymentInformation;
+                            
+                        _parkingLotRepository.Update(parkingLot);
+                        await _parkingLotRepository.SaveChangesAsync();
+                    }
+                }
+                else if (data.Status == PayOSPaymentStatus.PAID.ToString())
+                {
+                    return null;
+                }
+            }
+
             var paymentInfo = JsonSerializer.Deserialize<PaymentResponseDto>(parkingLot.SubscriptionTransactionInformation);
-            if (paymentInfo == null)
-                throw new InvalidInformationException(MessageKeys.PARKING_LOT_SUBSCSRIPTION_PAYMENT_INFO_NOT_FOUND);
             return paymentInfo;
+        }
+
+        /// <summary>
+        /// Creates a payment request for parking lot subscription.
+        /// This method consolidates the payment request logic for subscription payments.
+        /// </summary>
+        /// <param name="parkingLot">The parking lot for which to create the payment request</param>
+        /// <param name="amount">The amount to be charged for the subscription</param>
+        /// <param name="subscriptionId">The subscription ID being purchased</param>
+        /// <returns>A SubscriptionPaymentCreationResult containing the serialized payment information and transaction ID</returns>
+        private async Task<SubscriptionPaymentCreationResult> CreateSubscriptionPaymentRequest(int amount)
+        {
+            int transactionId = new Random().Next(0, int.MaxValue);
+            var apiKey = _paymentSettings.PaymentGatewayApiKey;
+            var clientKey = _paymentSettings.PaymentGatewayClientKey;
+            var checkSumKey = _paymentSettings.PaymentGatewayCheckSumKey;
+            
+            string data = $"amount={amount}&cancelUrl={""}&description=SUB{transactionId}" +
+                $"&orderCode={transactionId}&returnUrl={""}";
+            var signature = _paymentService.GenerateSignature(data, checkSumKey);
+            
+            // Prepare payment request
+            var paymentRequest = new PaymentRequestDto
+            {
+                OrderCode = transactionId,
+                Amount = amount,
+                Description = $"SUB{transactionId}",
+                CancelUrl = "",
+                ReturnUrl = "",
+                Signature = signature,
+                BuyerName = "",
+                BuyerEmail = "",
+                BuyerPhone = "",
+                BuyerAddress = string.Empty,
+                ExpiredAt = (int)DateTime.UtcNow.AddMinutes(15).ToUniversalTime().Subtract(DateTime.UnixEpoch).TotalSeconds,
+                Items = new List<DTOs.Concrete.PaymentDtos.PaymentItemDto>
+                {
+                    new DTOs.Concrete.PaymentDtos.PaymentItemDto
+                    {
+                        Name = "Parking lot Subscription",
+                        Quantity = 1,
+                        Price = amount
+                    }
+                },
+            };
+            
+            var paymentResponse = await _paymentService.SendPaymentRequest(paymentRequest, clientKey, apiKey, checkSumKey);
+            if (paymentResponse == null)
+                throw new InvalidOperationException(MessageKeys.PAYOS_SERVICE_UNAVAILABLE);
+            
+            var responseData = JsonSerializer.Serialize(paymentResponse);
+            
+            return new SubscriptionPaymentCreationResult
+            {
+                PaymentInformation = responseData,
+                TransactionId = transactionId
+            };
         }
 
         public async Task<bool> IsParkingLotUsingWhiteList(string parkingLotId)
@@ -329,6 +373,15 @@ namespace SAPLSServer.Services.Implementations
                 throw new InvalidInformationException(MessageKeys.PARKING_LOT_NOT_FOUND);
             var settings = JsonSerializer.Deserialize<ParkingLotSettings>(parkingLot.Settings);
             return settings?.UseWhiteList ?? false;
+        }
+
+        /// <summary>
+        /// Represents the result of creating a subscription payment request, containing the serialized payment information and transaction ID.
+        /// </summary>
+        private class SubscriptionPaymentCreationResult
+        {
+            public string PaymentInformation { get; set; } = string.Empty;
+            public int TransactionId { get; set; }
         }
     }
 }

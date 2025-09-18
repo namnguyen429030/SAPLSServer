@@ -112,7 +112,7 @@ namespace SAPLSServer.Services.Implementations
         {
             if (!await _parkingLotService.IsParkingLotValid(request.ParkingLotId))
                 throw new InvalidInformationException(MessageKeys.PARKING_LOT_NOT_FOUND);
-            if(await _parkingLotService.IsParkingLotUsingWhiteList(request.ParkingLotId))
+            if (await _parkingLotService.IsParkingLotUsingWhiteList(request.ParkingLotId))
             {
                 var isWhiteListed = await _whiteListService.IsClientWhitelistedAsync(request.ParkingLotId, staffId);
                 if (!isWhiteListed)
@@ -182,7 +182,7 @@ namespace SAPLSServer.Services.Implementations
                 TransactionCount = 0,
                 CheckInStaffId = staffId,
                 ParkingFeeSchedule = await _parkingFeeScheduleService
-                    .GetParkingLotCurrentFeeSchedule(request.ParkingLotId, 
+                    .GetParkingLotCurrentFeeSchedule(request.ParkingLotId,
                     Enum.TryParse<VehicleType>(vehicleType, out var parsedVehicleType) ? parsedVehicleType : VehicleType.Motorbike),
             };
 
@@ -199,54 +199,21 @@ namespace SAPLSServer.Services.Implementations
             if (session.Status != ParkingSessionStatus.Parking.ToString())
                 throw new InvalidInformationException(MessageKeys.PARKING_SESSION_ALREADY_CHECKED_OUT);
 
-            session.Status = ParkingSessionStatus.CheckedOut.ToString();
             session.CheckOutDateTime = DateTime.UtcNow;
             session.Cost = await CalculateSessionFee(session);
             session.PaymentMethod = request.PaymentMethod;
 
             if (request.PaymentMethod == PaymentMethod.Bank.ToString())
             {
-                int transactionId = new Random().Next(1, int.MaxValue);
-                session.TransactionId = transactionId;
-                session.TransactionCount++;
                 var apiKey = await _parkingLotService.GetParkingLotApiKey(session.ParkingLotId ?? string.Empty);
                 var clientKey = await _parkingLotService.GetParkingLotClientKey(session.ParkingLotId ?? string.Empty);
                 var checkSumKey = await _parkingLotService.GetParkingLotCheckSumKey(session.ParkingLotId ?? string.Empty);
-                string data = $"amount={(int)session.Cost}&cancelUrl={""}&description=SESS{transactionId}&orderCode={transactionId}&returnUrl={""}";
-                var signature = _paymentService.GenerateSignature(data, checkSumKey);
-                // Prepare payment request
-                var paymentRequest = new PaymentRequestDto
-                {
-                    OrderCode = transactionId,
-                    Amount = (int)session.Cost,
-                    Description = $"SESS{transactionId}",
-                    CancelUrl = "",
-                    ReturnUrl = "",
-                    Signature = signature,
-                    BuyerName = session.Driver?.User?.FullName,
-                    BuyerEmail = session.Driver?.User?.Email,
-                    BuyerPhone = session.Driver?.User?.Phone,
-                    BuyerAddress = string.Empty,
-                    ExpiredAt = (int)DateTime.UtcNow.AddMinutes(15).ToUniversalTime().Subtract(DateTime.UnixEpoch).TotalSeconds,
-                    Items = new List<DTOs.Concrete.PaymentDtos.PaymentItemDto>
-                    {
-                        new DTOs.Concrete.PaymentDtos.PaymentItemDto
-                        {
-                            Name = "Parking Fee",
-                            Quantity = 1,
-                            Price = (int)session.Cost
-                        }
-                    },
-                };
-
-                // Send payment request
-                var response = await _paymentService.SendPaymentRequest(paymentRequest, clientKey, apiKey, checkSumKey);
-                if (response == null)
-                    throw new InvalidOperationException(MessageKeys.PAYOS_SERVICE_UNAVAILABLE);
-                var responseData = JsonSerializer.Serialize(response);
+                
+                var paymentResult = await CreatePaymentRequest(session, (int)session.Cost, clientKey, apiKey, checkSumKey);
                 session.PaymentStatus = ParkingSessionPayStatus.Pending.ToString();
-                session.PaymentInformation = responseData;
-
+                session.PaymentInformation = paymentResult.PaymentInformation;
+                session.TransactionId = paymentResult.TransactionId;
+                session.TransactionCount++;
             }
             _parkingSessionRepository.Update(session);
             await _parkingSessionRepository.SaveChangesAsync();
@@ -311,7 +278,7 @@ namespace SAPLSServer.Services.Implementations
             }
             throw new InvalidInformationException(MessageKeys.PARKING_SESSION_NOT_FOUND);
         }
-        public async Task       ForceFinish(FinishParkingSessionRequest request, string staffId)
+        public async Task ForceFinish(FinishParkingSessionRequest request, string staffId)
         {
             var session = await _parkingSessionRepository.FindLatest(request.VehicleLicensePlate, request.ParkingLotId);
             if (session == null)
@@ -545,6 +512,62 @@ namespace SAPLSServer.Services.Implementations
             }
         }
 
+        /// <summary>
+        /// Creates a payment request for a parking session with bank payment method.
+        /// This method consolidates the payment request logic used in both CheckOut and GetSessionPaymentInfo.
+        /// </summary>
+        /// <param name="session">The parking session for which to create the payment request</param>
+        /// <param name="amount">The amount to be charged for the payment</param>
+        /// <param name="clientKey">The client key for the payment gateway</param>
+        /// <param name="apiKey">The API key for the payment gateway</param>
+        /// <param name="checkSumKey">The checksum key for signature generation</param>
+        /// <returns>A PaymentCreationResult containing the serialized payment information and transaction ID</returns>
+        private async Task<PaymentCreationResult> CreatePaymentRequest(ParkingSession session, int amount, string clientKey, string apiKey, string checkSumKey)
+        {
+            int transactionId = new Random().Next(1, int.MaxValue);
+            
+            string data = $"amount={amount}&cancelUrl={""}&description=SESS{transactionId}&orderCode={transactionId}&returnUrl={""}";
+            var signature = _paymentService.GenerateSignature(data, checkSumKey);
+            
+            // Prepare payment request
+            var paymentRequest = new PaymentRequestDto
+            {
+                OrderCode = transactionId,
+                Amount = amount,
+                Description = $"SESS{transactionId}",
+                CancelUrl = "",
+                ReturnUrl = "",
+                Signature = signature,
+                BuyerName = session.Driver?.User?.FullName,
+                BuyerEmail = session.Driver?.User?.Email,
+                BuyerPhone = session.Driver?.User?.Phone,
+                BuyerAddress = string.Empty,
+                ExpiredAt = (int)DateTime.UtcNow.AddMinutes(BusinessRules.PAYMENT_DURATION_IN_MINUTES).ToUniversalTime().Subtract(DateTime.UnixEpoch).TotalSeconds,
+                Items = new List<DTOs.Concrete.PaymentDtos.PaymentItemDto>
+                {
+                    new DTOs.Concrete.PaymentDtos.PaymentItemDto
+                    {
+                        Name = "Parking Fee",
+                        Quantity = 1,
+                        Price = amount
+                    }
+                },
+            };
+
+            // Send payment request
+            var response = await _paymentService.SendPaymentRequest(paymentRequest, clientKey, apiKey, checkSumKey);
+            if (response == null)
+                throw new InvalidOperationException(MessageKeys.PAYOS_SERVICE_UNAVAILABLE);
+            
+            var responseData = JsonSerializer.Serialize(response);
+            
+            return new PaymentCreationResult
+            {
+                PaymentInformation = responseData,
+                TransactionId = transactionId
+            };
+        }
+
         public async Task<int?> GetSessionTransactionId(string sessionId)
         {
             var session = await _parkingSessionRepository.Find(sessionId);
@@ -564,9 +587,42 @@ namespace SAPLSServer.Services.Implementations
             }
             if (string.IsNullOrWhiteSpace(session.PaymentInformation))
             {
-                return null;
+                throw new InvalidInformationException(MessageKeys.PARKING_SESSION_PAYMENT_INFO_NOT_FOUND);
             }
-            return JsonSerializer.Deserialize<PaymentResponseDto>(session.PaymentInformation);
+
+            var clientKey = await _parkingLotService.GetParkingLotClientKey(session.ParkingLotId ?? string.Empty);
+            var apiKey = await _parkingLotService.GetParkingLotApiKey(session.ParkingLotId ?? string.Empty);
+
+            var paymentStatus = await _paymentService.GetPaymentStatus((int)session.TransactionId!, clientKey, apiKey);
+            if (paymentStatus != null)
+            {
+                if (paymentStatus.Data != null)
+                {
+                    var data = paymentStatus.Data;
+                    if (data.Status == PayOSPaymentStatus.EXPIRED.ToString() || 
+                        data.Status == PayOSPaymentStatus.UNDERPAID.ToString() ||
+                        data.Status == PayOSPaymentStatus.CANCELLED.ToString())
+                    {
+                        var checkSumKey = await _parkingLotService.GetParkingLotCheckSumKey(session.ParkingLotId ?? string.Empty);
+                        var paymentResult = await CreatePaymentRequest(session, (int)data.AmountRemaining, clientKey, apiKey, checkSumKey);
+                        session.TransactionId = paymentResult.TransactionId;
+                        session.TransactionCount++;
+                        session.PaymentStatus = ParkingSessionPayStatus.Pending.ToString();
+                        session.PaymentInformation = paymentResult.PaymentInformation;
+                            
+                        _parkingSessionRepository.Update(session);
+                        await _parkingSessionRepository.SaveChangesAsync();
+                    }
+                    else if(data.Status == PayOSPaymentStatus.PAID.ToString())
+                    {
+                        return null;
+                    }
+                }
+            }
+
+            var paymentInfo = JsonSerializer.Deserialize<PaymentResponseDto>(session.PaymentInformation);
+
+            return paymentInfo;
         }
 
         public async Task ConfirmTransaction(PaymentWebHookRequest request)
@@ -577,10 +633,12 @@ namespace SAPLSServer.Services.Implementations
                 if (request.Success)
                 {
                     session.PaymentStatus = ParkingSessionPayStatus.Paid.ToString();
+                    session.Status = ParkingSessionStatus.CheckedOut.ToString();
                 }
                 else
                 {
                     session.PaymentStatus = ParkingSessionPayStatus.NotPaid.ToString();
+                    session.Status = ParkingSessionStatus.Parking.ToString();
                 }
                 _parkingSessionRepository.Update(session);
                 await _parkingSessionRepository.SaveChangesAsync();
@@ -635,7 +693,7 @@ namespace SAPLSServer.Services.Implementations
 
             string apiKey = await _parkingLotService.GetParkingLotApiKey(parkingSession.ParkingLotId);
 
-           
+
             return await _paymentService.GetPaymentStatus(paymentId, clientKey, apiKey);
         }
         public async Task<PaymentStatusResponseDto?> SendCancelPaymentRequest(PaymentCancelRequestDto request, string parkingSessionId)
@@ -660,6 +718,15 @@ namespace SAPLSServer.Services.Implementations
             string apiKey = await _parkingLotService.GetParkingLotApiKey(parkingSession.ParkingLotId);
 
             return await _paymentService.SendCancelPaymentRequest(paymentId, clientKey, apiKey, request);
+        }
+
+        /// <summary>
+        /// Represents the result of creating a payment request, containing the serialized payment information and transaction ID.
+        /// </summary>
+        private class PaymentCreationResult
+        {
+            public string PaymentInformation { get; set; } = string.Empty;
+            public int TransactionId { get; set; }
         }
     }
 }
