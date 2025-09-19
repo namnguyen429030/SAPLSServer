@@ -153,7 +153,7 @@ namespace SAPLSServer.Services.Implementations
             var totalMinutes = (endTime - startTime).TotalMinutes;
             
             var additionalMinutes = Math.Max(schedule.AdditionalMinutes > 0
-                ? (int)((totalMinutes - schedule.InitialMinutes) % schedule.AdditionalMinutes)
+                ? (int)((totalMinutes - schedule.InitialMinutes) / schedule.AdditionalMinutes)
                 : 0, 0);
 
             return schedule.InitialFee + additionalMinutes * schedule.AdditionalFee;

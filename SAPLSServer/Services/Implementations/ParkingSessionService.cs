@@ -490,6 +490,10 @@ namespace SAPLSServer.Services.Implementations
 
         private async Task<decimal> CalculateSessionFee(ParkingSession session)
         {
+            if(session.PaymentStatus == ParkingSessionPayStatus.Paid.ToString())
+            {
+                return session.Cost;
+            }
             if (session.ParkingFeeSchedule != null)
             {
                 return await _parkingFeeScheduleService.CalculateParkingSessionFee(
@@ -604,12 +608,17 @@ namespace SAPLSServer.Services.Implementations
                 if (paymentStatus.Data != null)
                 {
                     var data = paymentStatus.Data;
+                    var cost = await CalculateSessionFee(session);
+                    if (data.Status == PayOSPaymentStatus.UNDERPAID.ToString())
+                    {
+                        cost = data.AmountRemaining;
+                    }
                     if (data.Status == PayOSPaymentStatus.EXPIRED.ToString() || 
                         data.Status == PayOSPaymentStatus.UNDERPAID.ToString() ||
                         data.Status == PayOSPaymentStatus.CANCELLED.ToString())
                     {
                         var checkSumKey = await _parkingLotService.GetParkingLotCheckSumKey(session.ParkingLotId ?? string.Empty);
-                        var paymentResult = await CreatePaymentRequest(session, data.AmountRemaining, clientKey, apiKey, checkSumKey);
+                        var paymentResult = await CreatePaymentRequest(session, (int)cost, clientKey, apiKey, checkSumKey);
                         session.TransactionId = paymentResult.TransactionId;
                         session.TransactionCount++;
                         session.PaymentStatus = ParkingSessionPayStatus.Pending.ToString();
@@ -665,12 +674,17 @@ namespace SAPLSServer.Services.Implementations
                 if (paymentStatus.Data != null)
                 {
                     var data = paymentStatus.Data;
+                    var cost = await CalculateSessionFee(session);
+                    if(data.Status == PayOSPaymentStatus.UNDERPAID.ToString())
+                    {
+                        cost = data.AmountRemaining;
+                    }
                     if (data.Status == PayOSPaymentStatus.EXPIRED.ToString() ||
                         data.Status == PayOSPaymentStatus.UNDERPAID.ToString() ||
                         data.Status == PayOSPaymentStatus.CANCELLED.ToString())
                     {
                         var checkSumKey = await _parkingLotService.GetParkingLotCheckSumKey(session.ParkingLotId ?? string.Empty);
-                        var paymentResult = await CreatePaymentRequest(session, data.AmountRemaining, clientKey, apiKey, checkSumKey);
+                        var paymentResult = await CreatePaymentRequest(session, (int)cost, clientKey, apiKey, checkSumKey);
                         session.TransactionId = paymentResult.TransactionId;
                         session.TransactionCount++;
                         session.PaymentStatus = ParkingSessionPayStatus.Pending.ToString();
@@ -698,6 +712,7 @@ namespace SAPLSServer.Services.Implementations
                 if (request.Success)
                 {
                     session.PaymentStatus = ParkingSessionPayStatus.Paid.ToString();
+                    session.Cost = request.Data.Amount;
                     session.Status = ParkingSessionStatus.CheckedOut.ToString();
                 }
                 else
