@@ -26,6 +26,7 @@ namespace SAPLSServer.Services.Implementations
         private readonly string _audience;
         private readonly string _secretKey;
         private readonly string _clientId;
+
         public AuthService(
             IUserService userService,
             IClientService clientService,
@@ -47,88 +48,53 @@ namespace SAPLSServer.Services.Implementations
             _clientId = googleOAuthSettings.ClientId;
         }
 
-        public async Task<AuthenticateUserResponse?> AuthenticateUser(AuthenticateUserRequest request)
+        public async Task<AuthenticateUserResponse?> AuthenticateAdminAndParkingLotOwner(AuthenticateUserRequest request)
         {
-            if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Password))
-            {
-                return null;
-            }
-            var user = await _userService.GetByPhoneOrEmail(request.Email);
-            if (user == null || user.Status != UserStatus.Active.ToString())
-                return null;
-            if (user.Status == UserStatus.Inactive.ToString())
-            {
-                await _userService.SendNewConfirmationEmail(request.Email);
-                throw new InvalidInformationException(MessageKeys.INACTIVE_USER);
-            }
-            var userPassword = await _userService.GetPassword(user.Id);
-            if (!_passwordService.VerifyPassword(request.Password, userPassword))
+            if (!ValidateAuthenticationRequest(request.Email, request.Password))
                 return null;
 
-            // Check if staff is in current shift
-            if (user.Role == UserRole.Staff.ToString())
-            {
-                var isInCurrentShift = await _staffService.IsStaffInCurrentShift(user.Id);
-                if (!isInCurrentShift)
-                    return null;
-            }
+            var user = await GetAndValidateUserByEmail(request.Email!);
+            if (user == null) return null;
 
-            var accessToken = await GenerateAccessToken(user);
-            var refreshToken = GenerateRefreshToken();
-            var refreshTokenExpires = DateTime.UtcNow.AddDays(7); // 7 days for refresh token
+            await ValidatePassword(user.Id, request.Password!);
 
-            // Store refresh token
-            await _userService.StoreRefreshToken(user.Id, refreshToken, refreshTokenExpires);
+            if (user.Role != UserRole.Admin.ToString() && user.Role != UserRole.ParkingLotOwner.ToString())
+                return null;
 
-            return new AuthenticateUserResponse
-            {
-                AccessToken = accessToken,
-                RefreshToken = refreshToken,
-                TokenType = "Bearer",
-                ExpiresAt = DateTime.UtcNow.AddMinutes(90)
-            };
+            return await GenerateAuthenticationResponse(user, expirationMinutes: 90);
+        }
+
+        public async Task<AuthenticateUserResponse?> AuthenticateStaff(AuthenticateUserRequest request)
+        {
+            if (!ValidateAuthenticationRequest(request.Email, request.Password))
+                return null;
+
+            var user = await GetAndValidateUserByEmail(request.Email!);
+            if (user == null || user.Role != UserRole.Staff.ToString()) 
+                return null;
+
+            await ValidatePassword(user.Id, request.Password!, throwOnInvalid: true);
+
+            // Staff-specific validation
+            var isInCurrentShift = await _staffService.IsStaffInCurrentShift(user.Id);
+            if (!isInCurrentShift)
+                throw new InvalidInformationException(MessageKeys.STAFF_NOT_IN_CURRENT_SHIFT);
+
+            return await GenerateAuthenticationResponse(user, expirationMinutes: 90);
         }
 
         public async Task<AuthenticateUserResponse?> AuthenticateClientProfile(AuthenticateClientProfileRequest request)
         {
-            if (string.IsNullOrWhiteSpace(request.EmailOrCitizenIdNo) || string.IsNullOrWhiteSpace(request.Password))
-            {
+            if (!ValidateAuthenticationRequest(request.EmailOrCitizenIdNo, request.Password))
                 return null;
-            }
-            UserDetailsDto? user = null;
-            if (request.EmailOrCitizenIdNo.All(char.IsDigit))
-            {
-                var clientProfile = await _clientService.GetByCitizenIdNo(request.EmailOrCitizenIdNo);
-                if (clientProfile == null)
-                {
-                    return null;
-                }
-                user = await _userService.GetById(clientProfile.Id);
-            }
-            else
-            {
-                user = await _userService.GetByPhoneOrEmail(request.EmailOrCitizenIdNo);
-            }
+
+            var user = await GetClientUser(request.EmailOrCitizenIdNo!);
             if (user == null || user.Role != UserRole.Client.ToString() || user.Status != UserStatus.Active.ToString())
                 return null;
-            var userPassword = await _userService.GetPassword(user.Id);
-            if (!_passwordService.VerifyPassword(request.Password, userPassword))
-                throw new InvalidCredentialException(MessageKeys.WRONG_PASSWORD);
 
-            var accessToken = await GenerateAccessToken(user);
-            var refreshToken = GenerateRefreshToken();
-            var refreshTokenExpires = DateTime.UtcNow.AddDays(7); // 7 days for refresh token
+            await ValidatePassword(user.Id, request.Password!, throwOnInvalid: true);
 
-            // Store refresh token
-            await _userService.StoreRefreshToken(user.Id, refreshToken, refreshTokenExpires);
-
-            return new AuthenticateUserResponse
-            {
-                AccessToken = accessToken,
-                RefreshToken = refreshToken,
-                TokenType = "Bearer",
-                ExpiresAt = DateTime.UtcNow.AddMinutes(5)
-            };
+            return await GenerateAuthenticationResponse(user, expirationMinutes: 5);
         }
 
         public async Task<AuthenticateUserResponse?> AuthenticateWithGoogle(GoogleAuthRequest request)
@@ -177,6 +143,155 @@ namespace SAPLSServer.Services.Implementations
                 return null;
             }
         }
+
+        public async Task<AuthenticateUserResponse?> RefreshToken(string userId, RefreshTokenRequest request)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(request.RefreshToken))
+                    return null;
+
+                if (string.IsNullOrWhiteSpace(userId))
+                    return null;
+
+                // Validate refresh token for this specific user
+                var isValidRefreshToken = await _userService.ValidateRefreshToken(userId, request.RefreshToken);
+                if (!isValidRefreshToken)
+                    return null;
+
+                // Get user details
+                var user = await _userService.GetById(userId);
+                if (user == null)
+                    return null;
+
+                // Generate new tokens
+                var newAccessToken = await GenerateAccessToken(user);
+                var newRefreshToken = GenerateRefreshToken();
+                var refreshTokenExpires = DateTime.UtcNow.AddDays(7);
+
+                // Store new refresh token
+                await _userService.StoreRefreshToken(user.Id, newRefreshToken, refreshTokenExpires);
+
+                return new AuthenticateUserResponse
+                {
+                    AccessToken = newAccessToken,
+                    RefreshToken = newRefreshToken,
+                    TokenType = "Bearer",
+                    ExpiresAt = DateTime.UtcNow.AddHours(1)
+                };
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+
+        #region Private Reusable Methods
+
+        /// <summary>
+        /// Validates the basic authentication request parameters
+        /// </summary>
+        /// <param name="emailOrIdentifier">Email or identifier (could be citizen ID)</param>
+        /// <param name="password">Password</param>
+        /// <returns>True if valid, false otherwise</returns>
+        private static bool ValidateAuthenticationRequest(string? emailOrIdentifier, string? password)
+        {
+            return !string.IsNullOrWhiteSpace(emailOrIdentifier) && !string.IsNullOrWhiteSpace(password);
+        }
+
+        /// <summary>
+        /// Gets and validates user by email with status checks
+        /// </summary>
+        /// <param name="email">User email</param>
+        /// <returns>User details if valid, null otherwise</returns>
+        private async Task<UserDetailsDto?> GetAndValidateUserByEmail(string email)
+        {
+            var user = await _userService.GetByPhoneOrEmail(email);
+            if (user == null || user.Status != UserStatus.Active.ToString())
+                return null;
+
+            if (user.Status == UserStatus.Inactive.ToString())
+            {
+                await _userService.SendNewConfirmationEmail(email);
+                throw new InvalidInformationException(MessageKeys.INACTIVE_USER);
+            }
+
+            return user;
+        }
+
+        /// <summary>
+        /// Gets client user either by email or citizen ID
+        /// </summary>
+        /// <param name="emailOrCitizenIdNo">Email or citizen ID number</param>
+        /// <returns>User details if found, null otherwise</returns>
+        private async Task<UserDetailsDto?> GetClientUser(string emailOrCitizenIdNo)
+        {
+            UserDetailsDto? user = null;
+
+            if (emailOrCitizenIdNo.All(char.IsDigit))
+            {
+                var clientProfile = await _clientService.GetByCitizenIdNo(emailOrCitizenIdNo);
+                if (clientProfile == null)
+                    return null;
+
+                user = await _userService.GetById(clientProfile.Id);
+            }
+            else
+            {
+                user = await _userService.GetByPhoneOrEmail(emailOrCitizenIdNo);
+            }
+
+            return user;
+        }
+
+        /// <summary>
+        /// Validates user password
+        /// </summary>
+        /// <param name="userId">User ID</param>
+        /// <param name="password">Password to validate</param>
+        /// <param name="throwOnInvalid">Whether to throw exception on invalid password</param>
+        /// <returns>True if valid</returns>
+        private async Task<bool> ValidatePassword(string userId, string password, bool throwOnInvalid = false)
+        {
+            var userPassword = await _userService.GetPassword(userId);
+            var isValid = _passwordService.VerifyPassword(password, userPassword);
+
+            if (!isValid && throwOnInvalid)
+            {
+                throw new InvalidCredentialException(MessageKeys.WRONG_PASSWORD);
+            }
+
+            return isValid;
+        }
+
+        /// <summary>
+        /// Generates a complete authentication response with tokens
+        /// </summary>
+        /// <param name="user">User details</param>
+        /// <param name="expirationMinutes">Token expiration in minutes</param>
+        /// <returns>Authentication response</returns>
+        private async Task<AuthenticateUserResponse> GenerateAuthenticationResponse(UserDetailsDto user, int expirationMinutes)
+        {
+            var accessToken = await GenerateAccessToken(user);
+            var refreshToken = GenerateRefreshToken();
+            var refreshTokenExpires = DateTime.UtcNow.AddDays(7); // 7 days for refresh token
+
+            // Store refresh token
+            await _userService.StoreRefreshToken(user.Id, refreshToken, refreshTokenExpires);
+
+            return new AuthenticateUserResponse
+            {
+                AccessToken = accessToken,
+                RefreshToken = refreshToken,
+                TokenType = "Bearer",
+                ExpiresAt = DateTime.UtcNow.AddMinutes(expirationMinutes)
+            };
+        }
+
+        #endregion
+
+        #region Existing Private Methods
+
         private async Task<UserDetailsDto?> GetUserByGoogleIdOrEmail(string googleId, string email)
         {
             // First try to find by Google ID
@@ -187,7 +302,6 @@ namespace SAPLSServer.Services.Implementations
             // Then try by email
             return await _userService.GetByPhoneOrEmail(email);
         }
-
 
         private async Task<GoogleJsonWebSignature.Payload?> VerifyGoogleIdTokenAsync(string idToken)
         {
@@ -209,8 +323,6 @@ namespace SAPLSServer.Services.Implementations
                 return null;
             }
         }
-
-
 
         private async Task<string> GenerateAccessToken(UserDetailsDto user)
         {
@@ -268,46 +380,6 @@ namespace SAPLSServer.Services.Implementations
             return Convert.ToBase64String(randomBytes);
         }
 
-        public async Task<AuthenticateUserResponse?> RefreshToken(string userId, RefreshTokenRequest request)
-        {
-            try
-            {
-                if (string.IsNullOrWhiteSpace(request.RefreshToken))
-                    return null;
-
-                if (string.IsNullOrWhiteSpace(userId))
-                    return null;
-
-                // Validate refresh token for this specific user
-                var isValidRefreshToken = await _userService.ValidateRefreshToken(userId, request.RefreshToken);
-                if (!isValidRefreshToken)
-                    return null;
-
-                // Get user details
-                var user = await _userService.GetById(userId);
-                if (user == null)
-                    return null;
-
-                // Generate new tokens
-                var newAccessToken = await GenerateAccessToken(user);
-                var newRefreshToken = GenerateRefreshToken();
-                var refreshTokenExpires = DateTime.UtcNow.AddDays(7);
-
-                // Store new refresh token
-                await _userService.StoreRefreshToken(user.Id, newRefreshToken, refreshTokenExpires);
-
-                return new AuthenticateUserResponse
-                {
-                    AccessToken = newAccessToken,
-                    RefreshToken = newRefreshToken,
-                    TokenType = "Bearer",
-                    ExpiresAt = DateTime.UtcNow.AddHours(1)
-                };
-            }
-            catch (Exception)
-            {
-                return null;
-            }
-        }
+        #endregion
     }
 }

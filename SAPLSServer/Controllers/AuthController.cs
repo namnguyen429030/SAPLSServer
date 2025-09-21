@@ -40,7 +40,7 @@ namespace SAPLSServer.Controllers
                     return BadRequest(ModelState);
                 }
 
-                var result = await _authService.AuthenticateUser(request);
+                var result = await _authService.AuthenticateAdminAndParkingLotOwner(request);
 
                 if (result == null)
                 {
@@ -58,6 +58,47 @@ namespace SAPLSServer.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error occurred during user authentication");
+                return StatusCode(StatusCodes.Status500InternalServerError, new { message = MessageKeys.AUTHENTICATION_FAILED });
+            }
+        }
+
+        /// <summary>
+        /// Authenticates a staff member with email and password
+        /// </summary>
+        [HttpPost("staff/login")]
+        public async Task<ActionResult<AuthenticateUserResponse>> AuthenticateStaff([FromBody] AuthenticateUserRequest request)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    _logger.LogWarning("Invalid model state in AuthenticateStaff: {@ModelState}", ModelState);
+                    return BadRequest(ModelState);
+                }
+
+                var result = await _authService.AuthenticateStaff(request);
+
+                if (result == null)
+                {
+                    _logger.LogInformation("Authentication failed for staff: {Email}", request.Email);
+                    return Unauthorized(new { message = MessageKeys.INVALID_CREDENTIALS });
+                }
+
+                return Ok(result);
+            }
+            catch (InvalidCredentialException ex)
+            {
+                _logger.LogWarning(ex, "Invalid credentials provided during staff authentication");
+                return Unauthorized(new { message = ex.Message });
+            }
+            catch (InvalidInformationException ex)
+            {
+                _logger.LogWarning(ex, "Invalid information provided during staff authentication");
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred during staff authentication");
                 return StatusCode(StatusCodes.Status500InternalServerError, new { message = MessageKeys.AUTHENTICATION_FAILED });
             }
         }
