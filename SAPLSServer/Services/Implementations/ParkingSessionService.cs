@@ -322,7 +322,14 @@ namespace SAPLSServer.Services.Implementations
                 var backCaptureResult = await _fileService.UploadFileAsync(backCaptureUploadRequest);
                 exitBackCaptureUrl = backCaptureResult.CdnUrl;
             }
-
+            if (session.PaymentMethod == null)
+            {
+                session.PaymentMethod = PaymentMethod.Bank.ToString();
+            }
+            else
+            {
+                session.PaymentMethod = PaymentMethod.Cash.ToString();
+            }
             session.Status = ParkingSessionStatus.Finished.ToString();
             session.ExitFrontCaptureUrl = exitFrontCaptureUrl;
             session.ExitBackCaptureUrl = exitBackCaptureUrl;
@@ -714,6 +721,10 @@ namespace SAPLSServer.Services.Implementations
                 if (request.Success)
                 {
                     session.PaymentStatus = ParkingSessionPayStatus.Paid.ToString();
+                    if(session.PaymentMethod == null)
+                    {
+                        session.PaymentMethod = PaymentMethod.Bank.ToString();
+                    }
                     session.Cost = request.Data.Amount;
                     session.Status = ParkingSessionStatus.CheckedOut.ToString();
                 }
