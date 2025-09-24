@@ -6,6 +6,7 @@ using SAPLSServer.Exceptions;
 using SAPLSServer.Models;
 using SAPLSServer.Repositories.Interfaces;
 using SAPLSServer.Services.Interfaces;
+using System.Linq.Expressions;
 
 namespace SAPLSServer.Services.Implementations
 {
@@ -48,13 +49,11 @@ namespace SAPLSServer.Services.Implementations
 
         public async Task<List<ShiftDiarySummaryDto>> GetListAsync(GetShiftDiaryListRequest request)
         {
-            var filters = new List<System.Linq.Expressions.Expression<Func<ShiftDiary, bool>>>();
-            if (!string.IsNullOrEmpty(request.ParkingLotId))
-                filters.Add(d => d.ParkingLotId == request.ParkingLotId);
-            if (request.UploadedDate.HasValue)
-                filters.Add(d => d.CreatedAt.Date == request.UploadedDate.Value.ToDateTime(TimeOnly.MinValue).Date);
+            var filters = BuildShiftDiaryCriterias(request);
+            var sortBy = GetSortByExpression(request.SortBy);
+            var isAscending = IsAscending(request.Order);
 
-            var diaries = await _shiftDiaryRepository.GetAllAsync(filters.ToArray());
+            var diaries = await _shiftDiaryRepository.GetAllAsync(filters.ToArray(), sortBy, isAscending);
             var result = new List<ShiftDiarySummaryDto>();
             foreach (var diary in diaries)
             {
@@ -69,18 +68,16 @@ namespace SAPLSServer.Services.Implementations
 
         public async Task<PageResult<ShiftDiarySummaryDto>> GetPageAsync(PageRequest pageRequest, GetShiftDiaryListRequest request)
         {            
-            var filters = new List<System.Linq.Expressions.Expression<Func<ShiftDiary, bool>>>();
-            if (!string.IsNullOrEmpty(request.ParkingLotId))
-                filters.Add(d => d.ParkingLotId == request.ParkingLotId);
-            if (request.UploadedDate.HasValue)
-                filters.Add(d => d.CreatedAt.Date == request.UploadedDate.Value.ToDateTime(TimeOnly.MinValue).Date);
+            var filters = BuildShiftDiaryCriterias(request);
+            var sortBy = GetSortByExpression(request.SortBy);
+            var isAscending = IsAscending(request.Order);
 
             var diaries = await _shiftDiaryRepository.GetPageAsync(
                 pageRequest.PageNumber,
                 pageRequest.PageSize,
                 filters.ToArray(),
-                null,
-                false
+                sortBy,
+                isAscending
             );
             var total = await _shiftDiaryRepository.CountAsync(filters.ToArray());
             var items = new List<ShiftDiarySummaryDto>();
@@ -106,5 +103,54 @@ namespace SAPLSServer.Services.Implementations
             var diary = await _shiftDiaryRepository.FindIncludingSenderReadOnly(id);
             return diary == null ? null : new ShiftDiaryDetailsDto(diary);
         }
+
+        #region Private Helper Methods
+
+        private static List<Expression<Func<ShiftDiary, bool>>> BuildShiftDiaryCriterias(GetShiftDiaryListRequest request)
+        {
+            var filters = new List<Expression<Func<ShiftDiary, bool>>>();
+            
+            if (!string.IsNullOrEmpty(request.ParkingLotId))
+                filters.Add(d => d.ParkingLotId == request.ParkingLotId);
+            
+            if (request.UploadedDate.HasValue)
+                filters.Add(d => d.CreatedAt.Date == request.UploadedDate.Value.ToDateTime(TimeOnly.MinValue).Date);
+
+            // Filter by search criteria (search in header and body)
+            if (!string.IsNullOrWhiteSpace(request.SearchCriteria))
+            {
+                filters.Add(d => d.Header.Contains(request.SearchCriteria) ||
+                                d.Body.Contains(request.SearchCriteria));
+            }
+
+            return filters;
+        }
+
+        private static Expression<Func<ShiftDiary, object>> GetSortByExpression(string? sortBy)
+        {
+            if (string.IsNullOrWhiteSpace(sortBy))
+                return d => d.CreatedAt;
+
+            switch (sortBy.Trim().ToLower())
+            {
+                case "createdat":
+                    return d => d.CreatedAt;
+                case "header":
+                    return d => d.Header;
+                case "body":
+                    return d => d.Body;
+                case "parkinglotid":
+                    return d => d.ParkingLotId;
+                default:
+                    return d => d.CreatedAt;
+            }
+        }
+
+        private static bool IsAscending(string? order)
+        {
+            return string.Equals(order, OrderType.Asc.ToString(), StringComparison.OrdinalIgnoreCase);
+        }
+
+        #endregion
     }
 }

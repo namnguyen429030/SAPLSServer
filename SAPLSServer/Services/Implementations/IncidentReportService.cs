@@ -42,7 +42,7 @@ namespace SAPLSServer.Services.Implementations
             {
                 throw new InvalidInformationException(MessageKeys.STAFF_PROFILE_NOT_FOUND);
             }
-            if (await _parkingLotService.IsParkingLotValid(reporter.ParkingLotId))
+            if (!await _parkingLotService.IsParkingLotValid(reporter.ParkingLotId))
             {
                 throw new InvalidInformationException(MessageKeys.PARKING_LOT_NOT_FOUND);
             }
@@ -100,45 +100,9 @@ namespace SAPLSServer.Services.Implementations
         public async Task<PageResult<IncidentReportSummaryDto>> GetIncidentReportsPage(PageRequest pageRequest, GetIncidenReportListRequest listRequest)
         {
             // Build filter criteria based on the listRequest parameters
-            var criterias = new List<Expression<Func<IncidenceReport, bool>>>();
-
-            // Filter by parking lot (required field)
-            if (!string.IsNullOrWhiteSpace(listRequest.ParkingLotId))
-            {
-                criterias.Add(ir => ir.ParkingLotId == listRequest.ParkingLotId);
-            }
-
-            // Filter by priority
-            if (!string.IsNullOrWhiteSpace(listRequest.Priority))
-            {
-                criterias.Add(ir => ir.Priority == listRequest.Priority);
-            }
-
-            // Filter by status
-            if (!string.IsNullOrWhiteSpace(listRequest.Status))
-            {
-                criterias.Add(ir => ir.Status == listRequest.Status);
-            }
-
-            // Filter by date range
-            if (listRequest.StartDate.HasValue && listRequest.EndDate.HasValue)
-            {
-                var startDateTime = listRequest.StartDate.Value.ToDateTime(TimeOnly.MinValue);
-                criterias.Add(ir => ir.ReportedDate >= startDateTime);
-                var endDateTime = listRequest.EndDate.Value.ToDateTime(TimeOnly.MaxValue);
-                criterias.Add(ir => ir.ReportedDate <= endDateTime);
-            }
-
-            // Filter by search criteria (search in header and description)
-            if (!string.IsNullOrWhiteSpace(listRequest.SearchCriteria))
-            {
-                criterias.Add(ir => ir.Header.Contains(listRequest.SearchCriteria) ||
-                                   ir.Description.Contains(listRequest.SearchCriteria));
-            }
-
-
-            // Determine sort order (default to descending for dates)
-            bool isAscending = listRequest.Order == OrderType.Asc.ToString();
+            var criterias = BuildIncidentReportCriterias(listRequest);
+            var sortBy = GetSortByExpression(listRequest.SortBy);
+            var isAscending = IsAscending(listRequest.Order);
 
             // Get total count for pagination
             var totalCount = await _incidentReportRepository.CountAsync(criterias.ToArray());
@@ -148,7 +112,7 @@ namespace SAPLSServer.Services.Implementations
                 pageRequest.PageNumber,
                 pageRequest.PageSize,
                 criterias.ToArray(),
-                null,
+                sortBy,
                 isAscending);
 
             // Convert to DTOs
@@ -165,8 +129,30 @@ namespace SAPLSServer.Services.Implementations
 
         public async Task<List<IncidentReportSummaryDto>> GetIncidentReportsList(GetIncidenReportListRequest request)
         {
-            // Build filter criteria based on the listRequest parameters (same logic as GetIncidentReportsPage)
+            // Build filter criteria based on the listRequest parameters
+            var criterias = BuildIncidentReportCriterias(request);
+            var sortBy = GetSortByExpression(request.SortBy);
+            var isAscending = IsAscending(request.Order);
+
+            // Get all results (no pagination)
+            var incidentReports = await _incidentReportRepository.GetAllAsync(
+                criterias.ToArray(),
+                sortBy,
+                isAscending);
+
+            // Convert to DTOs
+            return incidentReports.Select(ir => new IncidentReportSummaryDto(ir)).ToList();
+        }
+
+        #region Private Helper Methods
+
+        private static List<Expression<Func<IncidenceReport, bool>>> BuildIncidentReportCriterias(GetIncidenReportListRequest? request)
+        {
             var criterias = new List<Expression<Func<IncidenceReport, bool>>>();
+
+            // Handle null request
+            if (request == null)
+                return criterias;
 
             // Filter by parking lot (required field)
             if (!string.IsNullOrWhiteSpace(request.ParkingLotId))
@@ -187,10 +173,14 @@ namespace SAPLSServer.Services.Implementations
             }
 
             // Filter by date range
-            if (request.StartDate.HasValue && request.EndDate.HasValue)
+            if (request.StartDate.HasValue)
             {
                 var startDateTime = request.StartDate.Value.ToDateTime(TimeOnly.MinValue);
                 criterias.Add(ir => ir.ReportedDate >= startDateTime);
+            }
+
+            if (request.EndDate.HasValue)
+            {
                 var endDateTime = request.EndDate.Value.ToDateTime(TimeOnly.MaxValue);
                 criterias.Add(ir => ir.ReportedDate <= endDateTime);
             }
@@ -202,18 +192,37 @@ namespace SAPLSServer.Services.Implementations
                                    ir.Description.Contains(request.SearchCriteria));
             }
 
-            // Determine sort order (default to descending for dates)
-            bool isAscending = request.Order == OrderType.Asc.ToString();
-
-            // Get all results (no pagination)
-            var incidentReports = await _incidentReportRepository.GetAllAsync(
-                criterias.ToArray(),
-                null,
-                isAscending);
-
-            // Convert to DTOs
-            return incidentReports.Select(ir => new IncidentReportSummaryDto(ir)).ToList();
+            return criterias;
         }
+
+        private static Expression<Func<IncidenceReport, object>> GetSortByExpression(string? sortBy)
+        {
+            if (string.IsNullOrWhiteSpace(sortBy))
+                return ir => ir.ReportedDate;
+
+            switch (sortBy.Trim().ToLower())
+            {
+                case "reporteddate":
+                    return ir => ir.ReportedDate;
+                case "header":
+                    return ir => ir.Header;
+                case "priority":
+                    return ir => ir.Priority;
+                case "status":
+                    return ir => ir.Status;
+                case "description":
+                    return ir => ir.Description;
+                default:
+                    return ir => ir.ReportedDate;
+            }
+        }
+
+        private static bool IsAscending(string? order)
+        {
+            return string.Equals(order, OrderType.Asc.ToString(), StringComparison.OrdinalIgnoreCase);
+        }
+
+        #endregion
 
         private async Task ProcessEvidences(string incidentReportId, IFormFile[] evidences)
         {
