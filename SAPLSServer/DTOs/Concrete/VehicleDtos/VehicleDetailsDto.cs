@@ -14,7 +14,7 @@ namespace SAPLSServer.DTOs.Concrete.VehicleDtos
         {
             EngineNumber = vehicle.EngineNumber;
             ChassisNumber = vehicle.ChassisNumber;
-            OwnerVehicleFullName = vehicle.OwnerVehicleFullName;
+            OwnerVehicleFullName = vehicle.CurrentHolder!.User.FullName;
             CreatedAt = vehicle.CreatedAt;
             UpdatedAt = vehicle.UpdatedAt;
             OwnerId = vehicle.OwnerId;

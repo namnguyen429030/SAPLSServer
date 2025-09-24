@@ -167,7 +167,7 @@ namespace SAPLSServer.Services.Implementations
 
         public async Task<VehicleDetailsDto?> GetById(string id)
         {
-            var vehicle = await _vehicleRepository.Find(id);
+            var vehicle = await _vehicleRepository.FindIncludeOwnerAndCurrentHolder(id);
             if (vehicle == null)
                 return null;
             return new VehicleDetailsDto(vehicle);
@@ -175,7 +175,7 @@ namespace SAPLSServer.Services.Implementations
 
         public async Task<VehicleDetailsDto?> GetByLicensePlate(string licensePlate)
         {
-            var vehicle = await _vehicleRepository.Find([v => v.LicensePlate == licensePlate]);
+            var vehicle = await _vehicleRepository.FindIncludeOwnerAndCurrentHolder(v => v.LicensePlate == licensePlate);
             if (vehicle == null)
                 return null;
             return new VehicleDetailsDto(vehicle);
@@ -190,7 +190,15 @@ namespace SAPLSServer.Services.Implementations
                 pageRequest.PageNumber, pageRequest.PageSize, criteriasArray, null,
                 request.Order == OrderType.Asc.ToString());
 
-            var items = vehicles.Select(v => new VehicleSummaryDto(v)).ToList();
+            var items = new List<VehicleSummaryDto>();
+            foreach (var vehicle in vehicles)
+            {
+                if(vehicle.Owner != null)
+                {
+                    var vehicleIncludedOwnerAndCurrentHolder = await _vehicleRepository.FindIncludeOwnerAndCurrentHolder(vehicle.Id);
+                    items.Add(new VehicleSummaryDto(vehicleIncludedOwnerAndCurrentHolder!));
+                }
+            }
             return new PageResult<VehicleSummaryDto>
             {
                 Items = items,
@@ -206,7 +214,16 @@ namespace SAPLSServer.Services.Implementations
             var criteriasArray = criterias.ToArray();
             var vehicles = await _vehicleRepository.GetAllAsync(criteriasArray, null,
                 request.Order == OrderType.Asc.ToString());
-            return vehicles.Select(v => new VehicleSummaryDto(v)).ToList();
+            var items = new List<VehicleSummaryDto>();
+            foreach (var vehicle in vehicles)
+            {
+                if (vehicle.Owner != null)
+                {
+                    var vehicleIncludedOwnerAndCurrentHolder = await _vehicleRepository.FindIncludeOwnerAndCurrentHolder(vehicle.Id);
+                    items.Add(new VehicleSummaryDto(vehicleIncludedOwnerAndCurrentHolder!));
+                }
+            }
+            return items;
         }
 
         private List<Expression<Func<Vehicle, bool>>> BuildVehicleCriteria(GetVehicleListRequest request)
