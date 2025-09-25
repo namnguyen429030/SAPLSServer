@@ -294,5 +294,7 @@ namespace SAPLSServer.Constants
         public const string PARKING_SESSION_ALREADY_PAID = "PARKING_SESSION_ALREADY_PAID";
         public const string VEHICLE_ALREADY_CHECKED_IN = "VEHICLE_ALREADY_CHECKED_IN";
         public const string STAFF_NOT_IN_CURRENT_SHIFT = "STAFF_NOT_IN_CURRENT_SHIFT";
+        public const string PARKING_LOT_EXPIRED = "PARKING_LOT_EXPIRED";
+        public const string PARKING_SESSION_PAYMENT_EXPIRED = "PARKING_SESSION_PAYMENT_EXPIRED";
     }
 }

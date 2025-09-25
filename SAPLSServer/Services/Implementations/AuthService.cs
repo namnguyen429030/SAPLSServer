@@ -21,6 +21,7 @@ namespace SAPLSServer.Services.Implementations
         private readonly IPasswordService _passwordService;
         private readonly IAdminService _adminService;
         private readonly IStaffService _staffService;
+        private readonly IParkingLotService _parkingLotService;
 
         private readonly string _issuer;
         private readonly string _audience;
@@ -34,7 +35,8 @@ namespace SAPLSServer.Services.Implementations
             IStaffService staffService,
             IAuthenticationSettings settings,
             IGoogleOAuthSettings googleOAuthSettings,
-            IPasswordService passwordService)
+            IPasswordService passwordService,
+            IParkingLotService parkingLotService)
         {
             _userService = userService;
             _adminService = adminService;
@@ -46,6 +48,7 @@ namespace SAPLSServer.Services.Implementations
             _audience = settings.JwtAudience;
             _secretKey = settings.JwtSecretKey;
             _clientId = googleOAuthSettings.ClientId;
+            _parkingLotService = parkingLotService;
         }
 
         public async Task<AuthenticateUserResponse?> AuthenticateAdminAndParkingLotOwner(AuthenticateUserRequest request)
@@ -76,6 +79,11 @@ namespace SAPLSServer.Services.Implementations
             await ValidatePassword(user.Id, request.Password!, throwOnInvalid: true);
 
             // Staff-specific validation
+            var parkingLotId = await _staffService.GetParkingLotId(user.Id);
+            var isParkingLotExpired = await _parkingLotService.IsParkingLotExpired(parkingLotId);
+            if(isParkingLotExpired)
+                throw new InvalidInformationException(MessageKeys.PARKING_LOT_EXPIRED);
+
             var isInCurrentShift = await _staffService.IsStaffInCurrentShift(user.Id);
             if (!isInCurrentShift)
                 throw new InvalidInformationException(MessageKeys.STAFF_NOT_IN_CURRENT_SHIFT);

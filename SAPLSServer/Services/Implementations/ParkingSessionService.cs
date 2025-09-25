@@ -234,6 +234,15 @@ namespace SAPLSServer.Services.Implementations
                 {
                     throw new ParkingSessionException(MessageKeys.PARKING_SESSION_NOT_PAID);
                 }
+                if(session.Status == ParkingSessionPayStatus.Paid.ToString())
+                {
+                    var cost = await CalculateSessionFee(session);
+                    if(session.Cost < cost)
+                    {
+                        session.PaymentStatus = ParkingSessionPayStatus.NotPaid.ToString();
+                        throw new ParkingSessionException(MessageKeys.PARKING_SESSION_PAYMENT_EXPIRED);
+                    }
+                }
                 var exitFrontCaptureUrl = string.Empty;
                 var exitBackCaptureUrl = string.Empty;
                 if (request.ExitFrontCapture != null)
@@ -505,11 +514,12 @@ namespace SAPLSServer.Services.Implementations
             }
             if (session.ParkingFeeSchedule != null)
             {
-                return await _parkingFeeScheduleService.CalculateParkingSessionFee(
+                var totalCost = await _parkingFeeScheduleService.CalculateParkingSessionFee(
                     session.ParkingFeeSchedule,
                     session.EntryDateTime,
                     DateTime.UtcNow
                 );
+                return totalCost - session.Cost;
             }
             else
             {
