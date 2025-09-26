@@ -74,6 +74,7 @@ namespace SAPLSServer.Repositories.Implementations
                             .ThenInclude(v => v.Owner)
                             .ThenInclude(r => r.User)
                             .Include(sv => sv.Vehicle.CurrentHolder)
+                            .ThenInclude(ch => ch!.User)
                             .Include(sv => sv.SharedPerson)
                             .ThenInclude(sp => sp!.User)
                             .AsNoTracking();
