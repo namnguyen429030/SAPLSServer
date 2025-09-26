@@ -193,7 +193,7 @@ namespace SAPLSServer.Services.Implementations
             var items = new List<VehicleSummaryDto>();
             foreach (var vehicle in vehicles)
             {
-                if(vehicle.Owner != null)
+                if(vehicle.OwnerId != null)
                 {
                     var vehicleIncludedOwnerAndCurrentHolder = await _vehicleRepository.FindIncludeOwnerAndCurrentHolder(vehicle.Id);
                     items.Add(new VehicleSummaryDto(vehicleIncludedOwnerAndCurrentHolder!));
@@ -217,7 +217,7 @@ namespace SAPLSServer.Services.Implementations
             var items = new List<VehicleSummaryDto>();
             foreach (var vehicle in vehicles)
             {
-                if (vehicle.Owner != null)
+                if (vehicle.OwnerId != null)
                 {
                     var vehicleIncludedOwnerAndCurrentHolder = await _vehicleRepository.FindIncludeOwnerAndCurrentHolder(vehicle.Id);
                     items.Add(new VehicleSummaryDto(vehicleIncludedOwnerAndCurrentHolder!));
