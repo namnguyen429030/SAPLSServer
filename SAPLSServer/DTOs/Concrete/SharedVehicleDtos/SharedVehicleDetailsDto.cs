@@ -19,7 +19,7 @@ namespace SAPLSServer.DTOs.Concrete.SharedVehicleDtos
             Note = sharedVehicle.Note;
             InviteAt = sharedVehicle.InviteAt;
             ExpirationDate = sharedVehicle.ExpireAt;
-            OwnerName = sharedVehicle.Vehicle.OwnerVehicleFullName;
+            OwnerName = sharedVehicle.Vehicle.Owner.User.FullName;
             Id = sharedVehicle.Id;
             VehicleId = sharedVehicle.VehicleId;
         }

@@ -73,6 +73,7 @@ namespace SAPLSServer.Repositories.Implementations
             var query = _dbSet.Include(sv => sv.Vehicle)
                             .ThenInclude(v => v.Owner)
                             .ThenInclude(r => r.User)
+                            .Include(sv => sv.Vehicle.CurrentHolder)
                             .Include(sv => sv.SharedPerson)
                             .ThenInclude(sp => sp!.User)
                             .AsNoTracking();
