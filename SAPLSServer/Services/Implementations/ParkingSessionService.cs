@@ -288,7 +288,6 @@ namespace SAPLSServer.Services.Implementations
                 _parkingSessionRepository.Update(session);
                 await _parkingSessionRepository.SaveChangesAsync();
             }
-            throw new InvalidInformationException(MessageKeys.PARKING_SESSION_NOT_FOUND);
         }
         public async Task ForceFinish(FinishParkingSessionRequest request, string staffId)
         {
